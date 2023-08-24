@@ -6,7 +6,9 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
-
+#include "Net/UnrealNetwork.h"
+#include "Everzone/Weapon/Weapon.h"
+#include "Everzone/EverzoneComponents/CombatComponent.h"
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
 {
@@ -27,23 +29,46 @@ AEverzoneCharacter::AEverzoneCharacter()
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(RootComponent);
 
+	//Combat compnent will contain variables that need replicating so it's important that the component itself is also replicated
+	CombatComp = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
+	CombatComp->SetIsReplicated(true);
 }
 
+void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(AEverzoneCharacter, OverlappingWeapon, COND_OwnerOnly);
+}
 
 void AEverzoneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
+void AEverzoneCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+
+}
 void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AEverzoneCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &AEverzoneCharacter::LookUp);
 
+}
+void AEverzoneCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (CombatComp)
+	{
+		CombatComp->Character = this;
+	}
 }
 void AEverzoneCharacter::MoveForward(float value)
 {
@@ -72,13 +97,40 @@ void AEverzoneCharacter::LookUp(float value)
 {
 	AddControllerPitchInput(value);
 }
-
-
-void AEverzoneCharacter::Tick(float DeltaTime)
+void AEverzoneCharacter::EquipButtonPressed()
 {
-	Super::Tick(DeltaTime);
 
 }
+void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(false);
+	}
+	OverlappingWeapon = Weapon;
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
+}
+
+void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
+}
+
+
+
 
 
 

@@ -16,13 +16,15 @@ public:
 	virtual void Tick(float DeltaTime) override;
     // Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 protected:
 	virtual void BeginPlay() override;
 	void MoveForward(float value);
 	void MoveRight(float value);
 	void Turn(float value);
 	void LookUp(float value);
-
+	void EquipButtonPressed();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -32,7 +34,16 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta =(AllowPrivateAccess = "true"))
 	class UWidgetComponent* OverheadWidget;
-public:	
 
+	//Using a rep notify function because they don't get called on the server meaning that setting the pickup widget's visibility inside OnRep_OverlappingWeapon
+	// will allow the display text to only appear on the client that owns the pawn overlapping with the actor
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
+	class AWeapon* OverlappingWeapon;
+	UFUNCTION()
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+	UPROPERTY(VisibleAnywhere)
+	class UCombatComponent* CombatComp;
+public:	
+	void SetOverlappingWeapon(AWeapon* Weapon);
 
 };
