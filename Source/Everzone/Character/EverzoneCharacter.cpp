@@ -99,7 +99,10 @@ void AEverzoneCharacter::LookUp(float value)
 }
 void AEverzoneCharacter::EquipButtonPressed()
 {
-
+	if (CombatComp && HasAuthority())
+	{
+		CombatComp->EquipWeapon(OverlappingWeapon);
+	}
 }
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
