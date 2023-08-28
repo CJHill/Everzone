@@ -26,4 +26,5 @@ void UEverzoneAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsInAir = EverzoneCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = EverzoneCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f;
 	bIsWeaponEquipped = EverzoneCharacter->IsWeaponEquipped();
+	bIsCrouched = EverzoneCharacter->bIsCrouched;
 }

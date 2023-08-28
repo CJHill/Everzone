@@ -56,6 +56,7 @@ void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AEverzoneCharacter::EquipButtonPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AEverzoneCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
@@ -111,12 +112,17 @@ void AEverzoneCharacter::EquipButtonPressed()
 		}
 	}
 }
+
 void AEverzoneCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (CombatComp)
 	{
 		CombatComp->EquipWeapon(OverlappingWeapon);
 	}
+}
+void AEverzoneCharacter::CrouchButtonPressed()
+{
+	Crouch();
 }
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
