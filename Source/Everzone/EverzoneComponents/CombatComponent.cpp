@@ -5,7 +5,8 @@
 #include "Everzone/Weapon/Weapon.h"
 #include "Everzone/Character/EverzoneCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
-
+#include "Components/SphereComponent.h"
+#include "Net/UnrealNetwork.h"
 UCombatComponent::UCombatComponent()
 {
 
@@ -30,6 +31,12 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+}
+
 // Checks to see if the character and weapon to equip variable is not equal to null then changes the weapon state to equipped
 // Gets the hand socket the from the characters skeleton in the editor
 // lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display
@@ -44,6 +51,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
-	EquippedWeapon->ShowPickupWidget(false);
+	
 }
 

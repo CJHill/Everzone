@@ -99,7 +99,21 @@ void AEverzoneCharacter::LookUp(float value)
 }
 void AEverzoneCharacter::EquipButtonPressed()
 {
-	if (CombatComp && HasAuthority())
+	if (CombatComp)
+	{
+		if (HasAuthority())
+		{
+			CombatComp->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			ServerEquipButtonPressed();
+		}
+	}
+}
+void AEverzoneCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (CombatComp)
 	{
 		CombatComp->EquipWeapon(OverlappingWeapon);
 	}
@@ -118,6 +132,11 @@ void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+}
+
+bool AEverzoneCharacter::IsWeaponEquipped()
+{
+	return (CombatComp && CombatComp->EquippedWeapon);
 }
 
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

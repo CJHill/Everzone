@@ -43,7 +43,11 @@ private:
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* CombatComp;
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
-
+	//Getter function that returns true if the weapon is equipped
+	bool IsWeaponEquipped();
 };
