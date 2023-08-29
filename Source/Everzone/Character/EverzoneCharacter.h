@@ -26,6 +26,8 @@ protected:
 	void LookUp(float value);
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
+	void AimButtonPressed();
+	void AimButtonReleased();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -51,4 +53,6 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped
 	bool IsWeaponEquipped();
+	//Getter function that returns true if the player is aiming
+	bool IsAiming();
 };

@@ -29,9 +29,11 @@ AEverzoneCharacter::AEverzoneCharacter()
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(RootComponent);
 
-	//Combat compnent will contain variables that need replicating so it's important that the component itself is also replicated
+	//Combat component will contain variables that need replicating so it's important that the component itself is also replicated
 	CombatComp = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
 	CombatComp->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -57,6 +59,8 @@ void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AEverzoneCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AEverzoneCharacter::CrouchButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AEverzoneCharacter::AimButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Released , this, &AEverzoneCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
@@ -122,7 +126,28 @@ void AEverzoneCharacter::ServerEquipButtonPressed_Implementation()
 }
 void AEverzoneCharacter::CrouchButtonPressed()
 {
-	Crouch();
+	if (bIsCrouched) 
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();
+	}
+}
+void AEverzoneCharacter::AimButtonPressed()
+{
+	if (CombatComp)
+	{
+		CombatComp->SetAiming(true);
+	}
+}
+void AEverzoneCharacter::AimButtonReleased()
+{
+	if (CombatComp)
+	{
+		CombatComp->SetAiming(false);
+	}
 }
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
@@ -143,6 +168,11 @@ void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 bool AEverzoneCharacter::IsWeaponEquipped()
 {
 	return (CombatComp && CombatComp->EquippedWeapon);
+}
+
+bool AEverzoneCharacter::IsAiming()
+{
+	return (CombatComp && CombatComp->bIsAiming);
 }
 
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
