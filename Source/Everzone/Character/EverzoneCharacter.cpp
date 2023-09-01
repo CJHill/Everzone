@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Everzone/Weapon/Weapon.h"
 #include "Everzone/EverzoneComponents/CombatComponent.h"
+#include "Components/CapsuleComponent.h"
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
 {
@@ -34,6 +35,8 @@ AEverzoneCharacter::AEverzoneCharacter()
 	CombatComp->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
