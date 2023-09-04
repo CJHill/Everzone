@@ -152,6 +152,10 @@ void AEverzoneCharacter::AimButtonReleased()
 		CombatComp->SetAiming(false);
 	}
 }
+void AEverzoneCharacter::AimOffset(float DeltaTime)
+{
+
+}
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if (OverlappingWeapon)
