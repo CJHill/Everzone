@@ -10,6 +10,8 @@
 #include "Everzone/Weapon/Weapon.h"
 #include "Everzone/EverzoneComponents/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
 {
@@ -37,6 +39,7 @@ AEverzoneCharacter::AEverzoneCharacter()
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -53,8 +56,8 @@ void AEverzoneCharacter::BeginPlay()
 void AEverzoneCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	AimOffset(DeltaTime);
 	
-
 }
 void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -154,7 +157,50 @@ void AEverzoneCharacter::AimButtonReleased()
 }
 void AEverzoneCharacter::AimOffset(float DeltaTime)
 {
+	if (CombatComp && CombatComp->EquippedWeapon == nullptr) return;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
+	if (Speed == 0 && !bIsInAir)//whilst standing still 
+	{
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+	if (Speed > 0 || bIsInAir)// whilst running or jumping
+	{
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AO_Yaw = 0.f;
+		bUseControllerRotationYaw = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
+	if (AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		//map the pitch rotation from (270, 360) to (-90, 0)
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+		TurnInPlace(DeltaTime);
+	}
+}
+void AEverzoneCharacter::TurnInPlace(float DeltaTime)
+{
+	if (AO_Yaw > 90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Right;
+		
+	}
+	else if(AO_Yaw < -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Left;
+		
+	}
+	
 }
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
@@ -180,6 +226,12 @@ bool AEverzoneCharacter::IsWeaponEquipped()
 bool AEverzoneCharacter::IsAiming()
 {
 	return (CombatComp && CombatComp->bIsAiming);
+}
+
+AWeapon* AEverzoneCharacter::GetEquippedWeapon()
+{
+	if (CombatComp == nullptr) return nullptr;
+	return CombatComp->EquippedWeapon;
 }
 
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Everzone/EverzoneTypes/TurningInPlace.h"
 #include "EverzoneCharacter.generated.h"
 
 UCLASS()
@@ -28,6 +29,9 @@ protected:
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
+	//AIMOFFSET():checks if equipped weapon is a nullptr and will return if true
+	//Gets velocity and stores in a local float checks to see if speed is equal to 0 and player is not falling
+	//
 	void AimOffset(float DeltaTime);
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -53,10 +57,18 @@ private:
 
 	float AO_Yaw;
 	float AO_Pitch;
+	FRotator StartingAimRotation;
+
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped
 	bool IsWeaponEquipped();
 	//Getter function that returns true if the player is aiming
 	bool IsAiming();
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	FORCEINLINE float GetAO_Yaw() const  { return AO_Yaw; }
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	AWeapon* GetEquippedWeapon();
 };
