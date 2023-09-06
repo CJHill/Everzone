@@ -39,7 +39,10 @@ AEverzoneCharacter::AEverzoneCharacter()
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	NetUpdateFrequency = 66.f;
+	MinNetUpdateFrequency = 33.f;
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -62,7 +65,7 @@ void AEverzoneCharacter::Tick(float DeltaTime)
 void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AEverzoneCharacter::Jump);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AEverzoneCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AEverzoneCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AEverzoneCharacter::AimButtonPressed);
@@ -155,6 +158,17 @@ void AEverzoneCharacter::AimButtonReleased()
 		CombatComp->SetAiming(false);
 	}
 }
+void AEverzoneCharacter::Jump()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Super::Jump();
+	}
+}
 void AEverzoneCharacter::AimOffset(float DeltaTime)
 {
 	if (CombatComp && CombatComp->EquippedWeapon == nullptr) return;
@@ -188,8 +202,10 @@ void AEverzoneCharacter::AimOffset(float DeltaTime)
 		TurnInPlace(DeltaTime);
 	}
 }
+
 void AEverzoneCharacter::TurnInPlace(float DeltaTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("AO_Yaw is : %f"), AO_Yaw);
 	if (AO_Yaw > 90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;

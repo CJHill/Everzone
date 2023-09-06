@@ -62,6 +62,5 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	ETurningInPlace TurningInPlace;
-	UFUNCTION(BlueprintCallable, Category = "YourCategory")
-	static void PrintBoolToLog(bool bValue);
+	
 };

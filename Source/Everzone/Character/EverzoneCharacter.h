@@ -33,6 +33,7 @@ protected:
 	//Gets velocity and stores in a local float checks to see if speed is equal to 0 and player is not falling
 	//
 	void AimOffset(float DeltaTime);
+	virtual void Jump() override;
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -59,7 +60,9 @@ private:
 	float AO_Pitch;
 	FRotator StartingAimRotation;
 
+	
 	ETurningInPlace TurningInPlace;
+
 	void TurnInPlace(float DeltaTime);
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
