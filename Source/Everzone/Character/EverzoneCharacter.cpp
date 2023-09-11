@@ -61,6 +61,7 @@ void AEverzoneCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	AimOffset(DeltaTime);
 	
+	
 }
 void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -115,6 +116,7 @@ void AEverzoneCharacter::EquipButtonPressed()
 {
 	if (CombatComp)
 	{
+		
 		if (HasAuthority())
 		{
 			CombatComp->EquipWeapon(OverlappingWeapon);
@@ -182,7 +184,12 @@ void AEverzoneCharacter::AimOffset(float DeltaTime)
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
-		bUseControllerRotationYaw = false;
+		if (TurningInPlace == ETurningInPlace::ETIP_NotTurning)
+		{
+			InterpAO_Yaw = AO_Yaw;
+		}
+		bUseControllerRotationYaw = true;
+		TurnInPlace(DeltaTime);
 	}
 	if (Speed > 0 || bIsInAir)// whilst running or jumping
 	{
@@ -199,13 +206,14 @@ void AEverzoneCharacter::AimOffset(float DeltaTime)
 		FVector2D InRange(270.f, 360.f);
 		FVector2D OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
-		TurnInPlace(DeltaTime);
+	
 	}
 }
 
 void AEverzoneCharacter::TurnInPlace(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("AO_Yaw is : %f"), AO_Yaw);
+	
+	
 	if (AO_Yaw > 90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
@@ -216,7 +224,17 @@ void AEverzoneCharacter::TurnInPlace(float DeltaTime)
 		TurningInPlace = ETurningInPlace::ETIP_Left;
 		
 	}
-	
+	if (TurningInPlace != ETurningInPlace::ETIP_NotTurning)
+	{
+		InterpAO_Yaw = FMath::FInterpTo(InterpAO_Yaw, 0.f, DeltaTime, 10.f);
+		AO_Yaw = InterpAO_Yaw;
+		if (FMath::Abs(AO_Yaw) < 15.f)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+
+			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		}
+	}
 }
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
