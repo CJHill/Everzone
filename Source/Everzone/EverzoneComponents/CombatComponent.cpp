@@ -73,6 +73,17 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
+void UCombatComponent::ShootButtonPressed(bool bIsPressed)
+{
+	 bShootIsPressed = bIsPressed;
+	 if (EquippedWeapon == nullptr) return;
+	 if (Character && bShootIsPressed)
+	 {
+		 Character->PlayShootMontage(bIsAiming);
+		 EquippedWeapon->Shoot();
+	 }
+}
+
 // Checks to see if the character and weapon to equip variable is not equal to null then changes the weapon state to equipped
 // Gets the hand socket the from the characters skeleton in the editor
 // lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display

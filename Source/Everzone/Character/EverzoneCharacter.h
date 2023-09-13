@@ -19,6 +19,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	void PlayShootMontage(bool bAiming);
 protected:
 	virtual void BeginPlay() override;
 	void MoveForward(float value);
@@ -29,6 +30,8 @@ protected:
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
+	void ShootButtonPressed();
+	void ShootButtonReleased();
 	//AIMOFFSET():checks if equipped weapon is a nullptr and will return if true
 	//Gets velocity and stores in a local float checks to see if speed is equal to 0 and player is not falling
 	//
@@ -60,11 +63,12 @@ private:
 	float InterpAO_Yaw;
 	float AO_Pitch;
 	FRotator StartingAimRotation;
-
-	
 	ETurningInPlace TurningInPlace;
 
 	void TurnInPlace(float DeltaTime);
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* ShootMontage;
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped

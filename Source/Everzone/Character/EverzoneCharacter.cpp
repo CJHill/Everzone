@@ -11,6 +11,7 @@
 #include "Everzone/EverzoneComponents/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "EverzoneAnimInstance.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -71,6 +72,8 @@ void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AEverzoneCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AEverzoneCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released , this, &AEverzoneCharacter::AimButtonReleased);
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AEverzoneCharacter::ShootButtonPressed);
+	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AEverzoneCharacter::ShootButtonReleased);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
@@ -83,6 +86,17 @@ void AEverzoneCharacter::PostInitializeComponents()
 	if (CombatComp)
 	{
 		CombatComp->Character = this;
+	}
+}
+void AEverzoneCharacter::PlayShootMontage(bool bAiming)
+{
+	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ShootMontage)
+	{
+		AnimInstance->Montage_Play(ShootMontage);
+		FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
 void AEverzoneCharacter::MoveForward(float value)
@@ -158,6 +172,20 @@ void AEverzoneCharacter::AimButtonReleased()
 	if (CombatComp)
 	{
 		CombatComp->SetAiming(false);
+	}
+}
+void AEverzoneCharacter::ShootButtonPressed()
+{
+	if (CombatComp)
+	{
+		CombatComp->ShootButtonPressed(true);
+	}
+}
+void AEverzoneCharacter::ShootButtonReleased()
+{
+	if (CombatComp)
+	{
+		CombatComp->ShootButtonPressed(false);
 	}
 }
 void AEverzoneCharacter::Jump()

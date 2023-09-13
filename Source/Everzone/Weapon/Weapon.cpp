@@ -6,6 +6,8 @@
 #include "Components/WidgetComponent.h"
 #include "Everzone/Character/EverzoneCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Animation/AnimationAsset.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -107,6 +109,14 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
+	}
+}
+
+void AWeapon::Shoot()
+{
+	if (ShootAnim)
+	{
+		WeaponMesh->PlayAnimation(ShootAnim, false);
 	}
 }
 

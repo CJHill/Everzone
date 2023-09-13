@@ -29,6 +29,8 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+
+	void ShootButtonPressed(bool bIsPressed);
 private:
 	AEverzoneCharacter* Character;
 
@@ -43,6 +45,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
+
+	UPROPERTY(Replicated)
+	bool bShootIsPressed;
 public:	
 	
 	
