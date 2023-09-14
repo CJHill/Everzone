@@ -112,7 +112,7 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	}
 }
 
-void AWeapon::Shoot()
+void AWeapon::Shoot(const FVector& HitTarget)
 {
 	if (ShootAnim)
 	{

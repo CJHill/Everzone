@@ -8,10 +8,12 @@
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 UCombatComponent::UCombatComponent()
 {
 
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 400.f;
@@ -55,6 +57,8 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bAiming)
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	FHitResult HitResult;
+	TraceCrosshairs(HitResult);
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -76,14 +80,57 @@ void UCombatComponent::OnRep_EquippedWeapon()
 void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 {
 	 bShootIsPressed = bIsPressed;
-	 if (EquippedWeapon == nullptr) return;
-	 if (Character && bShootIsPressed)
+	 if (bShootIsPressed)
 	 {
-		 Character->PlayShootMontage(bIsAiming);
-		 EquippedWeapon->Shoot();
+		 ServerShoot();
 	 }
 }
 
+void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
+{
+	FVector2D Viewport;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(Viewport);
+	}
+	FVector2D CrosshairLocation(Viewport.X / 2.f, Viewport.Y / 2);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(UGameplayStatics::GetPlayerController(this, 0), CrosshairLocation, CrosshairWorldPosition, CrosshairWorldDirection);
+	if (bScreenToWorld)
+	{
+		FVector Start = CrosshairWorldPosition;
+		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+
+		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECollisionChannel::ECC_Visibility);
+		if (!TraceHitResult.bBlockingHit)
+		{
+			TraceHitResult.ImpactPoint = End;
+			HitTarget = End;
+		}
+		else
+		{
+			HitTarget = TraceHitResult.ImpactPoint;
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12.f, FColor::Red);
+		}
+	}
+	
+}
+
+void UCombatComponent::ServerShoot_Implementation()
+{
+	MulticastShoot();
+}
+
+void UCombatComponent::MulticastShoot_Implementation()
+{
+	if (EquippedWeapon == nullptr) return;
+	if (Character)
+	{
+		Character->PlayShootMontage(bIsAiming);
+		EquippedWeapon->Shoot(HitTarget);
+	}
+}
 // Checks to see if the character and weapon to equip variable is not equal to null then changes the weapon state to equipped
 // Gets the hand socket the from the characters skeleton in the editor
 // lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display

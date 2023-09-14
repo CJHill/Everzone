@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
-
+#define TRACE_LENGTH 80000.f
 class AWeapon;// forward delcaring as this class will be important for combat
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class EVERZONE_API UCombatComponent : public UActorComponent
@@ -31,6 +31,14 @@ protected:
 	void OnRep_EquippedWeapon();
 
 	void ShootButtonPressed(bool bIsPressed);
+
+	UFUNCTION(Server, Reliable)
+	void ServerShoot();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastShoot();
+
+	void TraceCrosshairs(FHitResult& TraceHitResult);
 private:
 	AEverzoneCharacter* Character;
 
@@ -48,6 +56,7 @@ private:
 
 	UPROPERTY(Replicated)
 	bool bShootIsPressed;
+	FVector HitTarget;
 public:	
 	
 	
