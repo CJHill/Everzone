@@ -31,6 +31,17 @@ void UCombatComponent::BeginPlay()
 	}
 	
 }
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, bIsAiming);
+}
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+}
 
 void UCombatComponent::SetAiming(bool bAiming)
 {
@@ -50,24 +61,6 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bAiming)
 	}
 }
 
-
-
-
-
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	FHitResult HitResult;
-	TraceCrosshairs(HitResult);
-}
-
-void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
-	DOREPLIFETIME(UCombatComponent, bIsAiming);
-}
-
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
@@ -82,7 +75,9 @@ void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 	 bShootIsPressed = bIsPressed;
 	 if (bShootIsPressed)
 	 {
-		 ServerShoot();
+		 FHitResult HitResult;
+		 TraceCrosshairs(HitResult);
+		 ServerShoot(HitResult.ImpactPoint);
 	 }
 }
 
@@ -106,29 +101,25 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
-			HitTarget = End;
+			 
 		}
-		else
-		{
-			HitTarget = TraceHitResult.ImpactPoint;
-			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12.f, FColor::Red);
-		}
+	
 	}
 	
 }
 
-void UCombatComponent::ServerShoot_Implementation()
+void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	MulticastShoot();
+	MulticastShoot(TraceHitTarget);
 }
 
-void UCombatComponent::MulticastShoot_Implementation()
+void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr) return;
 	if (Character)
 	{
 		Character->PlayShootMontage(bIsAiming);
-		EquippedWeapon->Shoot(HitTarget);
+		EquippedWeapon->Shoot(TraceHitTarget);
 	}
 }
 // Checks to see if the character and weapon to equip variable is not equal to null then changes the weapon state to equipped

@@ -7,6 +7,7 @@
 void AProjectileWeapon::Shoot(const FVector& HitTarget)
 {
 	Super::Shoot(HitTarget);
+	if (!HasAuthority()) return;// authority check is needed so the projectile is only spawned on the server
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
 	if (MuzzleFlashSocket)

@@ -33,10 +33,10 @@ protected:
 	void ShootButtonPressed(bool bIsPressed);
 
 	UFUNCTION(Server, Reliable)
-	void ServerShoot();
+	void ServerShoot(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastShoot();
+	void MulticastShoot(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceCrosshairs(FHitResult& TraceHitResult);
 private:
@@ -56,7 +56,7 @@ private:
 
 	UPROPERTY(Replicated)
 	bool bShootIsPressed;
-	FVector HitTarget;
+	
 public:	
 	
 	
