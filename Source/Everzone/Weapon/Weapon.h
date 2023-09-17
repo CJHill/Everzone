@@ -63,6 +63,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* ShootAnim;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class ABulletShell> BulletShellClass;
 public:	
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
