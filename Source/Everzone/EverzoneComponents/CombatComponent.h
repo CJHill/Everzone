@@ -37,7 +37,11 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShoot(const FVector_NetQuantize& TraceHitTarget);
-
+	/*
+	* TraceCrosshairs(): calculates the position of the crosshair at the center of the game viewport,
+	* converts it from screen coordinates to world coordinates, and performs a line trace from that position to detect collisions with the game world. 
+	* 
+	*/
 	void TraceCrosshairs(FHitResult& TraceHitResult);
 private:
 	AEverzoneCharacter* Character;

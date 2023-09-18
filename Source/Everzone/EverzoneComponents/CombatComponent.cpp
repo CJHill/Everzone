@@ -83,21 +83,26 @@ void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 
 void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 {
+	//Getting the viewport
 	FVector2D Viewport;
 	if (GEngine && GEngine->GameViewport)
 	{
 		GEngine->GameViewport->GetViewportSize(Viewport);
 	}
+	//calculation to position the crosshair in the middle of the screen
 	FVector2D CrosshairLocation(Viewport.X / 2.f, Viewport.Y / 2);
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
+	//conversion from screen space to world space result stored in boolean
 	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(UGameplayStatics::GetPlayerController(this, 0), CrosshairLocation, CrosshairWorldPosition, CrosshairWorldDirection);
 	if (bScreenToWorld)
 	{
+		//setting the start and point for the line trace
 		FVector Start = CrosshairWorldPosition;
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 
-		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECollisionChannel::ECC_Visibility);
+		//Line trace by single channel handles collision of the line trace for us. We just have to set the impact point to the end point of the trace if it returns false
+		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECollisionChannel::ECC_Visibility); 
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
@@ -122,9 +127,10 @@ void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& 
 		EquippedWeapon->Shoot(TraceHitTarget);
 	}
 }
-// Checks to see if the character and weapon to equip variable is not equal to null then changes the weapon state to equipped
-// Gets the hand socket the from the characters skeleton in the editor
-// lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display
+/* Checks to see if the character and weapon to equip variable is equal to null if it is then it calls return.Otherwise it changes the weapon state to equipped
+* Gets the hand socket the from the characters skeleton in the editor
+* lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display
+ */
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;

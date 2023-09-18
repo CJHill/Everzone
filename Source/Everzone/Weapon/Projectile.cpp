@@ -34,7 +34,10 @@ void AProjectile::BeginPlay()
 	{
 		TracerComp = UGameplayStatics::SpawnEmitterAttached(Tracer, CollisionBox, FName(), GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition);
 	}
-	if (HasAuthority())
+	// We have to use this authority check because multicasts have to be called on the server to invoke to all clients including the server
+	// subsequently by including the destroy function in OnHit() the super version of the Destroyed() function is also called on the server which will broadcast 
+	// the information of the projectile being destroyed to all clients
+	if (HasAuthority()) 
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	}

@@ -11,8 +11,8 @@ ABulletShell::ABulletShell()
 	PrimaryActorTick.bCanEverTick = false;
 	ShellMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet Shell Mesh"));
 	SetRootComponent(ShellMesh);
-	ShellMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-	ShellMesh->SetSimulatePhysics(true);
+	ShellMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);// prevents camera jitter when bullets are in field of view
+	ShellMesh->SetSimulatePhysics(true); 
 	ShellMesh->SetEnableGravity(true);
 	ShellMesh->SetNotifyRigidBodyCollision(true);
 	ShellEjectImpulse = 8.f;
@@ -24,7 +24,7 @@ void ABulletShell::BeginPlay()
 {
 	Super::BeginPlay();
 	ShellMesh->OnComponentHit.AddDynamic(this, &ABulletShell::OnHit);
-	ShellMesh->AddImpulse(GetActorForwardVector()* ShellEjectImpulse);
+	ShellMesh->AddImpulse(GetActorForwardVector()* ShellEjectImpulse); //Ejects the bullet along the X axis by multiplying it's length by the Eject Impulse variable
 	SetLifeSpan(3.f);
 }
 

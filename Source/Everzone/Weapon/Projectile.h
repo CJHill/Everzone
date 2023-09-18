@@ -15,11 +15,17 @@ public:
 
 	AProjectile();
 	virtual void Tick(float DeltaTime) override;
+	/*
+	* The Destroyed Function is an override from the parent function in Unreal Engine's AActor.h class, In the parent function of Destroyed(), it says this function will be called
+	* whenever the actor is destroyed during gameplay or in the editor. This parent function of Destroyed() will also broadcast itself using a multicast delegate, which means
+	* that once the actor has been destroyed that information will be replicated on the server and to all remaining clients.
+	*/
 	virtual void Destroyed() override;
 protected:
 	
 	virtual void BeginPlay() override;
 	UFUNCTION()
+		//HitFunction that will be bound to the OnComponentHit Multicast Delegate found in PrimitiveComponent.h the parameters are the same in order for the binding to work
 		virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 private:
 	UPROPERTY(EditAnywhere)
