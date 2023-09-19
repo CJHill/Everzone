@@ -4,6 +4,7 @@
 #include "BulletShell.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
+
 // Sets default values
 ABulletShell::ABulletShell()
 {
@@ -24,8 +25,13 @@ void ABulletShell::BeginPlay()
 {
 	Super::BeginPlay();
 	ShellMesh->OnComponentHit.AddDynamic(this, &ABulletShell::OnHit);
-	ShellMesh->AddImpulse(GetActorForwardVector()* ShellEjectImpulse); //Ejects the bullet along the X axis by multiplying it's length by the Eject Impulse variable
+	FVector ShellVector = GetActorForwardVector();
+	ShellVector.X = FMath::RandRange(-0.2f, 0.2f);
+	ShellVector.Y = FMath::RandRange(-0.2f, 0.2f);
+	ShellVector.Z = FMath::RandRange(-0.2f, 0.2f);
+	ShellMesh->AddImpulse(ShellVector* (FMath::RandRange(2.f, 2.f) + ShellEjectImpulse)); //Ejects the bullet along the X axis by multiplying it's length by the Eject Impulse variable
 	SetLifeSpan(3.f);
+	
 }
 
 void ABulletShell::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)

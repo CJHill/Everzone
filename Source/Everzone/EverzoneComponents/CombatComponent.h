@@ -40,9 +40,11 @@ protected:
 	/*
 	* TraceCrosshairs(): calculates the position of the crosshair at the center of the game viewport,
 	* converts it from screen coordinates to world coordinates, and performs a line trace from that position to detect collisions with the game world. 
-	* 
+	* Depending on whether a collision is detected or not, it updates the TraceHitResult accordingly;
 	*/
 	void TraceCrosshairs(FHitResult& TraceHitResult);
+
+	
 private:
 	AEverzoneCharacter* Character;
 
