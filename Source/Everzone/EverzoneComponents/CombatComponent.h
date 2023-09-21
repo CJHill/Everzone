@@ -44,10 +44,11 @@ protected:
 	*/
 	void TraceCrosshairs(FHitResult& TraceHitResult);
 
-	
+	void SetHUDCrosshair(float DeltaTime);
 private:
 	AEverzoneCharacter* Character;
-
+	class AEverzonePlayerController* PlayerController;
+	class AEverzoneHUD* PlayerHUD;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 

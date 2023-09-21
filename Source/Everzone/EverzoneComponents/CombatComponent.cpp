@@ -10,6 +10,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
+#include "Everzone/HUD/EverzoneHUD.h"
 UCombatComponent::UCombatComponent()
 {
 
@@ -40,7 +42,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	SetHUDCrosshair(DeltaTime);
 }
 
 void UCombatComponent::SetAiming(bool bAiming)
@@ -111,6 +113,44 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 	
 	}
 	
+}
+
+void UCombatComponent::SetHUDCrosshair(float DeltaTime)
+{
+	if (Character == nullptr || Character->Controller == nullptr) return;
+	// checks if player controller is equal to null if true we cast our player controller to the controller inherited from Unreal's character class, 
+	//if false we set it to the player controller
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+
+	if (PlayerController)
+	{
+		PlayerHUD = PlayerHUD == nullptr ? Cast<AEverzoneHUD>(PlayerController->GetHUD()) : PlayerHUD;
+		if (PlayerHUD)
+		{
+			FHUDPackage HUDPackage;
+			if (EquippedWeapon)
+			{
+				
+				HUDPackage.CrosshairCenter = EquippedWeapon->CrosshairCenter;
+				HUDPackage.CrosshairDown = EquippedWeapon->CrosshairDown;
+				HUDPackage.CrosshairUp = EquippedWeapon->CrosshairUp;
+				HUDPackage.CrosshairLeft = EquippedWeapon->CrosshairLeft;
+				HUDPackage.CrosshairRight = EquippedWeapon->CrosshairRight;
+				
+			}
+			else 
+			{
+			    
+				HUDPackage.CrosshairCenter = nullptr;
+				HUDPackage.CrosshairDown = nullptr;
+				HUDPackage.CrosshairUp = nullptr;
+				HUDPackage.CrosshairLeft = nullptr;
+				HUDPackage.CrosshairRight = nullptr;
+				
+			}
+			PlayerHUD->SetHUDPackage(HUDPackage);
+		}
+	}
 }
 
 void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
