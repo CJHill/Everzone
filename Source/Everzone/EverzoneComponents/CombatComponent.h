@@ -63,6 +63,12 @@ private:
 
 	UPROPERTY(Replicated)
 	bool bShootIsPressed;
+
+	/*
+	* HUD and Crosshairs
+	*/
+	float CrosshairVelocityFactor;
+	float CrosshairInAir;
 	
 public:	
 	
