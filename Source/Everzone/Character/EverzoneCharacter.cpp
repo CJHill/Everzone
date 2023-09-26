@@ -296,6 +296,12 @@ AWeapon* AEverzoneCharacter::GetEquippedWeapon()
 	return CombatComp->EquippedWeapon;
 }
 
+FVector AEverzoneCharacter::GetHitTarget() const
+{
+	if(CombatComp == nullptr) return FVector();
+	return CombatComp->HitTarget;
+}
+
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)

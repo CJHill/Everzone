@@ -59,6 +59,14 @@ void UEverzoneAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		EverzoneCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+		if (EverzoneCharacter->IsLocallyControlled())
+		{
+			bIsLocallyControlled = true;
+			FTransform RightHandTransform = EverzoneCharacter->GetMesh()->GetSocketTransform(FName("Hand_R"), ERelativeTransformSpace::RTS_World);
+			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(FVector3d(), RightHandTransform.GetLocation() - EverzoneCharacter->GetHitTarget());
+		}
+		
 		
 	}
 	

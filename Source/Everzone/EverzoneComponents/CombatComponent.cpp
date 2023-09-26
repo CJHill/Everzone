@@ -43,6 +43,13 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	SetHUDCrosshair(DeltaTime);
+	if (Character && Character->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+		TraceCrosshairs(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+	}
+	
 }
 
 void UCombatComponent::SetAiming(bool bAiming)
