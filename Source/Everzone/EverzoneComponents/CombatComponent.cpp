@@ -12,6 +12,7 @@
 #include "DrawDebugHelpers.h"
 #include "Everzone/PlayerController/EverzonePlayerController.h"
 #include "Everzone/HUD/EverzoneHUD.h"
+#include "Camera/CameraComponent.h"
 UCombatComponent::UCombatComponent()
 {
 
@@ -30,6 +31,11 @@ void UCombatComponent::BeginPlay()
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+		if (Character->GetFollowCamera())
+		{
+			DefaultFov = Character->GetFollowCamera()->FieldOfView;
+			CurrentFov = DefaultFov;
+		}
 	}
 	
 }
@@ -42,12 +48,16 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	SetHUDCrosshair(DeltaTime);
+	
 	if (Character && Character->IsLocallyControlled())
 	{
+		
 		FHitResult HitResult;
 		TraceCrosshairs(HitResult);
 		HitTarget = HitResult.ImpactPoint;
+
+		SetHUDCrosshair(DeltaTime);
+		InterpFov(DeltaTime);
 	}
 	
 }
@@ -87,6 +97,10 @@ void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 		 FHitResult HitResult;
 		 TraceCrosshairs(HitResult);
 		 ServerShoot(HitResult.ImpactPoint);
+		 if (EquippedWeapon)
+		 {
+			 CrosshairShootFactor = 0.9f;
+		 }
 	 }
 }
 
@@ -175,10 +189,36 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 			{
 				CrosshairInAir = FMath::FInterpTo(CrosshairInAir, 0.f, DeltaTime, 30.f);
 			}
-			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAir;
+			if (bIsAiming)
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, AimInterpTarget, DeltaTime, 30.f);
+			}
+			else
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
+			}
+			CrosshairShootFactor = FMath::FInterpTo(CrosshairShootFactor, 0.f, DeltaTime, 40.f);
+			HUDPackage.CrosshairSpread = 0.3f + CrosshairVelocityFactor + CrosshairInAir + CrosshairAimFactor + CrosshairShootFactor;
 
 			PlayerHUD->SetHUDPackage(HUDPackage);
 		}
+	}
+}
+
+void UCombatComponent::InterpFov(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr) return;
+	if (bIsAiming)
+	{
+		CurrentFov = FMath::FInterpTo(CurrentFov, EquippedWeapon->ZoomedFOV, DeltaTime, EquippedWeapon->ZoomInterpSpd);
+	}
+	else
+	{
+		CurrentFov = FMath::FInterpTo(CurrentFov, DefaultFov, DeltaTime, EquippedWeapon->ZoomInterpSpd);
+	}
+	if (Character && Character->GetFollowCamera())
+	{
+		Character->GetFollowCamera()->SetFieldOfView(CurrentFov);
 	}
 }
 

@@ -48,6 +48,15 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Crosshairs")
 	UTexture2D* CrosshairDown;
+
+	/*
+	* Field of View variables for aiming can be changed in blueprints as different weapon types may need different zoom in speeds
+	*/
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV = 35.f;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpd = 25.f; 
 protected:
 	
 	virtual void BeginPlay() override;

@@ -69,9 +69,27 @@ private:
 	*/
 	float CrosshairVelocityFactor;
 	float CrosshairInAir;
-
+	float CrosshairAimFactor;
+	float CrosshairShootFactor;
+	float AimInterpTarget = -0.58f;
 	FVector HitTarget;
-	
+
+	/*
+	* Aiming and Field of view properties
+	*/
+
+	//Fov when not aiming
+	float DefaultFov;
+
+	float CurrentFov;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomedFov = 35.f;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed = 25.f;
+
+	void InterpFov(float DeltaTime);
 public:	
 	
 	
