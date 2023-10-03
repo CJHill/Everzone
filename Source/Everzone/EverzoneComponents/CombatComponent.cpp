@@ -11,7 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Everzone/PlayerController/EverzonePlayerController.h"
-#include "Everzone/HUD/EverzoneHUD.h"
+//#include "Everzone/HUD/EverzoneHUD.h"
 #include "Camera/CameraComponent.h"
 UCombatComponent::UCombatComponent()
 {
@@ -106,7 +106,7 @@ void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 
 void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 {
-	//Getting the viewport
+	//Getting the viewport size 
 	FVector2D Viewport;
 	if (GEngine && GEngine->GameViewport)
 	{
@@ -126,6 +126,14 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 
 		//Line trace by single channel handles collision of the line trace for us. We just have to set the impact point to the end point of the trace if it returns false
 		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECollisionChannel::ECC_Visibility); 
+		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UCrosshairInterface>())
+		{
+			HUDPackage.CrosshairColour = FLinearColor::Red;
+		}
+		else
+		{
+			HUDPackage.CrosshairColour = FLinearColor::White;
+		}
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
@@ -148,7 +156,6 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 		PlayerHUD = PlayerHUD == nullptr ? Cast<AEverzoneHUD>(PlayerController->GetHUD()) : PlayerHUD;
 		if (PlayerHUD)
 		{
-			FHUDPackage HUDPackage;
 			if (EquippedWeapon)
 			{
 				

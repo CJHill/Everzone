@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Everzone/HUD/EverzoneHUD.h"
 #include "CombatComponent.generated.h"
 #define TRACE_LENGTH 80000.f
 class AWeapon;// forward delcaring as this class will be important for combat
@@ -67,6 +68,7 @@ private:
 	/*
 	* HUD and Crosshairs
 	*/
+	FHUDPackage HUDPackage;
 	float CrosshairVelocityFactor;
 	float CrosshairInAir;
 	float CrosshairAimFactor;

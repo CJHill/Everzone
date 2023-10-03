@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Everzone/EverzoneTypes/TurningInPlace.h"
+#include "Everzone/Interfaces/CrosshairInterface.h"
 #include "EverzoneCharacter.generated.h"
 
 UCLASS()
-class EVERZONE_API AEverzoneCharacter : public ACharacter
+class EVERZONE_API AEverzoneCharacter : public ACharacter, public ICrosshairInterface
 {
 	GENERATED_BODY()
 
