@@ -70,6 +70,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* ShootMontage;
+
+	/*
+	* HideCamera(): This function's purpose is to hide the camera when the camera is too close to the character this notably happens when the character is pressed up against a wall
+	* It will be called in the Tick function but it's conditional check will ensure it only happens in such a scenario as previously mentioned
+	*/
+	void HideCamera();
+
+	UPROPERTY(EditAnywhere)
+	float CameraTransition = 200.f;
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped

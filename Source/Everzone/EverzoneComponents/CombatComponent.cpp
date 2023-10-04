@@ -122,6 +122,12 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 	{
 		//setting the start and point for the line trace
 		FVector Start = CrosshairWorldPosition;
+		if (Character)
+		{
+			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 85.f);
+			DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
+		}
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 
 		//Line trace by single channel handles collision of the line trace for us. We just have to set the impact point to the end point of the trace if it returns false
