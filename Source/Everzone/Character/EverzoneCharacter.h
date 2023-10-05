@@ -21,6 +21,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayShootMontage(bool bAiming);
+	
+	virtual void OnRep_ReplicatedMovement() override;
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHitReact();
 protected:
 	virtual void BeginPlay() override;
 	void MoveForward(float value);
@@ -33,10 +37,14 @@ protected:
 	void AimButtonReleased();
 	void ShootButtonPressed();
 	void ShootButtonReleased();
+	void PlayHitReactMontage();
 	//AIMOFFSET():checks if equipped weapon is a nullptr and will return if true
 	//Gets velocity and stores in a local float checks to see if speed is equal to 0 and player is not falling
 	//
 	void AimOffset(float DeltaTime);
+	void CalculateAO_Pitch();
+	float CalculateSpeed();
+	void SimProxyRotate();
 	virtual void Jump() override;
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -71,6 +79,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* ShootMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* HitReactMontage;
+	
 	/*
 	* HideCamera(): This function's purpose is to hide the camera when the camera is too close to the character this notably happens when the character is pressed up against a wall
 	* It will be called in the Tick function but it's conditional check will ensure it only happens in such a scenario as previously mentioned
@@ -79,6 +90,17 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float CameraTransition = 200.f;
+
+	/*
+	* Properties needed for SimProxyRotateFunction which handles turning in place for simulated proxies
+	*/
+	bool bRotateRootBone;
+	float SimYawThreshold = 0.5f;
+	FRotator SimProxyRotationLastFrame;
+	FRotator SimProxyRotation;
+	float SimProxyYaw;
+	float TimeSinceLastSimReplication;
+
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped
@@ -91,4 +113,5 @@ public:
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE bool RotateRootBone() const { return bRotateRootBone; }
 };

@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EverzoneAnimInstance.h"
+#include "Everzone/Everzone.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -41,6 +42,7 @@ AEverzoneCharacter::AEverzoneCharacter()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
@@ -61,7 +63,22 @@ void AEverzoneCharacter::BeginPlay()
 void AEverzoneCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	AimOffset(DeltaTime);
+	// The order when creating enums matter by peeking the definition of net role you can see Sim proxy is considered lower or less than autonomus or authoritative as enums are assigned ints
+	// so by checking if the local role is greater than simulated proxy AimOffset will only be called on the locally controlled client and the server
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastSimReplication += DeltaTime;
+		if (TimeSinceLastSimReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
+	
 	HideCamera();
 	
 }
@@ -97,6 +114,29 @@ void AEverzoneCharacter::PlayShootMontage(bool bAiming)
 	{
 		AnimInstance->Montage_Play(ShootMontage);
 		FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+void AEverzoneCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	
+	SimProxyRotate();
+	
+	TimeSinceLastSimReplication = 0.f;
+}
+void AEverzoneCharacter::MulticastHitReact_Implementation()
+{
+	PlayHitReactMontage();
+}
+void AEverzoneCharacter::PlayHitReactMontage()
+{
+	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
@@ -203,13 +243,12 @@ void AEverzoneCharacter::Jump()
 void AEverzoneCharacter::AimOffset(float DeltaTime)
 {
 	if (CombatComp && CombatComp->EquippedWeapon == nullptr) return;
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.f;
-	float Speed = Velocity.Size();
+	float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
 	if (Speed == 0 && !bIsInAir)//whilst standing still 
 	{
+		bRotateRootBone = true;
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
@@ -222,12 +261,18 @@ void AEverzoneCharacter::AimOffset(float DeltaTime)
 	}
 	if (Speed > 0 || bIsInAir)// whilst running or jumping
 	{
+		bRotateRootBone = false;
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AO_Yaw = 0.f;
 		bUseControllerRotationYaw = true;
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 
+	CalculateAO_Pitch();
+}
+
+void AEverzoneCharacter::CalculateAO_Pitch()
+{
 	AO_Pitch = GetBaseAimRotation().Pitch;
 	if (AO_Pitch > 90.f && !IsLocallyControlled())
 	{
@@ -235,14 +280,54 @@ void AEverzoneCharacter::AimOffset(float DeltaTime)
 		FVector2D InRange(270.f, 360.f);
 		FVector2D OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
-	
+
 	}
+}
+
+float AEverzoneCharacter::CalculateSpeed()
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	
+	return Velocity.Size();
+}
+
+void AEverzoneCharacter::SimProxyRotate()
+{
+	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
+	bRotateRootBone = false;
+	float Speed = CalculateSpeed();
+	if (Speed > 0.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	SimProxyRotationLastFrame = SimProxyRotation;
+	SimProxyRotation = GetActorRotation();
+	SimProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(SimProxyRotation, SimProxyRotationLastFrame).Yaw;
+	
+
+	if (FMath::Abs(SimProxyYaw) > SimYawThreshold)
+	{
+		if (SimProxyYaw > SimYawThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Right;
+		}
+		else if (SimProxyYaw < -SimYawThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Left;
+		}
+		else
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		}
+		return;
+	}
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
 void AEverzoneCharacter::TurnInPlace(float DeltaTime)
 {
-	
-	
 	if (AO_Yaw > 90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
@@ -265,6 +350,7 @@ void AEverzoneCharacter::TurnInPlace(float DeltaTime)
 		}
 	}
 }
+
 void AEverzoneCharacter::HideCamera()
 {
 	if (!IsLocallyControlled()) return;
