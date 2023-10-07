@@ -56,6 +56,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta =(AllowPrivateAccess = "true"))
 	class UWidgetComponent* OverheadWidget;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+		class UAnimMontage* ShootMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* HitReactMontage;
+
 	//Using a rep notify function because they don't get called on the server meaning that setting the pickup widget's visibility inside OnRep_OverlappingWeapon
 	// will allow the display text to only appear on the client that owns the pawn overlapping with the actor
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
@@ -76,11 +82,7 @@ private:
 
 	void TurnInPlace(float DeltaTime);
 
-	UPROPERTY(EditAnywhere, Category = Combat)
-	class UAnimMontage* ShootMontage;
 
-	UPROPERTY(EditAnywhere, Category = Combat)
-	UAnimMontage* HitReactMontage;
 	
 	/*
 	* HideCamera(): This function's purpose is to hide the camera when the camera is too close to the character this notably happens when the character is pressed up against a wall

@@ -45,6 +45,15 @@ protected:
 	*/
 	void TraceCrosshairs(FHitResult& TraceHitResult);
 
+	/*
+	* SetHUDCrosshair(): Performs an conditional check to see if the Everzone character or controller inherited from Unreal code is nullptr 
+	* Checks to see if our player controller and playerHUD is equal to nullptr if true we use a cast to get the controller and HUD that's found in unreal engine code
+	* and store this inside our own player controller and hud variable, in the event its false we simply store in our player controller and HUD.
+	* If we have an equipped weapon we store our crosshair textures found on the weapon class and inside our blueprint into the FHUDPackage's crosshair texture variables
+	* if we dont have a weapon we assign the FHUDPackage's crosshairs to nullptr. 
+	* We use our crosshair factor variables to calculate how big or small the crosshair should be based on the player's current state i.e crouched , aiming, shooting 
+	* At the end we call the SetHUDPackage passing in the FHUDPackage variable here on Combat Component
+	*/
 	void SetHUDCrosshair(float DeltaTime);
 private:
 	AEverzoneCharacter* Character;
@@ -70,11 +79,13 @@ private:
 	*/
 	FHUDPackage HUDPackage;
 	float CrosshairVelocityFactor;
-	float CrosshairInAir;
+	float CrosshairInAirFactor;
 	float CrosshairAimFactor;
 	float CrosshairShootFactor;
 	float AimInterpTarget = -0.58f;
+	float CharacterTraceFactor;
 	FVector HitTarget;
+	bool TraceAgainstCharacter;
 
 	/*
 	* Aiming and Field of view properties

@@ -42,7 +42,9 @@ void AProjectile::BeginPlay()
 	// the information of the projectile being destroyed to all clients
 	if (HasAuthority()) 
 	{
+		
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+		
 	}
 }
 
@@ -52,6 +54,10 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	if (Character)
 	{
 		Character->MulticastHitReact();
+	}
+	if (HasAuthority())
+	{
+		MulticastOnHit();
 	}
 	Destroy();
 }
@@ -66,6 +72,11 @@ void AProjectile::Tick(float DeltaTime)
 void AProjectile::Destroyed()
 {
 	Super::Destroyed();
+	
+}
+
+void AProjectile::MulticastOnHit_Implementation()
+{
 	if (ImpactParticles)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());

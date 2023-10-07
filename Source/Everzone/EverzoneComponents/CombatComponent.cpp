@@ -135,6 +135,8 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UCrosshairInterface>())
 		{
 			HUDPackage.CrosshairColour = FLinearColor::Red;
+			TraceAgainstCharacter = true;
+			
 		}
 		else
 		{
@@ -143,7 +145,7 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
-			 
+			TraceAgainstCharacter = false;
 		}
 	
 	}
@@ -182,36 +184,47 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 				HUDPackage.CrosshairRight = nullptr;
 				
 			}
-			//calaculate crosshair spread
-			//mapping player walkspeed from [0,600] to [0,1]
+			//getting the ranges and velocity needed for the multiplier value in GetMappedRangeValueClamped
 			FVector2D WalkSpeedRange(0.f,Character->GetCharacterMovement()->MaxWalkSpeed);
 			FVector2D CrouchWalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeedCrouched);
 			FVector2D VelocityMultiplierRange(0.f,1.f);
 			FVector Velocity = Character->GetVelocity();
 			Velocity.Z = 0.f;
+			//mapping player walkspeed from [0,600] to [0,1]
 			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
 			if (Character->bIsCrouched)
 			{
+				//mapping player walkspeed from [0,300] to [0,1]
 				CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(CrouchWalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
 			}
 			if (Character->GetCharacterMovement()->IsFalling())
 			{
-				CrosshairInAir = FMath::FInterpTo(CrosshairInAir, 2.25f, DeltaTime, 2.25f);
+				//Interp used to smoothly transition between crosshair states
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
 			}
 			else
 			{
-				CrosshairInAir = FMath::FInterpTo(CrosshairInAir, 0.f, DeltaTime, 30.f);
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
 			}
 			if (bIsAiming)
 			{
-				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, AimInterpTarget, DeltaTime, 30.f);
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, AimInterpTarget , DeltaTime, 30.f);
 			}
 			else
 			{
 				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
 			}
+			if (TraceAgainstCharacter && !bIsAiming)
+			{
+				CharacterTraceFactor = FMath::FInterpTo(CharacterTraceFactor, -0.2f, DeltaTime, 30.f);
+			}
+			else
+			{
+				CharacterTraceFactor = FMath::FInterpTo(CharacterTraceFactor, 0.f, DeltaTime, 30.f);
+			}
 			CrosshairShootFactor = FMath::FInterpTo(CrosshairShootFactor, 0.f, DeltaTime, 40.f);
-			HUDPackage.CrosshairSpread = 0.3f + CrosshairVelocityFactor + CrosshairInAir + CrosshairAimFactor + CrosshairShootFactor;
+			// The hard coded 0.3 float value is needed to prevent the crosshairs from shrinking and overlapping each other which makes the crosshair look distorted
+			HUDPackage.CrosshairSpread = 0.3f + CrosshairVelocityFactor + CrosshairInAirFactor + CrosshairAimFactor + CharacterTraceFactor + CrosshairShootFactor;
 
 			PlayerHUD->SetHUDPackage(HUDPackage);
 		}

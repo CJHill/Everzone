@@ -21,11 +21,14 @@ public:
 	* that once the actor has been destroyed that information will be replicated on the server and to all remaining clients.
 	*/
 	virtual void Destroyed() override;
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastOnHit();
 protected:
 	
 	virtual void BeginPlay() override;
-	UFUNCTION()
+	   
 		//HitFunction that will be bound to the OnComponentHit Multicast Delegate found in PrimitiveComponent.h the parameters are the same in order for the binding to work
+		UFUNCTION()
 		virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 private:
 	UPROPERTY(EditAnywhere)
