@@ -51,14 +51,18 @@ void AProjectile::BeginPlay()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	AEverzoneCharacter* Character = Cast<AEverzoneCharacter>(OtherActor);
-	if (Character)
+	if (Character && Character->Implements<UCrosshairInterface>())
 	{
+		
 		Character->MulticastHitReact();
+		MulticastOnHit(Character);
+	
 	}
-	if (HasAuthority())
+	else 
 	{
-		MulticastOnHit();
+		MulticastOnHit(nullptr);
 	}
+	
 	Destroy();
 }
 
@@ -75,12 +79,24 @@ void AProjectile::Destroyed()
 	
 }
 
-void AProjectile::MulticastOnHit_Implementation()
+void AProjectile::MulticastOnHit_Implementation(AEverzoneCharacter* HitPlayer)
 {
-	if (ImpactParticles)
+	if (HitPlayer)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+		if (PlayerImpactParticles)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PlayerImpactParticles, GetActorTransform());
+		}
 	}
+	else 
+	{
+		if (ImpactParticles)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+		}
+	}
+	
+	
 	if (ImpactSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());

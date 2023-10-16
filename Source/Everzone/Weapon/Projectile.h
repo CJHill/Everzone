@@ -22,7 +22,7 @@ public:
 	*/
 	virtual void Destroyed() override;
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastOnHit();
+	void MulticastOnHit(AEverzoneCharacter* HitPlayer);
 protected:
 	
 	virtual void BeginPlay() override;
@@ -41,10 +41,16 @@ private:
 	class UParticleSystem* Tracer;
 
 	class UParticleSystemComponent* TracerComp;
+
 	//Impact Variables are needed for the OnHit function
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* DefaultParticles;
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles; 
 
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* PlayerImpactParticles;
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound;
 public:	

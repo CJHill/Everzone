@@ -11,8 +11,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Everzone/PlayerController/EverzonePlayerController.h"
-//#include "Everzone/HUD/EverzoneHUD.h"
 #include "Camera/CameraComponent.h"
+#include "TimerManager.h"
 UCombatComponent::UCombatComponent()
 {
 
@@ -79,7 +79,78 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bAiming)
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
 }
+void UCombatComponent::Shoot()
+{
+	if (bCanShoot)
+	{
+		bCanShoot = false;
+		ServerShoot(HitTarget);
+		if (EquippedWeapon)
+		{
+			CrosshairShootFactor = 0.9f;
+		}
+		StartShootTimer();
+	}
+	
+}
 
+void UCombatComponent::ShootButtonPressed(bool bIsPressed)
+{
+	 bShootIsPressed = bIsPressed;
+	 if (bShootIsPressed && EquippedWeapon)
+	 {
+		 Shoot();
+	 }
+}
+
+void UCombatComponent::StartShootTimer()
+{
+	if (EquippedWeapon == nullptr) return;
+	Character->GetWorldTimerManager().SetTimer(ShootTimer, this, &UCombatComponent::EndShootTimer, EquippedWeapon->ShootDelay);
+}
+
+void UCombatComponent::EndShootTimer()
+{ 
+	bCanShoot = true;
+	if (bShootIsPressed && EquippedWeapon->bIsAutomatic)
+	{
+		
+		Shoot();
+	}
+}
+
+void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	MulticastShoot(TraceHitTarget);
+}
+
+void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	if (EquippedWeapon == nullptr) return;
+	if (Character)
+	{
+		Character->PlayShootMontage(bIsAiming);
+		EquippedWeapon->Shoot(TraceHitTarget);
+	}
+}
+/* Checks to see if the character and weapon to equip variable is equal to null if it is then it calls return.Otherwise it changes the weapon state to equipped
+* Gets the hand socket the from the characters skeleton in the editor
+* lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display
+ */
+void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
+{
+	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	EquippedWeapon = WeaponToEquip;
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	if (HandSocket)
+	{
+		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+	}
+	EquippedWeapon->SetOwner(Character);
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+	Character->bUseControllerRotationYaw = true;
+}
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
@@ -88,22 +159,6 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		Character->bUseControllerRotationYaw = true;
 	}
 }
-
-void UCombatComponent::ShootButtonPressed(bool bIsPressed)
-{
-	 bShootIsPressed = bIsPressed;
-	 if (bShootIsPressed)
-	 {
-		 FHitResult HitResult;
-		 TraceCrosshairs(HitResult);
-		 ServerShoot(HitResult.ImpactPoint);
-		 if (EquippedWeapon)
-		 {
-			 CrosshairShootFactor = 0.9f;
-		 }
-	 }
-}
-
 void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 {
 	//Getting the viewport size 
@@ -126,17 +181,16 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 		{
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 90.f);
-			
+
 		}
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 
 		//Line trace by single channel handles collision of the line trace for us. We just have to set the impact point to the end point of the trace if it returns false
-		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECollisionChannel::ECC_Visibility); 
+		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECollisionChannel::ECC_Visibility);
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UCrosshairInterface>())
 		{
 			HUDPackage.CrosshairColour = FLinearColor::Red;
 			TraceAgainstCharacter = true;
-			
 		}
 		else
 		{
@@ -147,9 +201,9 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 			TraceHitResult.ImpactPoint = End;
 			TraceAgainstCharacter = false;
 		}
-	
+
 	}
-	
+
 }
 
 void UCombatComponent::SetHUDCrosshair(float DeltaTime)
@@ -166,28 +220,28 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 		{
 			if (EquippedWeapon)
 			{
-				
+
 				HUDPackage.CrosshairCenter = EquippedWeapon->CrosshairCenter;
 				HUDPackage.CrosshairDown = EquippedWeapon->CrosshairDown;
 				HUDPackage.CrosshairUp = EquippedWeapon->CrosshairUp;
 				HUDPackage.CrosshairLeft = EquippedWeapon->CrosshairLeft;
 				HUDPackage.CrosshairRight = EquippedWeapon->CrosshairRight;
-				
+
 			}
-			else 
+			else
 			{
-			    
+
 				HUDPackage.CrosshairCenter = nullptr;
 				HUDPackage.CrosshairDown = nullptr;
 				HUDPackage.CrosshairUp = nullptr;
 				HUDPackage.CrosshairLeft = nullptr;
 				HUDPackage.CrosshairRight = nullptr;
-				
+
 			}
 			//getting the ranges and velocity needed for the multiplier value in GetMappedRangeValueClamped
-			FVector2D WalkSpeedRange(0.f,Character->GetCharacterMovement()->MaxWalkSpeed);
+			FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
 			FVector2D CrouchWalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeedCrouched);
-			FVector2D VelocityMultiplierRange(0.f,1.f);
+			FVector2D VelocityMultiplierRange(0.f, 1.f);
 			FVector Velocity = Character->GetVelocity();
 			Velocity.Z = 0.f;
 			//mapping player walkspeed from [0,600] to [0,1]
@@ -208,7 +262,7 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 			}
 			if (bIsAiming)
 			{
-				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, AimInterpTarget , DeltaTime, 30.f);
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, AimInterpTarget, DeltaTime, 30.f);
 			}
 			else
 			{
@@ -247,37 +301,3 @@ void UCombatComponent::InterpFov(float DeltaTime)
 		Character->GetFollowCamera()->SetFieldOfView(CurrentFov);
 	}
 }
-
-void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
-{
-	MulticastShoot(TraceHitTarget);
-}
-
-void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
-{
-	if (EquippedWeapon == nullptr) return;
-	if (Character)
-	{
-		Character->PlayShootMontage(bIsAiming);
-		EquippedWeapon->Shoot(TraceHitTarget);
-	}
-}
-/* Checks to see if the character and weapon to equip variable is equal to null if it is then it calls return.Otherwise it changes the weapon state to equipped
-* Gets the hand socket the from the characters skeleton in the editor
-* lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display
- */
-void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
-{
-	if (Character == nullptr || WeaponToEquip == nullptr) return;
-	EquippedWeapon = WeaponToEquip;
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if (HandSocket)
-	{
-		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
-	}
-	EquippedWeapon->SetOwner(Character);
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
-}
-
