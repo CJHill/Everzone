@@ -13,6 +13,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "EverzoneAnimInstance.h"
 #include "Everzone/Everzone.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -53,12 +54,17 @@ void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(AEverzoneCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(AEverzoneCharacter, CurrentHealth);
 }
 
 void AEverzoneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	PlayerController = Cast<AEverzonePlayerController>(Controller);
+	if (PlayerController)
+	{
+		PlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+	}
 }
 void AEverzoneCharacter::Tick(float DeltaTime)
 {
@@ -370,6 +376,10 @@ void AEverzoneCharacter::HideCamera()
 			CombatComp->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
+}
+void AEverzoneCharacter::OnRep_Health()
+{
+
 }
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {

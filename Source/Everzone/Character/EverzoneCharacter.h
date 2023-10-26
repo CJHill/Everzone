@@ -103,6 +103,19 @@ private:
 	float SimProxyYaw;
 	float TimeSinceLastSimReplication;
 
+	/*
+	* Health properties
+	*/
+	UPROPERTY(EditAnywhere, Category = "Player Properties")
+	float MaxHealth = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Properties")
+	float CurrentHealth = 100.f;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	class AEverzonePlayerController* PlayerController;
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped

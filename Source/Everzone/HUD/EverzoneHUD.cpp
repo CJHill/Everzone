@@ -2,7 +2,24 @@
 
 
 #include "EverzoneHUD.h"
+#include "GameFramework/PlayerController.h"
+#include "OverlayWidget.h"
 
+void AEverzoneHUD::BeginPlay()
+{
+	Super::BeginPlay();
+	AddCharacterOverlay();
+}
+
+void AEverzoneHUD::AddCharacterOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && OverlayWidgetClass)
+	{
+		CharacterOverlay = CreateWidget<UOverlayWidget>(PlayerController, OverlayWidgetClass);
+		CharacterOverlay->AddToViewport();
+	}
+}
 void AEverzoneHUD::DrawHUD()
 {
 	Super::DrawHUD();
@@ -42,6 +59,8 @@ void AEverzoneHUD::DrawHUD()
 		}
 	}
 }
+
+
 
 void AEverzoneHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread, FLinearColor CrosshairsColour)
 {
