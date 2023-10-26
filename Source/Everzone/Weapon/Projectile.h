@@ -30,6 +30,8 @@ protected:
 		//HitFunction that will be bound to the OnComponentHit Multicast Delegate found in PrimitiveComponent.h the parameters are the same in order for the binding to work
 		UFUNCTION()
 		virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+		UPROPERTY(EditAnywhere)
+		float Damage = 15.f;
 private:
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
@@ -53,6 +55,8 @@ private:
 	UParticleSystem* PlayerImpactParticles;
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound;
+
+	
 public:	
 	
 	

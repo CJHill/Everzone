@@ -60,12 +60,13 @@ void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 void AEverzoneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	PlayerController = Cast<AEverzonePlayerController>(Controller);
-	if (PlayerController)
+	UpdateHUDHealth();
+	if (HasAuthority())
 	{
-		PlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+		OnTakeAnyDamage.AddDynamic(this, &AEverzoneCharacter::ReceiveDamage);
 	}
 }
+
 void AEverzoneCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -131,10 +132,7 @@ void AEverzoneCharacter::OnRep_ReplicatedMovement()
 	
 	TimeSinceLastSimReplication = 0.f;
 }
-void AEverzoneCharacter::MulticastHitReact_Implementation()
-{
-	PlayHitReactMontage();
-}
+
 void AEverzoneCharacter::PlayHitReactMontage()
 {
 	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
@@ -246,6 +244,13 @@ void AEverzoneCharacter::Jump()
 		Super::Jump();
 	}
 }
+void AEverzoneCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
+
 void AEverzoneCharacter::AimOffset(float DeltaTime)
 {
 	if (CombatComp && CombatComp->EquippedWeapon == nullptr) return;
@@ -379,7 +384,16 @@ void AEverzoneCharacter::HideCamera()
 }
 void AEverzoneCharacter::OnRep_Health()
 {
-
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
+void AEverzoneCharacter::UpdateHUDHealth()
+{
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+	}
 }
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {

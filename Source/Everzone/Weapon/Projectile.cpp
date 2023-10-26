@@ -54,7 +54,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	if (Character && Character->Implements<UCrosshairInterface>())
 	{
 		
-		Character->MulticastHitReact();
+	
 		MulticastOnHit(Character);
 	
 	}

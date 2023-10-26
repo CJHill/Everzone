@@ -23,10 +23,10 @@ public:
 	void PlayShootMontage(bool bAiming);
 	
 	virtual void OnRep_ReplicatedMovement() override;
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHitReact();
+	
 protected:
 	virtual void BeginPlay() override;
+	void UpdateHUDHealth();
 	void MoveForward(float value);
 	void MoveRight(float value);
 	void Turn(float value);
@@ -46,6 +46,8 @@ protected:
 	float CalculateSpeed();
 	void SimProxyRotate();
 	virtual void Jump() override;
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
