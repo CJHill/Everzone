@@ -14,6 +14,7 @@
 #include "EverzoneAnimInstance.h"
 #include "Everzone/Everzone.h"
 #include "Everzone/PlayerController/EverzonePlayerController.h"
+#include "Everzone/GameMode/EverzoneGameMode.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -133,6 +134,11 @@ void AEverzoneCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastSimReplication = 0.f;
 }
 
+void AEverzoneCharacter::Eliminated()
+{
+
+}
+
 void AEverzoneCharacter::PlayHitReactMontage()
 {
 	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
@@ -249,6 +255,17 @@ void AEverzoneCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+	if (CurrentHealth == 0.f)
+	{
+		AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>();
+		if (EverzoneGameMode)
+		{
+			PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Controller) : PlayerController;
+			AEverzonePlayerController* KillersController = Cast<AEverzonePlayerController>(InstigatorController);
+			EverzoneGameMode->PlayerEliminated(this, PlayerController, KillersController);
+		}
+	}
+	
 }
 
 void AEverzoneCharacter::AimOffset(float DeltaTime)

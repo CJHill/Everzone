@@ -21,8 +21,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayShootMontage(bool bAiming);
-	
 	virtual void OnRep_ReplicatedMovement() override;
+	void Eliminated();
 	
 protected:
 	virtual void BeginPlay() override;
