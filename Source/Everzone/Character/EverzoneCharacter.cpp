@@ -125,6 +125,15 @@ void AEverzoneCharacter::PlayShootMontage(bool bAiming)
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+void AEverzoneCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ShootMontage)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+		
+	}
+}
 void AEverzoneCharacter::OnRep_ReplicatedMovement()
 {
 	Super::OnRep_ReplicatedMovement();
@@ -134,9 +143,10 @@ void AEverzoneCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastSimReplication = 0.f;
 }
 
-void AEverzoneCharacter::Eliminated()
+void AEverzoneCharacter::Eliminated_Implementation()
 {
-
+	bIsEliminated = true;
+	PlayElimMontage();
 }
 
 void AEverzoneCharacter::PlayHitReactMontage()

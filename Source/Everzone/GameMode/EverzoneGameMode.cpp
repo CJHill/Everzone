@@ -7,5 +7,8 @@
 
 void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController, AEverzonePlayerController* KillersController)
 {
-
+	if (PlayerKilled)
+	{
+		PlayerKilled->Eliminated();
+	}
 }

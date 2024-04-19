@@ -21,7 +21,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayShootMontage(bool bAiming);
+	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
+	UFUNCTION(NetMulticast, Reliable)
 	void Eliminated();
 	
 protected:
@@ -59,13 +61,16 @@ private:
 	class UWidgetComponent* OverheadWidget;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-		class UAnimMontage* ShootMontage;
+	class UAnimMontage* ShootMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-		UAnimMontage* HitReactMontage;
+	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ElimMontage;
 
 	//Using a rep notify function because they don't get called on the server meaning that setting the pickup widget's visibility inside OnRep_OverlappingWeapon
-	// will allow the display text to only appear on the client that owns the pawn overlapping with the actor
+	//will allow the display text to only appear on the client that owns the pawn overlapping with the actor
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
 	UFUNCTION()
@@ -114,6 +119,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Properties")
 	float CurrentHealth = 100.f;
 
+	bool bIsEliminated;
 	UFUNCTION()
 	void OnRep_Health();
 
@@ -131,4 +137,5 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool RotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsEliminated() const { return bIsEliminated; }
 };
