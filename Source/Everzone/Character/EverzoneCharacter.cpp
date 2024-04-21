@@ -15,6 +15,7 @@
 #include "Everzone/Everzone.h"
 #include "Everzone/PlayerController/EverzonePlayerController.h"
 #include "Everzone/GameMode/EverzoneGameMode.h"
+#include "TimerManager.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -143,10 +144,24 @@ void AEverzoneCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastSimReplication = 0.f;
 }
 
-void AEverzoneCharacter::Eliminated_Implementation()
+void AEverzoneCharacter::Eliminated()
+{
+	MulticastEliminated();
+	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &AEverzoneCharacter::EliminatedTimerFinished, EliminatedDelay);
+}
+
+void AEverzoneCharacter::MulticastEliminated_Implementation()
 {
 	bIsEliminated = true;
 	PlayElimMontage();
+}
+void AEverzoneCharacter::EliminatedTimerFinished()
+{
+	AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>(); // Use this line to get the game mode when you need it
+	if (EverzoneGameMode)
+	{
+		EverzoneGameMode->RequestRespawn(this, PlayerController);
+	}
 }
 
 void AEverzoneCharacter::PlayHitReactMontage()
@@ -409,6 +424,7 @@ void AEverzoneCharacter::HideCamera()
 		}
 	}
 }
+
 void AEverzoneCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();

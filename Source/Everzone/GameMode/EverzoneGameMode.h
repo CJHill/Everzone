@@ -16,4 +16,5 @@ class EVERZONE_API AEverzoneGameMode : public AGameMode
 
 public:
 virtual void PlayerEliminated(class AEverzoneCharacter* PlayerKilled, class AEverzonePlayerController* VictimsController, class AEverzonePlayerController* KillersController);
+virtual void RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController);
 };

@@ -23,8 +23,10 @@ public:
 	void PlayShootMontage(bool bAiming);
 	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
-	UFUNCTION(NetMulticast, Reliable)
+	//We have two eliminated functions multicasteliminated handles functionality being replicated to all clients. Eliminated just handles server functionality
 	void Eliminated();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEliminated();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -50,6 +52,7 @@ protected:
 	virtual void Jump() override;
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -119,9 +122,20 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Properties")
 	float CurrentHealth = 100.f;
 
-	bool bIsEliminated;
 	UFUNCTION()
 	void OnRep_Health();
+
+	/*
+	* Elimination properties
+	*/
+	bool bIsEliminated;
+	FTimerHandle EliminatedTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float EliminatedDelay = 3.f;
+
+	void EliminatedTimerFinished();
+	
 
 	class AEverzonePlayerController* PlayerController;
 public:	
