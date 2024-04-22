@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Everzone/EverzoneTypes/TurningInPlace.h"
 #include "Everzone/Interfaces/CrosshairInterface.h"
+#include "Components/TimelineComponent.h"
 #include "EverzoneCharacter.generated.h"
 
 UCLASS()
@@ -135,7 +136,28 @@ private:
 	float EliminatedDelay = 3.f;
 
 	void EliminatedTimerFinished();
-	
+	/*
+	* Dissolve effect properties for elimination
+	*/
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+
+	FOnTimelineFloat DissolveTrack;
+
+	//InstDynamicDissolveMat is the material being applied to the character at runtime when player is eliminated
+	UPROPERTY(VisibleAnywhere, Category = "Elimination") 
+	UMaterialInstanceDynamic* InstDynamicDissolveMat;
+
+	//DissolveMatInst is the default material that can be set in the editor
+	UPROPERTY(EditAnywhere, Category = "Elimination")
+	UMaterialInstance* DissolveMatInst;
+
+	UFUNCTION()
+	void UpdateDissolveMat(float DissolveMatValue);
+	void StartDissolve();
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
 
 	class AEverzonePlayerController* PlayerController;
 public:	

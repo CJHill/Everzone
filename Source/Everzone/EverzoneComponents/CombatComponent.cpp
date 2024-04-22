@@ -153,8 +153,19 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 }
 void UCombatComponent::OnRep_EquippedWeapon()
 {
+	/*
+	* We are setting the weapon state here to ensure that physics is disabled before attaching the weapon to the character
+	* on all clients as only setting on the server doesn't consider poor network performance may result in the attachment of the weapon taking place
+	* before physics are disabled by the weapon state
+	*/
 	if (EquippedWeapon && Character)
 	{
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}

@@ -50,6 +50,8 @@ AEverzoneCharacter::AEverzoneCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Dissolve Timeline"));
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -146,6 +148,10 @@ void AEverzoneCharacter::OnRep_ReplicatedMovement()
 
 void AEverzoneCharacter::Eliminated()
 {
+	if (CombatComp && CombatComp->EquippedWeapon)
+	{
+		CombatComp->EquippedWeapon->Dropped();
+	}
 	MulticastEliminated();
 	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &AEverzoneCharacter::EliminatedTimerFinished, EliminatedDelay);
 }
@@ -154,6 +160,25 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 {
 	bIsEliminated = true;
 	PlayElimMontage();
+	//Changing the dissolve material to add the dissolve effects
+	if (DissolveMatInst)
+	{
+		InstDynamicDissolveMat = UMaterialInstanceDynamic::Create(DissolveMatInst, this);
+		GetMesh()->SetMaterial(0, InstDynamicDissolveMat);
+		InstDynamicDissolveMat->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
+		InstDynamicDissolveMat->SetScalarParameterValue(TEXT("Glow"), 180.f);
+	}
+	StartDissolve();
+
+	//disable movement and collision
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (PlayerController)
+	{
+		DisableInput(PlayerController);
+	}
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 void AEverzoneCharacter::EliminatedTimerFinished()
 {
@@ -163,7 +188,22 @@ void AEverzoneCharacter::EliminatedTimerFinished()
 		EverzoneGameMode->RequestRespawn(this, PlayerController);
 	}
 }
-
+void AEverzoneCharacter::UpdateDissolveMat(float DissolveMatValue)
+{
+	if (InstDynamicDissolveMat)
+	{
+		InstDynamicDissolveMat->SetScalarParameterValue(TEXT("Dissolve"), DissolveMatValue);
+	}
+}
+void AEverzoneCharacter::StartDissolve()
+{
+	DissolveTrack.BindDynamic(this, &AEverzoneCharacter::UpdateDissolveMat);
+	if (DissolveCurve && DissolveTimeline)
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
+	}
+}
 void AEverzoneCharacter::PlayHitReactMontage()
 {
 	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
@@ -438,6 +478,7 @@ void AEverzoneCharacter::UpdateHUDHealth()
 		PlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
 	}
 }
+
 void AEverzoneCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if (OverlappingWeapon)

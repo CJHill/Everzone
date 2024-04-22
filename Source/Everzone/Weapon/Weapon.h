@@ -26,6 +26,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);
+    void Dropped();
 /*
 * Shoot(): virtual function that can be overidden as different weapon types that will be derived from this class may require unique functionality
 */
