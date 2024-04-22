@@ -28,7 +28,7 @@ public:
 	void Eliminated();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastEliminated();
-	
+	virtual void Destroyed() override;
 protected:
 	virtual void BeginPlay() override;
 	void UpdateHUDHealth();
@@ -158,6 +158,18 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UCurveFloat* DissolveCurve;
+
+	/*
+	* DeathBot Properties which is tied to elimination
+	*/
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* DeathBotEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* DeathBotComp;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* DeathBotCue;
 
 	class AEverzonePlayerController* PlayerController;
 public:	

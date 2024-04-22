@@ -16,6 +16,9 @@
 #include "Everzone/PlayerController/EverzonePlayerController.h"
 #include "Everzone/GameMode/EverzoneGameMode.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -59,6 +62,15 @@ void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(AEverzoneCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(AEverzoneCharacter, CurrentHealth);
+}
+
+void AEverzoneCharacter::Destroyed()
+{
+	Super::Destroyed();
+	if (DeathBotComp)
+	{
+		DeathBotComp->DestroyComponent();
+	}
 }
 
 void AEverzoneCharacter::BeginPlay()
@@ -179,6 +191,18 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 	}
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//Spawn DeathBot
+	if (DeathBotEffect)
+	{
+		FVector DeathBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 200.f);
+		DeathBotComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DeathBotEffect, DeathBotSpawnPoint, GetActorRotation());
+	}
+	if (DeathBotCue)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, DeathBotCue, GetActorLocation());
+	}
+
 }
 void AEverzoneCharacter::EliminatedTimerFinished()
 {
@@ -187,6 +211,7 @@ void AEverzoneCharacter::EliminatedTimerFinished()
 	{
 		EverzoneGameMode->RequestRespawn(this, PlayerController);
 	}
+	
 }
 void AEverzoneCharacter::UpdateDissolveMat(float DissolveMatValue)
 {
