@@ -19,6 +19,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Everzone/PlayerState/EverzonePlayerState.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -103,7 +104,7 @@ void AEverzoneCharacter::Tick(float DeltaTime)
 	}
 	
 	HideCamera();
-	
+	GetAndInitHUD();
 }
 void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -238,6 +239,19 @@ void AEverzoneCharacter::PlayHitReactMontage()
 		AnimInstance->Montage_Play(HitReactMontage);
 		FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+void AEverzoneCharacter::GetAndInitHUD()
+{
+	if (EverzonePlayerState == nullptr)
+	{
+		EverzonePlayerState = GetPlayerState<AEverzonePlayerState>();
+		if (EverzonePlayerState)
+		{
+			//This is to refresh the count for the score and death properties nothing is being added here
+			EverzonePlayerState->AddToPlayerScore(0.f);
+			EverzonePlayerState->AddToPlayerDeaths(0);
+		}
 	}
 }
 void AEverzoneCharacter::MoveForward(float value)

@@ -32,6 +32,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void UpdateHUDHealth();
+	//GetAndInitHUD: Get and initialise relevent properties for the players HUD
+	void GetAndInitHUD();
 	void MoveForward(float value);
 	void MoveRight(float value);
 	void Turn(float value);
@@ -171,7 +173,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* DeathBotCue;
 
+	UPROPERTY()
 	class AEverzonePlayerController* PlayerController;
+
+	UPROPERTY()
+	class AEverzonePlayerState* EverzonePlayerState;
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped

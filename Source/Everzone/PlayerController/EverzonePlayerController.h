@@ -15,8 +15,12 @@ class EVERZONE_API AEverzonePlayerController : public APlayerController
 	GENERATED_BODY()
 public:
 	void SetHUDHealth(float CurrentHealth, float MaxHealth);
+	void SetHUDScore(float Score);
+	void SetHUDDeaths(int32 Deaths);
 protected:
 	virtual void BeginPlay() override;
 private:
+
+	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
 };

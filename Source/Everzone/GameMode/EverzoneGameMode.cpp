@@ -6,9 +6,20 @@
 #include "Everzone/PlayerController/EverzonePlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
+#include "Everzone/PlayerState/EverzonePlayerState.h"
 
 void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController, AEverzonePlayerController* KillersController)
 {
+	AEverzonePlayerState* KillersPlayerState = KillersController ? Cast<AEverzonePlayerState>(KillersController->PlayerState) : nullptr;
+	AEverzonePlayerState* VictimsPlayerState = VictimsController ? Cast<AEverzonePlayerState>(VictimsController->PlayerState) : nullptr;
+	if (KillersPlayerState && KillersPlayerState != VictimsPlayerState)
+	{
+		KillersPlayerState->AddToPlayerScore(1.0f);
+	}
+	if (VictimsPlayerState)
+	{
+		VictimsPlayerState->AddToPlayerDeaths(1);
+	}
 	if (PlayerKilled)
 	{
 		PlayerKilled->Eliminated();

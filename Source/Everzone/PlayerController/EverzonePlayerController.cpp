@@ -29,3 +29,29 @@ void AEverzonePlayerController::SetHUDHealth(float CurrentHealth, float MaxHealt
 		EverzoneHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
 }
+
+void AEverzonePlayerController::SetHUDScore(float Score)
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->ScoreAmount;
+	if (bIsHUDValid)
+	{
+		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
+		EverzoneHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void AEverzonePlayerController::SetHUDDeaths(int32 Deaths)
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->DeathAmount;
+	if (bIsHUDValid)
+	{
+		FString DeathText = FString::Printf(TEXT("%d"), Deaths);
+		EverzoneHUD->CharacterOverlay->DeathAmount->SetText(FText::FromString(DeathText));
+	}
+}

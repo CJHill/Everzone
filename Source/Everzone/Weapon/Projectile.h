@@ -42,6 +42,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer;
 
+	UPROPERTY()
 	class UParticleSystemComponent* TracerComp;
 
 	//Impact Variables are needed for the OnHit function
