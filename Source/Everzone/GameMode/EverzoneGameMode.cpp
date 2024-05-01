@@ -16,13 +16,17 @@ void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEver
 	{
 		KillersPlayerState->AddToPlayerScore(1.0f);
 	}
-	if (VictimsPlayerState)
+	if (VictimsPlayerState && KillersPlayerState)
 	{
 		VictimsPlayerState->AddToPlayerDeaths(1);
+		FString KillersName = KillersPlayerState->GetPlayerName();
+		VictimsPlayerState->SetKillersName(KillersName);
 	}
 	if (PlayerKilled)
 	{
 		PlayerKilled->Eliminated();
+		
+		
 	}
 }
 
@@ -35,9 +39,11 @@ void AEverzoneGameMode::RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzo
 	}
 	if (VictimsController)
 	{
+
 		TArray<AActor*> PlayerStarts;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
-		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
+		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1); // We minus one to ensure that the maximum value doesn't fall outside of the array index
+		VictimsController->HideDeathMessage();
 		RestartPlayerAtPlayerStart(VictimsController, PlayerStarts[Selection]);
 	}
 }

@@ -20,6 +20,7 @@
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
+#include "Everzone/Weapon/WeaponTypes.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -78,6 +79,10 @@ void AEverzoneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	UpdateHUDHealth();
+	if (PlayerController)
+	{
+		PlayerController->HideDeathMessage();
+	}
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &AEverzoneCharacter::ReceiveDamage);
@@ -116,6 +121,7 @@ void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Aim", IE_Released , this, &AEverzoneCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AEverzoneCharacter::ShootButtonPressed);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AEverzoneCharacter::ShootButtonReleased);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AEverzoneCharacter::ReloadButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
@@ -150,6 +156,24 @@ void AEverzoneCharacter::PlayElimMontage()
 		
 	}
 }
+void AEverzoneCharacter::PlayReloadMontage()
+{
+	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (CombatComp->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
 void AEverzoneCharacter::OnRep_ReplicatedMovement()
 {
 	Super::OnRep_ReplicatedMovement();
@@ -171,6 +195,10 @@ void AEverzoneCharacter::Eliminated()
 
 void AEverzoneCharacter::MulticastEliminated_Implementation()
 {
+	if (PlayerController)
+	{
+		PlayerController->SetHUDWeaponAmmo(0);
+	}
 	bIsEliminated = true;
 	PlayElimMontage();
 	//Changing the dissolve material to add the dissolve effects
@@ -203,7 +231,7 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, DeathBotCue, GetActorLocation());
 	}
-
+	
 }
 void AEverzoneCharacter::EliminatedTimerFinished()
 {
@@ -212,7 +240,10 @@ void AEverzoneCharacter::EliminatedTimerFinished()
 	{
 		EverzoneGameMode->RequestRespawn(this, PlayerController);
 	}
-	
+	if (PlayerController)
+	{
+		PlayerController->HideDeathMessage();
+	}
 }
 void AEverzoneCharacter::UpdateDissolveMat(float DissolveMatValue)
 {
@@ -251,6 +282,7 @@ void AEverzoneCharacter::GetAndInitHUD()
 			//This is to refresh the count for the score and death properties nothing is being added here
 			EverzonePlayerState->AddToPlayerScore(0.f);
 			EverzonePlayerState->AddToPlayerDeaths(0);
+			EverzonePlayerState->SetKillersName("");
 		}
 	}
 }
@@ -313,6 +345,13 @@ void AEverzoneCharacter::CrouchButtonPressed()
 	else
 	{
 		Crouch();
+	}
+}
+void AEverzoneCharacter::ReloadButtonPressed()
+{
+	if (CombatComp)
+	{
+		CombatComp->Reload();
 	}
 }
 void AEverzoneCharacter::AimButtonPressed()
@@ -554,6 +593,12 @@ FVector AEverzoneCharacter::GetHitTarget() const
 {
 	if(CombatComp == nullptr) return FVector();
 	return CombatComp->HitTarget;
+}
+
+ECombatState AEverzoneCharacter::GetCombatState() const
+{
+	if (CombatComp == nullptr) return ECombatState::ECS_MAX;
+	return CombatComp->CombatState;
 }
 
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

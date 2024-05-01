@@ -13,6 +13,8 @@
 #include "Everzone/PlayerController/EverzonePlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
+#include "Sound/SoundCue.h"
+
 UCombatComponent::UCombatComponent()
 {
 
@@ -36,6 +38,11 @@ void UCombatComponent::BeginPlay()
 			DefaultFov = Character->GetFollowCamera()->FieldOfView;
 			CurrentFov = DefaultFov;
 		}
+		if (Character->HasAuthority())
+		{
+			InitAmmoReserves();
+		}
+
 	}
 	
 }
@@ -44,6 +51,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
+	DOREPLIFETIME_CONDITION(UCombatComponent, AmmoReserves, COND_OwnerOnly);
+	DOREPLIFETIME(UCombatComponent, CombatState)
 }
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -81,7 +90,7 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bAiming)
 }
 void UCombatComponent::Shoot()
 {
-	if (bCanShoot)
+	if (CanShoot())
 	{
 		bCanShoot = false;
 		ServerShoot(HitTarget);
@@ -119,6 +128,29 @@ void UCombatComponent::EndShootTimer()
 	}
 }
 
+bool UCombatComponent::CanShoot()
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return false;
+	}
+	return !EquippedWeapon->AmmoIsEmpty() && bCanShoot && CombatState == ECombatState::ECS_Unoccupied;
+}
+
+void UCombatComponent::OnRep_AmmoReserves()
+{
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDAmmoReserves(AmmoReserves);
+	}
+}
+
+void UCombatComponent::InitAmmoReserves()
+{
+	AmmoReservesMap.Emplace(EWeaponType::EWT_AssaultRifle, InitialAmmoReserves);
+}
+
 void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	MulticastShoot(TraceHitTarget);
@@ -127,7 +159,7 @@ void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& Tra
 void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr) return;
-	if (Character)
+	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayShootMontage(bIsAiming);
 		EquippedWeapon->Shoot(TraceHitTarget);
@@ -140,6 +172,10 @@ void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Dropped();
+	}
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
@@ -148,9 +184,97 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetHUDAmmo();
+	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		AmmoReserves = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
+	}
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDAmmoReserves(AmmoReserves);
+	}
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+	}
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState)
+	{
+	case ECombatState::ECS_Reloading:
+		HandleReload();
+		break;
+	case ECombatState::ECS_Unoccupied:
+		if (bShootIsPressed)
+		{
+			Shoot();
+		}
+		break;
+	}
+}
+void UCombatComponent::Reload()
+{
+	if (AmmoReserves > 0 && CombatState !=ECombatState::ECS_Reloading)
+	{
+		ServerReload();
+	}
+}
+void UCombatComponent::FinishedReload()
+{
+	if (Character == nullptr) return;
+	if (Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoAmount();
+	}
+	if (bShootIsPressed)
+	{
+		Shoot();
+	}
+}
+void UCombatComponent::ServerReload_Implementation()
+{
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	CombatState = ECombatState::ECS_Reloading;
+	HandleReload();
+}
+void UCombatComponent::HandleReload()
+{
+	Character->PlayReloadMontage();
+}
+int32 UCombatComponent::AmountToReload()
+{
+	if (EquippedWeapon == nullptr) return 0;
+	int32 RoomInMagazine = EquippedWeapon->GetAmmoMag() - EquippedWeapon->GetAmmo(); 
+	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		int32 ReservesAmount = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
+		int32 Least = FMath::Min(RoomInMagazine, ReservesAmount);
+		return FMath::Clamp(RoomInMagazine, 0, Least);
+	}
+	return 0;
+}
+void UCombatComponent::UpdateAmmoAmount()
+{
+	if (EquippedWeapon == nullptr) return;
+	int32 ReloadAmount = AmountToReload();
+	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		AmmoReservesMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		AmmoReserves = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
+	}
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDAmmoReserves(AmmoReserves);
+	}
+	EquippedWeapon->AddAmmo(-ReloadAmount);
+}
+
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	/*
@@ -166,10 +290,15 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		{
 			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 		}
+		if (EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}
 }
+
 void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 {
 	//Getting the viewport size 
@@ -288,6 +417,7 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 				CharacterTraceFactor = FMath::FInterpTo(CharacterTraceFactor, 0.f, DeltaTime, 30.f);
 			}
 			CrosshairShootFactor = FMath::FInterpTo(CrosshairShootFactor, 0.f, DeltaTime, 40.f);
+
 			// The hard coded 0.3 float value is needed to prevent the crosshairs from shrinking and overlapping each other which makes the crosshair look distorted
 			HUDPackage.CrosshairSpread = 0.3f + CrosshairVelocityFactor + CrosshairInAirFactor + CrosshairAimFactor + CharacterTraceFactor + CrosshairShootFactor;
 
@@ -296,6 +426,9 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 	}
 }
 
+/*
+* This is responsible for the camera zooming in and out when the 
+*/
 void UCombatComponent::InterpFov(float DeltaTime)
 {
 	if (EquippedWeapon == nullptr) return;

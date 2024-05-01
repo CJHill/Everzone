@@ -7,6 +7,7 @@
 #include "Everzone/EverzoneTypes/TurningInPlace.h"
 #include "Everzone/Interfaces/CrosshairInterface.h"
 #include "Components/TimelineComponent.h"
+#include "Everzone/EverzoneTypes/CombatState.h"
 #include "EverzoneCharacter.generated.h"
 
 UCLASS()
@@ -17,17 +18,18 @@ class EVERZONE_API AEverzoneCharacter : public ACharacter, public ICrosshairInte
 public:
 	AEverzoneCharacter();
 	virtual void Tick(float DeltaTime) override;
-    // Called to bind functionality to input
+	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayShootMontage(bool bAiming);
 	void PlayElimMontage();
+	void PlayReloadMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	//We have two eliminated functions multicasteliminated handles functionality being replicated to all clients. Eliminated just handles server functionality
 	void Eliminated();
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastEliminated();
+		void MulticastEliminated();
 	virtual void Destroyed() override;
 protected:
 	virtual void BeginPlay() override;
@@ -40,6 +42,7 @@ protected:
 	void LookUp(float value);
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
+	void ReloadButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void ShootButtonPressed();
@@ -54,38 +57,41 @@ protected:
 	void SimProxyRotate();
 	virtual void Jump() override;
 	UFUNCTION()
-	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class USpringArmComponent* CameraBoom;
+		class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class UCameraComponent* FollowCamera;
+		class UCameraComponent* FollowCamera;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta =(AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverheadWidget;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class UWidgetComponent* OverheadWidget;
+
+	// Anim Montages
+	UPROPERTY(EditAnywhere, Category = Combat)
+		class UAnimMontage* ShootMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	class UAnimMontage* ShootMontage;
+		UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	UAnimMontage* HitReactMontage;
-
+		UAnimMontage* ElimMontage;
 	UPROPERTY(EditAnywhere, Category = Combat)
-	UAnimMontage* ElimMontage;
+		UAnimMontage* ReloadMontage;
 
 	//Using a rep notify function because they don't get called on the server meaning that setting the pickup widget's visibility inside OnRep_OverlappingWeapon
 	//will allow the display text to only appear on the client that owns the pawn overlapping with the actor
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
-	class AWeapon* OverlappingWeapon;
+		class AWeapon* OverlappingWeapon;
 	UFUNCTION()
-	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
-	UPROPERTY(VisibleAnywhere)
-	class UCombatComponent* CombatComp;
+		void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class UCombatComponent* CombatComp;
 
 	UFUNCTION(Server, Reliable)
-	void ServerEquipButtonPressed();
+		void ServerEquipButtonPressed();
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
@@ -96,7 +102,7 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 
-	
+
 	/*
 	* HideCamera(): This function's purpose is to hide the camera when the camera is too close to the character this notably happens when the character is pressed up against a wall
 	* It will be called in the Tick function but it's conditional check will ensure it only happens in such a scenario as previously mentioned
@@ -104,7 +110,7 @@ private:
 	void HideCamera();
 
 	UPROPERTY(EditAnywhere)
-	float CameraTransition = 200.f;
+		float CameraTransition = 200.f;
 
 	/*
 	* Properties needed for SimProxyRotateFunction which handles turning in place for simulated proxies
@@ -120,13 +126,13 @@ private:
 	* Health properties
 	*/
 	UPROPERTY(EditAnywhere, Category = "Player Properties")
-	float MaxHealth = 100.f;
+		float MaxHealth = 100.f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Properties")
-	float CurrentHealth = 100.f;
+		float CurrentHealth = 100.f;
 
 	UFUNCTION()
-	void OnRep_Health();
+		void OnRep_Health();
 
 	/*
 	* Elimination properties
@@ -135,61 +141,64 @@ private:
 	FTimerHandle EliminatedTimer;
 
 	UPROPERTY(EditDefaultsOnly)
-	float EliminatedDelay = 3.f;
+		float EliminatedDelay = 3.f;
 
 	void EliminatedTimerFinished();
 	/*
 	* Dissolve effect properties for elimination
 	*/
 	UPROPERTY(VisibleAnywhere)
-	UTimelineComponent* DissolveTimeline;
+		UTimelineComponent* DissolveTimeline;
 
 	FOnTimelineFloat DissolveTrack;
 
 	//InstDynamicDissolveMat is the material being applied to the character at runtime when player is eliminated
-	UPROPERTY(VisibleAnywhere, Category = "Elimination") 
-	UMaterialInstanceDynamic* InstDynamicDissolveMat;
+	UPROPERTY(VisibleAnywhere, Category = "Elimination")
+		UMaterialInstanceDynamic* InstDynamicDissolveMat;
 
 	//DissolveMatInst is the default material that can be set in the editor
 	UPROPERTY(EditAnywhere, Category = "Elimination")
-	UMaterialInstance* DissolveMatInst;
+		UMaterialInstance* DissolveMatInst;
 
 	UFUNCTION()
-	void UpdateDissolveMat(float DissolveMatValue);
+		void UpdateDissolveMat(float DissolveMatValue);
 	void StartDissolve();
 
 	UPROPERTY(EditAnywhere)
-	UCurveFloat* DissolveCurve;
+		UCurveFloat* DissolveCurve;
 
 	/*
 	* DeathBot Properties which is tied to elimination
 	*/
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* DeathBotEffect;
+		UParticleSystem* DeathBotEffect;
 
 	UPROPERTY(VisibleAnywhere)
-	UParticleSystemComponent* DeathBotComp;
+		UParticleSystemComponent* DeathBotComp;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* DeathBotCue;
+		class USoundCue* DeathBotCue;
 
 	UPROPERTY()
-	class AEverzonePlayerController* PlayerController;
+		class AEverzonePlayerController* PlayerController;
 
 	UPROPERTY()
-	class AEverzonePlayerState* EverzonePlayerState;
-public:	
+		class AEverzonePlayerState* EverzonePlayerState;
+public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped
 	bool IsWeaponEquipped();
 	//Getter function that returns true if the player is aiming
 	bool IsAiming();
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
-	FORCEINLINE float GetAO_Yaw() const  { return AO_Yaw; }
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool RotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsEliminated() const { return bIsEliminated; }
+	FORCEINLINE float GetHealth() const { return CurrentHealth; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	ECombatState GetCombatState() const;
 };

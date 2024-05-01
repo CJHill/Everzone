@@ -14,7 +14,7 @@ class EVERZONE_API UOverlayWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	/*These variables are responible for changing the variables of the same name in the CharacterOverlay  Widget Blueprint*/
+	/*These variables are responsible for changing the variables of the same name in the CharacterOverlay  Widget Blueprint*/
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HealthBar;
 
@@ -26,4 +26,16 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* DeathAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* DeathMessage;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* KilledBy;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* AmmoAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* AmmoReserves;
 };

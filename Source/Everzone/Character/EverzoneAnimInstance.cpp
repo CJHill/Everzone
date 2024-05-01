@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Everzone/Weapon/Weapon.h"
+#include "Everzone/EverzoneTypes/CombatState.h"
 
 void UEverzoneAnimInstance::NativeInitializeAnimation()
 {
@@ -72,6 +73,9 @@ void UEverzoneAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		
 		
 	}
-	
+	// bUseFabrik is true if combat state is not set to reloading
+	bUseFabrik = EverzoneCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffset = EverzoneCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bTransformRightHand = EverzoneCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 }
 

@@ -61,7 +61,10 @@ void AEverzoneHUD::DrawHUD()
 }
 
 
-
+/*
+* DrawCrosshair: This is where the size of the crosshairs can be customised
+  draw texture  is responsible for drawing the crosshairs to the HUD 
+*/
 void AEverzoneHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread, FLinearColor CrosshairsColour)
 {
 	const float TextureWidth = Texture->GetSizeX();

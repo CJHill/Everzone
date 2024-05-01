@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -26,7 +27,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);
+	void SetHUDAmmo();
+	virtual void OnRep_Owner() override;
     void Dropped();
+	void AddAmmo(int32 AmmoToAdd);
 /*
 * Shoot(): virtual function that can be overidden as different weapon types that will be derived from this class may require unique functionality
 */
@@ -66,6 +70,9 @@ public:
 		float ShootDelay = 0.15f;
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		bool bIsAutomatic = true;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	class USoundCue* EquipSound;
 protected:
 	
 	virtual void BeginPlay() override;
@@ -105,10 +112,27 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ABulletShell> BulletShellClass;
+	/*
+	* Ammunition Properties
+	*/
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+	UPROPERTY(EditAnywhere)
+	int32 AmmoMagazine;
+	UFUNCTION()
+	void OnRep_Ammo();
+	void UseAmmo();
 
-	
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
+	class AEverzoneCharacter* EverzoneOwningCharacter;
+	class AEverzonePlayerController* EverzoneOwningController;
 public:	
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	bool AmmoIsEmpty();
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetAmmoMag() const { return AmmoMagazine; }
 };

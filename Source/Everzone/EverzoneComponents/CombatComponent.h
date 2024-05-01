@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Everzone/HUD/EverzoneHUD.h"
+#include "Everzone/Weapon/WeaponTypes.h"
+#include "Everzone/EverzoneTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 #define TRACE_LENGTH 80000.f
 class AWeapon;// forward delcaring as this class will be important for combat
@@ -19,6 +21,9 @@ public:
 	friend class AEverzoneCharacter;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void EquipWeapon(AWeapon* WeaponToEquip);
+	void Reload();
+	UFUNCTION(BlueprintCallable)
+	void FinishedReload();
 protected:
 	
 	virtual void BeginPlay() override;
@@ -39,6 +44,13 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShoot(const FVector_NetQuantize& TraceHitTarget);
+
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
+	void HandleReload();
+
+	int32 AmountToReload();
 	/*
 	* TraceCrosshairs(): calculates the position of the crosshair at the center of the game viewport,
 	* converts it from screen coordinates to world coordinates, and performs a line trace from that position to detect collisions with the game world. 
@@ -115,6 +127,29 @@ private:
 
 	void StartShootTimer();
 	void EndShootTimer();
+	bool CanShoot();
+
+	//Ammo reserves for currently equipped weapon
+	UPROPERTY(ReplicatedUsing = OnRep_AmmoReserves)
+	int32 AmmoReserves;
+
+	UFUNCTION()
+	void OnRep_AmmoReserves();
+
+	TMap<EWeaponType, int32> AmmoReservesMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 InitialAmmoReserves = 30;
+
+	// Initialising Ammo Reserves
+	void InitAmmoReserves();
+	void UpdateAmmoAmount();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
 public:	
 	
 	

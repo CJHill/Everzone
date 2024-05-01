@@ -14,6 +14,7 @@ class EVERZONE_API AEverzonePlayerState : public APlayerState
 {
 	GENERATED_BODY()
 public:
+	AEverzonePlayerState();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// Replication Notifications
@@ -21,8 +22,13 @@ public:
 	UFUNCTION()
 	virtual void OnRep_Deaths();
 
+	UFUNCTION()
+	void OnRep_KilledBy();
+
 	void AddToPlayerScore(float ScoreAmount);
 	void AddToPlayerDeaths(int32 DeathAmount);
+	void SetKillersName(FString KillersName);
+	void UpdateDeathMessage();
 private:
 	//Note: It's important to make sure pointers are giving UProperty Macro to make sure they are null without doing so results in undefined behaviour
 	UPROPERTY()
@@ -34,5 +40,6 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Deaths)
 	int32 Deaths;
 
-	
+	UPROPERTY(ReplicatedUsing = OnRep_KilledBy)
+	FString KilledBy;
 };

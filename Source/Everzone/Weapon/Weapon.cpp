@@ -10,6 +10,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "BulletShell.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
 
 AWeapon::AWeapon()
 {
@@ -62,6 +63,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, WeaponState)
+	DOREPLIFETIME(AWeapon, Ammo)
 }
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -78,6 +80,28 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	if (EverzoneCharacter)
 	{
 		EverzoneCharacter->SetOverlappingWeapon(nullptr);
+	}
+}
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
+}
+void AWeapon::UseAmmo()
+{
+	Ammo = FMath::Clamp(Ammo -1, 0, AmmoMagazine);
+	SetHUDAmmo();
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
+	if (EverzoneOwningCharacter)
+	{
+		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(EverzoneOwningCharacter->Controller) : EverzoneOwningController;
+		if (EverzoneOwningController)
+		{
+			EverzoneOwningController->SetHUDWeaponAmmo(Ammo);
+		}
 	}
 }
 void AWeapon::SetWeaponState(EWeaponState State)
@@ -103,6 +127,10 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		break;
 	}
 	
+}
+bool AWeapon::AmmoIsEmpty()
+{
+	return Ammo <= 0;
 }
 void AWeapon::OnRep_WeaponState()
 {
@@ -134,12 +162,37 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	}
 }
 
+
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if (Owner == nullptr)
+	{
+		EverzoneOwningCharacter = nullptr;
+		EverzoneOwningController = nullptr;
+	}
+	else
+	{
+		SetHUDAmmo();
+	}
+	
+}
+
 void AWeapon::Dropped()
 {
 	SetWeaponState(EWeaponState::EWS_Dropped);
 	FDetachmentTransformRules DroppedRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DroppedRules);
 	SetOwner(nullptr);
+	EverzoneOwningCharacter = nullptr;
+	EverzoneOwningController = nullptr;
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, AmmoMagazine);
+	SetHUDAmmo();
 }
 
 void AWeapon::Shoot(const FVector& HitTarget)
@@ -164,5 +217,6 @@ void AWeapon::Shoot(const FVector& HitTarget)
 			
 		}
 	}
+	UseAmmo();
 }
 

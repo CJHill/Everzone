@@ -14,9 +14,14 @@ class EVERZONE_API AEverzonePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	virtual void OnPossess(APawn* InPawn) override;
 	void SetHUDHealth(float CurrentHealth, float MaxHealth);
 	void SetHUDScore(float Score);
 	void SetHUDDeaths(int32 Deaths);
+	void ShowDeathMessage(const FString KilledBy);
+	void HideDeathMessage();
+	void SetHUDWeaponAmmo(int32 Ammo);
+	void SetHUDAmmoReserves(int32 Ammo);
 protected:
 	virtual void BeginPlay() override;
 private:
