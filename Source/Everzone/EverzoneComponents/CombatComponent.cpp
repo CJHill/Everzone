@@ -14,6 +14,7 @@
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
+#include "UObject/ConstructorHelpers.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -120,11 +121,16 @@ void UCombatComponent::StartShootTimer()
 
 void UCombatComponent::EndShootTimer()
 { 
+	if (EquippedWeapon == nullptr) return;
 	bCanShoot = true;
 	if (bShootIsPressed && EquippedWeapon->bIsAutomatic)
 	{
 		
 		Shoot();
+	}
+	if (EquippedWeapon->AmmoIsEmpty())
+	{
+		Reload();
 	}
 }
 
@@ -185,6 +191,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
+	
 	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
 		AmmoReserves = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
@@ -193,11 +200,17 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (PlayerController)
 	{
 		PlayerController->SetHUDAmmoReserves(AmmoReserves);
+		PlayerController->ShowWeaponIcon(EquippedWeapon->GetWeaponIcon());
 	}
 	if (EquippedWeapon->EquipSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
 	}
+	if (EquippedWeapon->AmmoIsEmpty())
+	{
+		Reload();
+	}
+
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
@@ -215,6 +228,13 @@ void UCombatComponent::OnRep_CombatState()
 		}
 		break;
 	}
+}
+void UCombatComponent::SetWeaponIcon()
+{
+	if (EquippedWeapon == nullptr) return;
+	if (!WeaponIconImage) return;
+	if (PlayerController == nullptr) return;
+	WeaponIconImage = EquippedWeapon->GetWeaponIcon();
 }
 void UCombatComponent::Reload()
 {
@@ -296,6 +316,11 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+		PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+		if (PlayerController)
+		{
+			PlayerController->ShowWeaponIcon(EquippedWeapon->GetWeaponIcon());
+		}
 	}
 }
 

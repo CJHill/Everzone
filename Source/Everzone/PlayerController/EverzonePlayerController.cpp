@@ -7,6 +7,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Everzone/Character/EverzoneCharacter.h"
+#include "Components/Image.h"
 
 
 void AEverzonePlayerController::BeginPlay()
@@ -124,6 +125,31 @@ void AEverzonePlayerController::SetHUDAmmoReserves(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		EverzoneHUD->CharacterOverlay->AmmoReserves->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void AEverzonePlayerController::ShowWeaponIcon(UTexture2D* WeaponIcon)
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->WeaponIcon;
+	if (bIsHUDValid)
+	{
+		EverzoneHUD->CharacterOverlay->WeaponIcon->SetBrushFromTexture(WeaponIcon, true);
+		EverzoneHUD->CharacterOverlay->WeaponIcon->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+}
+
+void AEverzonePlayerController::HideWeaponIcon()
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->WeaponIcon;
+	if (bIsHUDValid)
+	{
+		EverzoneHUD->CharacterOverlay->WeaponIcon->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

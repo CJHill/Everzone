@@ -75,6 +75,7 @@ private:
 	class AEverzonePlayerController* PlayerController;
 	UPROPERTY()
 	class AEverzoneHUD* PlayerHUD;
+
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
@@ -150,6 +151,10 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	UPROPERTY()
+	class UTexture2D* WeaponIconImage;
+	void SetWeaponIcon();
 public:	
 	
 	

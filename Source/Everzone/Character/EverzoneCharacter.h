@@ -91,7 +91,7 @@ private:
 		class UCombatComponent* CombatComp;
 
 	UFUNCTION(Server, Reliable)
-		void ServerEquipButtonPressed();
+	void ServerEquipButtonPressed();
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
@@ -110,7 +110,7 @@ private:
 	void HideCamera();
 
 	UPROPERTY(EditAnywhere)
-		float CameraTransition = 200.f;
+	float CameraTransition = 200.f;
 
 	/*
 	* Properties needed for SimProxyRotateFunction which handles turning in place for simulated proxies
@@ -126,13 +126,13 @@ private:
 	* Health properties
 	*/
 	UPROPERTY(EditAnywhere, Category = "Player Properties")
-		float MaxHealth = 100.f;
+	float MaxHealth = 100.f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Properties")
-		float CurrentHealth = 100.f;
+	float CurrentHealth = 100.f;
 
 	UFUNCTION()
-		void OnRep_Health();
+	void OnRep_Health();
 
 	/*
 	* Elimination properties
@@ -141,49 +141,49 @@ private:
 	FTimerHandle EliminatedTimer;
 
 	UPROPERTY(EditDefaultsOnly)
-		float EliminatedDelay = 3.f;
+	float EliminatedDelay = 3.f;
 
 	void EliminatedTimerFinished();
 	/*
 	* Dissolve effect properties for elimination
 	*/
 	UPROPERTY(VisibleAnywhere)
-		UTimelineComponent* DissolveTimeline;
+	UTimelineComponent* DissolveTimeline;
 
 	FOnTimelineFloat DissolveTrack;
 
 	//InstDynamicDissolveMat is the material being applied to the character at runtime when player is eliminated
 	UPROPERTY(VisibleAnywhere, Category = "Elimination")
-		UMaterialInstanceDynamic* InstDynamicDissolveMat;
+	UMaterialInstanceDynamic* InstDynamicDissolveMat;
 
 	//DissolveMatInst is the default material that can be set in the editor
 	UPROPERTY(EditAnywhere, Category = "Elimination")
-		UMaterialInstance* DissolveMatInst;
+	UMaterialInstance* DissolveMatInst;
 
 	UFUNCTION()
-		void UpdateDissolveMat(float DissolveMatValue);
+	void UpdateDissolveMat(float DissolveMatValue);
 	void StartDissolve();
 
 	UPROPERTY(EditAnywhere)
-		UCurveFloat* DissolveCurve;
+	UCurveFloat* DissolveCurve;
 
 	/*
 	* DeathBot Properties which is tied to elimination
 	*/
 	UPROPERTY(EditAnywhere)
-		UParticleSystem* DeathBotEffect;
+	UParticleSystem* DeathBotEffect;
 
 	UPROPERTY(VisibleAnywhere)
-		UParticleSystemComponent* DeathBotComp;
+	UParticleSystemComponent* DeathBotComp;
 
 	UPROPERTY(EditAnywhere)
-		class USoundCue* DeathBotCue;
+	class USoundCue* DeathBotCue;
 
 	UPROPERTY()
-		class AEverzonePlayerController* PlayerController;
+	class AEverzonePlayerController* PlayerController;
 
 	UPROPERTY()
-		class AEverzonePlayerState* EverzonePlayerState;
+	class AEverzonePlayerState* EverzonePlayerState;
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped

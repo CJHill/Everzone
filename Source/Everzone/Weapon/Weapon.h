@@ -110,6 +110,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* ShootAnim;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
+	class UTexture2D* WeaponIconTexture;
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ABulletShell> BulletShellClass;
 	/*
@@ -135,4 +138,5 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetAmmoMag() const { return AmmoMagazine; }
+	FORCEINLINE UTexture2D* GetWeaponIcon() const { return WeaponIconTexture; }
 };

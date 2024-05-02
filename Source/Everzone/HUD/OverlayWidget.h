@@ -38,4 +38,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* AmmoReserves;
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* WeaponIcon;
 };

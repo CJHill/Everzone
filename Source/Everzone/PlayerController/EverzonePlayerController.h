@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Engine/Texture2D.h"
 #include "EverzonePlayerController.generated.h"
+
 
 /**
  * 
@@ -22,6 +24,8 @@ public:
 	void HideDeathMessage();
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDAmmoReserves(int32 Ammo);
+	void ShowWeaponIcon(UTexture2D* WeaponIcon);
+	void HideWeaponIcon();
 protected:
 	virtual void BeginPlay() override;
 private:
