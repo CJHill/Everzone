@@ -9,14 +9,16 @@
 
 
 /**
- * 
+ * Responsiblities for this class are to; implement functionality for changing elements on the Player's HUD, syncing the time between server and client
  */
 UCLASS()
 class EVERZONE_API AEverzonePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	//OnPossess is needed for reseting the health bar to full on respawn
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void Tick(float DeltaTime);
 	void SetHUDHealth(float CurrentHealth, float MaxHealth);
 	void SetHUDScore(float Score);
 	void SetHUDDeaths(int32 Deaths);
@@ -26,10 +28,22 @@ public:
 	void SetHUDAmmoReserves(int32 Ammo);
 	void ShowWeaponIcon(UTexture2D* WeaponIcon);
 	void HideWeaponIcon();
+	void SetHUDMatchTimer(float TimeRemaining);
 protected:
 	virtual void BeginPlay() override;
+	void SetHUDTime();
+	/*
+	* Sync time between client and server
+	*/
+	UFUNCTION(Server, Reliable)
+	void RequestServerTime(float TimeServerRequest); //Requests the current time on the server. Passes in the time when the request was made
+	UFUNCTION(Client, Reliable)
+	void ReportServerTime(float TimeOfServerRequest, float TimeReceivedServerRequest); // Reports the server time in response to request server time function. Passes in the time when the request was made and the time the server received the request
 private:
 
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
+
+	float MatchTime = 120.f;
+	uint32 MatchTimerInt = 0;
 };

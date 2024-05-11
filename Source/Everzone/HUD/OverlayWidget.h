@@ -40,5 +40,8 @@ public:
 	class UTextBlock* AmmoReserves;
 
 	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* MatchTimer;
+
+	UPROPERTY(meta = (BindWidget))
 	class UImage* WeaponIcon;
 };
