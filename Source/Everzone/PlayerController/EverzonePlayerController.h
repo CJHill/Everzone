@@ -29,18 +29,29 @@ public:
 	void ShowWeaponIcon(UTexture2D* WeaponIcon);
 	void HideWeaponIcon();
 	void SetHUDMatchTimer(float TimeRemaining);
+	// Synced server world clock function
+	virtual float GetCurrentServerTime();
+	//Syncs with the server clock as soon as possible
+	virtual void ReceivedPlayer() override;
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
 	/*
-	* Sync time between client and server
+	* Sync time between client and server properties
 	*/
 	UFUNCTION(Server, Reliable)
 	void RequestServerTime(float TimeServerRequest); //Requests the current time on the server. Passes in the time when the request was made
 	UFUNCTION(Client, Reliable)
 	void ReportServerTime(float TimeOfServerRequest, float TimeReceivedServerRequest); // Reports the server time in response to request server time function. Passes in the time when the request was made and the time the server received the request
-private:
+	
+	float ClientServerDeltaTime = 0.f; //difference between server and client time
 
+	UPROPERTY(EditAnywhere, Category = "Time")
+	float TimeSyncFrequency = 5.f;
+
+	float TimeSinceLastSync = 0.f;
+	void RefreshTimeSync(float DeltaTime);
+private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
 

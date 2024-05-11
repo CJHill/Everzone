@@ -19,23 +19,37 @@ void AEverzonePlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	SetHUDTime();
+	RefreshTimeSync(DeltaTime);
 }
 void AEverzonePlayerController::SetHUDTime()
 {
-	uint32 TimeLeft = FMath::CeilToInt(MatchTime - GetWorld()->TimeSeconds);
+	uint32 TimeLeft = FMath::CeilToInt(MatchTime - GetCurrentServerTime());
 	if (MatchTimerInt != TimeLeft)
 	{
-		SetHUDMatchTimer(MatchTime - GetWorld()->TimeSeconds);
+		SetHUDMatchTimer(MatchTime - GetCurrentServerTime());
 	}
 	MatchTimerInt = TimeLeft;
 }
+void AEverzonePlayerController::RefreshTimeSync(float DeltaTime)
+{
+	TimeSinceLastSync += DeltaTime;
+	if (IsLocalController() && TimeSinceLastSync > TimeSyncFrequency)
+	{
+		RequestServerTime(GetWorld()->GetTimeSeconds());
+		TimeSinceLastSync = 0.f;
+	}
+}
 void AEverzonePlayerController::RequestServerTime_Implementation(float TimeServerRequest)
 {
+	float ServerTimeofRequestReceived = GetWorld()->TimeSeconds;
+	ReportServerTime(TimeServerRequest, ServerTimeofRequestReceived);
 
 }
 void AEverzonePlayerController::ReportServerTime_Implementation(float TimeOfServerRequest, float TimeReceivedServerRequest)
 {
-
+	float RoundTripTime = GetWorld()->TimeSeconds - TimeOfServerRequest;
+	float CurrentServerTime = TimeReceivedServerRequest + (0.5 * RoundTripTime);
+	ClientServerDeltaTime = CurrentServerTime - GetWorld()->TimeSeconds;
 }
 void AEverzonePlayerController::OnPossess(APawn* InPawn)
 {
@@ -192,6 +206,25 @@ void AEverzonePlayerController::SetHUDMatchTimer(float TimeRemaining)
 		//changing the 0 will turn the padding into spaces from the left
 		FString MatchTimerText = FString::Printf(TEXT(" %02d:%02d"), Minutes, Seconds); 
 		EverzoneHUD->CharacterOverlay->MatchTimer->SetText(FText::FromString(MatchTimerText));
+	}
+}
+
+float AEverzonePlayerController::GetCurrentServerTime()
+{
+	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
+	else
+	{
+		return GetWorld()->GetTimeSeconds() + ClientServerDeltaTime;
+	}
+	
+}
+
+void AEverzonePlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+	if (IsLocalController())
+	{
+		RequestServerTime(GetWorld()->GetTimeSeconds());
 	}
 }
 
