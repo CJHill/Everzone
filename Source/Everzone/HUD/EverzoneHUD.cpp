@@ -4,11 +4,12 @@
 #include "EverzoneHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "OverlayWidget.h"
+#include "AnnouncementWidget.h"
 
 void AEverzoneHUD::BeginPlay()
 {
 	Super::BeginPlay();
-	AddCharacterOverlay();
+	
 }
 
 void AEverzoneHUD::AddCharacterOverlay()
@@ -18,6 +19,15 @@ void AEverzoneHUD::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UOverlayWidget>(PlayerController, OverlayWidgetClass);
 		CharacterOverlay->AddToViewport();
+	}
+}
+void AEverzoneHUD::AddAnnouncementOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && AnnouncementWidgetClass)
+	{
+		AnnouncementOverlay = CreateWidget<UAnnouncementWidget>(PlayerController, AnnouncementWidgetClass);
+		AnnouncementOverlay->AddToViewport();
 	}
 }
 void AEverzoneHUD::DrawHUD()

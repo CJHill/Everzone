@@ -8,6 +8,42 @@
 #include "GameFramework/PlayerStart.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
 
+AEverzoneGameMode::AEverzoneGameMode()
+{
+	bDelayedStart = true;
+}
+void AEverzoneGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	LevelStartTime = GetWorld()->GetTimeSeconds();
+}
+void AEverzoneGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for (FConstPlayerControllerIterator ControllerIt = GetWorld()->GetPlayerControllerIterator(); ControllerIt; ++ControllerIt)
+	{
+		AEverzonePlayerController* EverzonePlayerController = Cast<AEverzonePlayerController>(*ControllerIt);
+		if (EverzonePlayerController)
+		{
+			EverzonePlayerController->OnMatchStateSet(MatchState);
+		}
+	}
+}
+void AEverzoneGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		CountdownTime = WarmUpTime - GetWorld()->GetTimeSeconds() + LevelStartTime;
+		if (CountdownTime <= 0.f)
+		{
+			StartMatch();
+		}
+	}
+}
+
 void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController, AEverzonePlayerController* KillersController)
 {
 	AEverzonePlayerState* KillersPlayerState = KillersController ? Cast<AEverzonePlayerState>(KillersController->PlayerState) : nullptr;
@@ -47,3 +83,5 @@ void AEverzoneGameMode::RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzo
 		RestartPlayerAtPlayerStart(VictimsController, PlayerStarts[Selection]);
 	}
 }
+
+

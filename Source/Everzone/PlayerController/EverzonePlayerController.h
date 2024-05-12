@@ -19,6 +19,7 @@ public:
 	//OnPossess is needed for reseting the health bar to full on respawn
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTime);
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void SetHUDHealth(float CurrentHealth, float MaxHealth);
 	void SetHUDScore(float Score);
 	void SetHUDDeaths(int32 Deaths);
@@ -33,9 +34,13 @@ public:
 	virtual float GetCurrentServerTime();
 	//Syncs with the server clock as soon as possible
 	virtual void ReceivedPlayer() override;
+
+	void OnMatchStateSet(FName State);
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
+	void PollInit();
+	void HandleMatchHasStarted();
 	/*
 	* Sync time between client and server properties
 	*/
@@ -51,10 +56,27 @@ protected:
 
 	float TimeSinceLastSync = 0.f;
 	void RefreshTimeSync(float DeltaTime);
+
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
 
 	float MatchTime = 120.f;
 	uint32 MatchTimerInt = 0;
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY()
+	class UOverlayWidget* CharacterOverlay;
+	bool bInitCharacterOverlay = false;
+
+	float HUDCurrentHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	int32 HUDDeaths;
+
+	
 };

@@ -8,18 +8,30 @@
 #include "Components/TextBlock.h"
 #include "Everzone/Character/EverzoneCharacter.h"
 #include "Components/Image.h"
-
+#include "Net/UnrealNetwork.h"
+#include "Everzone/GameMode/EverzoneGameMode.h"
+#include "Everzone/HUD/AnnouncementWidget.h"
 
 void AEverzonePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	EverzoneHUD = Cast<AEverzoneHUD>(GetHUD());
+	if (EverzoneHUD)
+	{
+		EverzoneHUD->AddAnnouncementOverlay();
+	}
 }
 void AEverzonePlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	SetHUDTime();
+	PollInit();
 	RefreshTimeSync(DeltaTime);
+}
+void AEverzonePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AEverzonePlayerController, MatchState);
 }
 void AEverzonePlayerController::SetHUDTime()
 {
@@ -30,6 +42,23 @@ void AEverzonePlayerController::SetHUDTime()
 	}
 	MatchTimerInt = TimeLeft;
 }
+void AEverzonePlayerController::PollInit()
+{
+	if (CharacterOverlay != nullptr) return;
+	
+	if (EverzoneHUD && EverzoneHUD->CharacterOverlay)
+	{
+		CharacterOverlay = EverzoneHUD->CharacterOverlay;
+		if (CharacterOverlay)
+		{
+			SetHUDHealth(HUDCurrentHealth, HUDMaxHealth);
+			SetHUDScore(HUDScore);
+			SetHUDDeaths(HUDDeaths);
+		}
+	}
+	
+}
+
 void AEverzonePlayerController::RefreshTimeSync(float DeltaTime)
 {
 	TimeSinceLastSync += DeltaTime;
@@ -77,6 +106,12 @@ void AEverzonePlayerController::SetHUDHealth(float CurrentHealth, float MaxHealt
 		FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(CurrentHealth), FMath::CeilToInt(MaxHealth));
 		EverzoneHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
+	else
+	{
+		bInitCharacterOverlay = true;
+		HUDCurrentHealth = CurrentHealth;
+		HUDMaxHealth = MaxHealth;
+	}
 }
 
 void AEverzonePlayerController::SetHUDScore(float Score)
@@ -90,6 +125,11 @@ void AEverzonePlayerController::SetHUDScore(float Score)
 		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
 		EverzoneHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
 	}
+	else 
+	{
+		bInitCharacterOverlay = true;
+		HUDScore = Score;
+	}
 }
 
 void AEverzonePlayerController::SetHUDDeaths(int32 Deaths)
@@ -102,6 +142,11 @@ void AEverzonePlayerController::SetHUDDeaths(int32 Deaths)
 	{
 		FString DeathText = FString::Printf(TEXT("%d"), Deaths);
 		EverzoneHUD->CharacterOverlay->DeathAmount->SetText(FText::FromString(DeathText));
+	}
+	else
+	{
+		bInitCharacterOverlay = true;
+		HUDDeaths = Deaths;
 	}
 }
 
@@ -228,6 +273,33 @@ void AEverzonePlayerController::ReceivedPlayer()
 	}
 }
 
+void AEverzonePlayerController::OnMatchStateSet(FName State)
+{
+	MatchState = State;
+	
+	if (MatchState == MatchState::InProgress)
+	{
+		HandleMatchHasStarted();
+	}
+}
 
+void AEverzonePlayerController::OnRep_MatchState()
+{
+	if (MatchState == MatchState::InProgress)
+	{
+		HandleMatchHasStarted();
+	}
+}
 
+void AEverzonePlayerController::HandleMatchHasStarted()
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	if (!EverzoneHUD) return;
+
+	EverzoneHUD->AddCharacterOverlay();
+	if (EverzoneHUD->AnnouncementOverlay)
+	{
+		EverzoneHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
 

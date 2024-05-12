@@ -15,6 +15,20 @@ class EVERZONE_API AEverzoneGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
-virtual void PlayerEliminated(class AEverzoneCharacter* PlayerKilled, class AEverzonePlayerController* VictimsController, class AEverzonePlayerController* KillersController);
-virtual void RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController);
+	AEverzoneGameMode();
+    virtual void Tick(float DeltaTime) override;
+    virtual void PlayerEliminated(class AEverzoneCharacter* PlayerKilled, class AEverzonePlayerController* VictimsController, class AEverzonePlayerController* KillersController);
+    virtual void RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController);
+
+
+    UPROPERTY(EditDefaultsOnly)
+    float WarmUpTime = 10.f;
+
+    float LevelStartTime = 0.f;
+protected:
+    virtual void BeginPlay() override;
+    virtual void OnMatchStateSet() override;
+private:
+    float CountdownTime = 0.f;
+
 };
