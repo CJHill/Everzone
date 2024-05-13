@@ -11,37 +11,72 @@
 #include "Net/UnrealNetwork.h"
 #include "Everzone/GameMode/EverzoneGameMode.h"
 #include "Everzone/HUD/AnnouncementWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 void AEverzonePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	EverzoneHUD = Cast<AEverzoneHUD>(GetHUD());
-	if (EverzoneHUD)
-	{
-		EverzoneHUD->AddAnnouncementOverlay();
-	}
+	
+	CheckMatchState();
 }
 void AEverzonePlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 	SetHUDTime();
 	PollInit();
 	RefreshTimeSync(DeltaTime);
+	
 }
 void AEverzonePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AEverzonePlayerController, MatchState);
+	DOREPLIFETIME(AEverzonePlayerController, StateofMatch);
+	
 }
 void AEverzonePlayerController::SetHUDTime()
 {
-	uint32 TimeLeft = FMath::CeilToInt(MatchTime - GetCurrentServerTime());
-	if (MatchTimerInt != TimeLeft)
+	
+	
+	AEverzoneGameMode* GameMode = Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
 	{
-		SetHUDMatchTimer(MatchTime - GetCurrentServerTime());
+		LevelStartTime = GameMode->LevelStartTime;
+		WarmUpTime = GameMode->WarmUpTime;
+		MatchTime = GameMode->MatchTime;
 	}
-	MatchTimerInt = TimeLeft;
+	
+	float TimeLeft = 0.f;
+	if (StateofMatch == MatchState::WaitingToStart) TimeLeft = WarmUpTime - GetCurrentServerTime() + LevelStartTime;
+	else if (StateofMatch == MatchState::InProgress) TimeLeft = WarmUpTime + MatchTime - GetCurrentServerTime() + LevelStartTime;
+	
+	uint32 GameTimeLeft = FMath::CeilToInt(TimeLeft);
+	if (MatchTimerInt != GameTimeLeft)
+	{
+		if (StateofMatch == MatchState::WaitingToStart)
+		{
+		
+			SetHUDAnnouncementTimer(TimeLeft);
+
+		}
+		if (StateofMatch == MatchState::InProgress)
+		{
+			SetHUDMatchTimer(TimeLeft);
+		}
+	}
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("warm up time is: %d"), TimeLeft);
+	}
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("server warm up time is: %d"),TimeLeft);
+	}
+	MatchTimerInt = GameTimeLeft;
 }
+
 void AEverzonePlayerController::PollInit()
 {
 	if (CharacterOverlay != nullptr) return;
@@ -67,6 +102,34 @@ void AEverzonePlayerController::RefreshTimeSync(float DeltaTime)
 		RequestServerTime(GetWorld()->GetTimeSeconds());
 		TimeSinceLastSync = 0.f;
 	}
+}
+
+void AEverzonePlayerController::CheckMatchState_Implementation()
+{
+	AEverzoneGameMode* GameMode = Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this));
+	if (!GameMode) return;
+	
+	WarmUpTime = GameMode->WarmUpTime;
+	MatchTime = GameMode->MatchTime;
+	LevelStartTime = GameMode->LevelStartTime;
+	StateofMatch = GameMode->GetMatchState();
+	ClientJoinMidGame(StateofMatch, WarmUpTime, LevelStartTime, MatchTime);
+	
+	
+}
+void AEverzonePlayerController::ClientJoinMidGame_Implementation(FName StateOfTheMatch, float Warmup, float Match, float StartingTime)
+{
+	WarmUpTime = Warmup;
+	StateofMatch = StateOfTheMatch;
+	LevelStartTime = StartingTime;
+	MatchTime = Match;
+	OnMatchStateSet(StateofMatch);
+	if (EverzoneHUD && StateofMatch == MatchState::WaitingToStart)
+	{
+		EverzoneHUD->AddAnnouncementOverlay();
+
+	}
+
 }
 void AEverzonePlayerController::RequestServerTime_Implementation(float TimeServerRequest)
 {
@@ -254,6 +317,21 @@ void AEverzonePlayerController::SetHUDMatchTimer(float TimeRemaining)
 	}
 }
 
+void AEverzonePlayerController::SetHUDAnnouncementTimer(float TimeRemaining)
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+	EverzoneHUD->AnnouncementOverlay &&
+	EverzoneHUD->AnnouncementOverlay->WarmUpTimer;
+	if (bIsHUDValid)
+	{
+		int32 Minutes = FMath::FloorToInt(TimeRemaining / 60.f);
+		int32 Seconds = TimeRemaining - Minutes * 60.f;
+		FString WarmUpTimerText = FString::Printf(TEXT(" %02d:%02d"), Minutes, Seconds);
+		EverzoneHUD->AnnouncementOverlay->WarmUpTimer->SetText(FText::FromString(WarmUpTimerText));
+	}
+}
+
 float AEverzonePlayerController::GetCurrentServerTime()
 {
 	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
@@ -275,9 +353,9 @@ void AEverzonePlayerController::ReceivedPlayer()
 
 void AEverzonePlayerController::OnMatchStateSet(FName State)
 {
-	MatchState = State;
+	StateofMatch = State;
 	
-	if (MatchState == MatchState::InProgress)
+	if (StateofMatch == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
 	}
@@ -285,7 +363,7 @@ void AEverzonePlayerController::OnMatchStateSet(FName State)
 
 void AEverzonePlayerController::OnRep_MatchState()
 {
-	if (MatchState == MatchState::InProgress)
+	if (StateofMatch == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
 	}
@@ -294,12 +372,13 @@ void AEverzonePlayerController::OnRep_MatchState()
 void AEverzonePlayerController::HandleMatchHasStarted()
 {
 	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
-	if (!EverzoneHUD) return;
-
-	EverzoneHUD->AddCharacterOverlay();
-	if (EverzoneHUD->AnnouncementOverlay)
+	if (EverzoneHUD)
 	{
-		EverzoneHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Collapsed);
+		EverzoneHUD->AddCharacterOverlay();
+		if (EverzoneHUD->AnnouncementOverlay)
+		{
+			EverzoneHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 

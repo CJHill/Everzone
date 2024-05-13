@@ -17,13 +17,15 @@ class EVERZONE_API AEverzoneGameMode : public AGameMode
 public:
 	AEverzoneGameMode();
     virtual void Tick(float DeltaTime) override;
+   
     virtual void PlayerEliminated(class AEverzoneCharacter* PlayerKilled, class AEverzonePlayerController* VictimsController, class AEverzonePlayerController* KillersController);
     virtual void RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController);
 
 
     UPROPERTY(EditDefaultsOnly)
     float WarmUpTime = 10.f;
-
+    UPROPERTY(EditDefaultsOnly)
+    float MatchTime = 120.f;
     float LevelStartTime = 0.f;
 protected:
     virtual void BeginPlay() override;

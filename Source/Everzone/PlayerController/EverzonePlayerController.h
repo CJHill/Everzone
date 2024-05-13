@@ -30,6 +30,7 @@ public:
 	void ShowWeaponIcon(UTexture2D* WeaponIcon);
 	void HideWeaponIcon();
 	void SetHUDMatchTimer(float TimeRemaining);
+	void SetHUDAnnouncementTimer(float TimeRemaining);
 	// Synced server world clock function
 	virtual float GetCurrentServerTime();
 	//Syncs with the server clock as soon as possible
@@ -57,15 +58,27 @@ protected:
 	float TimeSinceLastSync = 0.f;
 	void RefreshTimeSync(float DeltaTime);
 
+	UFUNCTION(Server, Reliable)
+	void CheckMatchState(); // Server RPC for checking the match state as soon as the controller is set up
+
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidGame(FName StateOfTheMatch, float Warmup, float Match, float StartingTime);
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
+	
+	float LevelStartTime = 0.f;
+	
+	float MatchTime = 0.f;
+	
+	float WarmUpTime = 0.f;
 
-	float MatchTime = 120.f;
+	
+	
 	uint32 MatchTimerInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
-	FName MatchState;
+	FName StateofMatch;
 	UFUNCTION()
 	void OnRep_MatchState();
 

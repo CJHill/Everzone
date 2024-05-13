@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
+#include "Net/UnrealNetwork.h"
 
 AEverzoneGameMode::AEverzoneGameMode()
 {
@@ -14,6 +15,7 @@ AEverzoneGameMode::AEverzoneGameMode()
 }
 void AEverzoneGameMode::BeginPlay()
 {
+	
 	Super::BeginPlay();
 	LevelStartTime = GetWorld()->GetTimeSeconds();
 }
@@ -43,6 +45,8 @@ void AEverzoneGameMode::Tick(float DeltaTime)
 		}
 	}
 }
+
+
 
 void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController, AEverzonePlayerController* KillersController)
 {

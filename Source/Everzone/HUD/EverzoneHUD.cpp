@@ -26,6 +26,7 @@ void AEverzoneHUD::AddAnnouncementOverlay()
 	APlayerController* PlayerController = GetOwningPlayerController();
 	if (PlayerController && AnnouncementWidgetClass)
 	{
+		if (AnnouncementOverlay) return;
 		AnnouncementOverlay = CreateWidget<UAnnouncementWidget>(PlayerController, AnnouncementWidgetClass);
 		AnnouncementOverlay->AddToViewport();
 	}
