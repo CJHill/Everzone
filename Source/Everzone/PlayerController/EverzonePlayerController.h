@@ -42,6 +42,7 @@ protected:
 	void SetHUDTime();
 	void PollInit();
 	void HandleMatchHasStarted();
+	void HandleCooldown();
 	/*
 	* Sync time between client and server properties
 	*/
@@ -53,7 +54,7 @@ protected:
 	float ClientServerDeltaTime = 0.f; //difference between server and client time
 
 	UPROPERTY(EditAnywhere, Category = "Time")
-	float TimeSyncFrequency = 5.f;
+	float TimeSyncFrequency = 2.f;
 
 	float TimeSinceLastSync = 0.f;
 	void RefreshTimeSync(float DeltaTime);
@@ -62,18 +63,21 @@ protected:
 	void CheckMatchState(); // Server RPC for checking the match state as soon as the controller is set up
 
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidGame(FName StateOfTheMatch, float Warmup, float Match, float StartingTime);
+	void ClientJoinMidGame(FName StateOfTheMatch, float Warmup,float Cooldown, float Match, float StartingTime);
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
-	
+	UPROPERTY()
+	class AEverzoneGameMode* EverzoneGameMode;
+	UPROPERTY()
+	class AEverzoneCharacter* EverzoneCharacter;
 	float LevelStartTime = 0.f;
 	
 	float MatchTime = 0.f;
 	
 	float WarmUpTime = 0.f;
 
-	
+	float CooldownTime = 0.f;
 	
 	uint32 MatchTimerInt = 0;
 

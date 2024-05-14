@@ -63,6 +63,7 @@ void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(AEverzoneCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(AEverzoneCharacter, CurrentHealth);
+	DOREPLIFETIME(AEverzoneCharacter, bDisableGameplay);
 }
 
 void AEverzoneCharacter::Destroyed()
@@ -91,22 +92,7 @@ void AEverzoneCharacter::BeginPlay()
 void AEverzoneCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	// The order when creating enums matter by peeking the definition of net role you can see Sim proxy is considered lower or less than autonomus or authoritative as enums are assigned ints
-	// so by checking if the local role is greater than simulated proxy AimOffset will only be called on the locally controlled client and the server
-	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
-	{
-		AimOffset(DeltaTime);
-	}
-	else
-	{
-		TimeSinceLastSimReplication += DeltaTime;
-		if (TimeSinceLastSimReplication > 0.25f)
-		{
-			OnRep_ReplicatedMovement();
-		}
-		CalculateAO_Pitch();
-	}
-	
+	RotateInPlace(DeltaTime);
 	HideCamera();
 	GetAndInitHUD();
 }
@@ -314,6 +300,7 @@ void AEverzoneCharacter::LookUp(float value)
 }
 void AEverzoneCharacter::EquipButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
 		
@@ -348,6 +335,7 @@ void AEverzoneCharacter::CrouchButtonPressed()
 }
 void AEverzoneCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
 		CombatComp->Reload();
@@ -355,6 +343,7 @@ void AEverzoneCharacter::ReloadButtonPressed()
 }
 void AEverzoneCharacter::AimButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
 		CombatComp->SetAiming(true);
@@ -362,6 +351,7 @@ void AEverzoneCharacter::AimButtonPressed()
 }
 void AEverzoneCharacter::AimButtonReleased()
 {
+	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
 		CombatComp->SetAiming(false);
@@ -369,6 +359,7 @@ void AEverzoneCharacter::AimButtonReleased()
 }
 void AEverzoneCharacter::ShootButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
 		CombatComp->ShootButtonPressed(true);
@@ -376,6 +367,7 @@ void AEverzoneCharacter::ShootButtonPressed()
 }
 void AEverzoneCharacter::ShootButtonReleased()
 {
+	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
 		CombatComp->ShootButtonPressed(false);
@@ -460,6 +452,25 @@ float AEverzoneCharacter::CalculateSpeed()
 	Velocity.Z = 0.f;
 	
 	return Velocity.Size();
+}
+
+void AEverzoneCharacter::RotateInPlace(float DeltaTime)
+{
+	// The order when creating enums matter by peeking the definition of net role you can see Sim proxy is considered lower or less than autonomus or authoritative as enums are assigned ints
+	// so by checking if the local role is greater than simulated proxy AimOffset will only be called on the locally controlled client and the server
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastSimReplication += DeltaTime;
+		if (TimeSinceLastSimReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
 }
 
 void AEverzoneCharacter::SimProxyRotate()

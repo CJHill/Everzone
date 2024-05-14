@@ -6,6 +6,10 @@
 #include "GameFramework/GameMode.h"
 #include "EverzoneGameMode.generated.h"
 
+namespace MatchState
+{
+    extern EVERZONE_API const FName CooldownState; // Match has concluded display winner starts cooldown timer
+}
 /**
  * 
  */
@@ -27,10 +31,13 @@ public:
     UPROPERTY(EditDefaultsOnly)
     float MatchTime = 120.f;
     float LevelStartTime = 0.f;
+    UPROPERTY(EditDefaultsOnly)
+    float CooldownTime = 10.f;
 protected:
     virtual void BeginPlay() override;
     virtual void OnMatchStateSet() override;
 private:
     float CountdownTime = 0.f;
-
+public:
+    FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 };

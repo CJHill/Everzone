@@ -31,6 +31,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastEliminated();
 	virtual void Destroyed() override;
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
 protected:
 	virtual void BeginPlay() override;
 	void UpdateHUDHealth();
@@ -54,6 +56,7 @@ protected:
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
 	float CalculateSpeed();
+	void RotateInPlace(float DeltaTime);
 	void SimProxyRotate();
 	virtual void Jump() override;
 	UFUNCTION()
@@ -201,4 +204,5 @@ public:
 	FORCEINLINE float GetHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombatComp() const { return CombatComp; }
 };

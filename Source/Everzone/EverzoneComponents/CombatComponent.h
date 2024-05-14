@@ -24,6 +24,7 @@ public:
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishedReload();
+    void ShootButtonPressed(bool bIsPressed);
 protected:
 	
 	virtual void BeginPlay() override;
@@ -37,7 +38,7 @@ protected:
 	void OnRep_EquippedWeapon();
 	void Shoot();
 
-	void ShootButtonPressed(bool bIsPressed);
+	
 
 	UFUNCTION(Server, Reliable)
 	void ServerShoot(const FVector_NetQuantize& TraceHitTarget);

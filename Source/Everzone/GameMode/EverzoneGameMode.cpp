@@ -9,6 +9,10 @@
 #include "Everzone/PlayerState/EverzonePlayerState.h"
 #include "Net/UnrealNetwork.h"
 
+namespace MatchState
+{
+	const FName CooldownState = FName(TEXT("Cooldown"));
+}
 AEverzoneGameMode::AEverzoneGameMode()
 {
 	bDelayedStart = true;
@@ -18,6 +22,7 @@ void AEverzoneGameMode::BeginPlay()
 	
 	Super::BeginPlay();
 	LevelStartTime = GetWorld()->GetTimeSeconds();
+	
 }
 void AEverzoneGameMode::OnMatchStateSet()
 {
@@ -42,6 +47,22 @@ void AEverzoneGameMode::Tick(float DeltaTime)
 		if (CountdownTime <= 0.f)
 		{
 			StartMatch();
+		}
+	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		CountdownTime = WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartTime;
+		if (CountdownTime <= 0.f)
+		{
+			SetMatchState(MatchState::CooldownState);
+		}
+	}
+	else if (MatchState == MatchState::CooldownState)
+	{
+		CountdownTime = CooldownTime + WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartTime;
+		if (CountdownTime <= 0.f)
+		{
+			RestartGame();
 		}
 	}
 }
