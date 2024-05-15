@@ -73,6 +73,12 @@ void AEverzoneCharacter::Destroyed()
 	{
 		DeathBotComp->DestroyComponent();
 	}
+	AEverzoneGameMode* EverzoneGameMode = Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bIsMatchNotInProgress = EverzoneGameMode && EverzoneGameMode->GetMatchState() != MatchState::InProgress;
+	if (CombatComp && CombatComp->EquippedWeapon && bIsMatchNotInProgress)
+	{
+		CombatComp->EquippedWeapon->Destroy();
+	}
 }
 
 void AEverzoneCharacter::BeginPlay()
@@ -195,7 +201,10 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 		InstDynamicDissolveMat->SetScalarParameterValue(TEXT("Glow"), 180.f);
 	}
 	StartDissolve();
-
+	if (CombatComp)
+	{
+		CombatComp->ShootButtonPressed(false);
+	}
 	//disable movement and collision
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
@@ -351,7 +360,7 @@ void AEverzoneCharacter::AimButtonPressed()
 }
 void AEverzoneCharacter::AimButtonReleased()
 {
-	if (bDisableGameplay) return;
+	
 	if (CombatComp)
 	{
 		CombatComp->SetAiming(false);

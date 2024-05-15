@@ -23,4 +23,6 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* WarmUpTimer;
+
+	
 };

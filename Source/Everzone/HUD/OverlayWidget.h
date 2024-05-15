@@ -44,4 +44,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UImage* WeaponIcon;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation* CountdownAnimation;
 };

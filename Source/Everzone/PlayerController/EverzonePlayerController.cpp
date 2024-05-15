@@ -13,6 +13,8 @@
 #include "Everzone/HUD/AnnouncementWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Everzone/EverzoneComponents/CombatComponent.h"
+#include "Everzone/GameState/EverzoneGameState.h"
+#include "Everzone/PlayerState/EverzonePlayerState.h"
 
 void AEverzonePlayerController::BeginPlay()
 {
@@ -305,22 +307,26 @@ void AEverzonePlayerController::SetHUDMatchTimer(float TimeRemaining)
 	bool bIsHUDValid = EverzoneHUD &&
 		EverzoneHUD->CharacterOverlay &&
 		EverzoneHUD->CharacterOverlay->MatchTimer;
-	if (bIsHUDValid)
+	if (!bIsHUDValid) return;
+	
+	if (TimeRemaining < 0.f)
 	{
-		if (TimeRemaining < 0.f)
-		{
-			// Safety check see announcment timer function for the reason.
-			EverzoneHUD->CharacterOverlay->MatchTimer->SetText(FText());
-			return;
-		}
-		int32 Minutes = FMath::FloorToInt(TimeRemaining / 60.f);
-		int32 Seconds = TimeRemaining - Minutes * 60.f;
-		//"%02d": the 2 represents the amount of digits you want the int variable to display, 
-		//the 0 respresents the padding by setting it 0 it will format the first digit as a zero if the minutes or seconds are a single digit. 
-		//changing the 0 will turn the padding into spaces from the left
-		FString MatchTimerText = FString::Printf(TEXT(" %02d:%02d"), Minutes, Seconds); 
-		EverzoneHUD->CharacterOverlay->MatchTimer->SetText(FText::FromString(MatchTimerText));
+		// Safety check see announcment timer function for the reason.
+		EverzoneHUD->CharacterOverlay->MatchTimer->SetText(FText());
+		return;
 	}
+	int32 Minutes = FMath::FloorToInt(TimeRemaining / 60.f);
+	int32 Seconds = TimeRemaining - Minutes * 60.f;
+	//"%02d": the 2 represents the amount of digits you want the int variable to display, 
+	//the 0 respresents the padding by setting it 0 it will format the first digit as a zero if the minutes or seconds are a single digit. 
+	//changing the 0 will turn the padding into spaces from the left
+	FString MatchTimerText = FString::Printf(TEXT(" %02d:%02d"), Minutes, Seconds); 
+	EverzoneHUD->CharacterOverlay->MatchTimer->SetText(FText::FromString(MatchTimerText));
+	if (TimeRemaining <= 30.f)
+	{
+		EverzoneHUD->CharacterOverlay->PlayAnimation(EverzoneHUD->CharacterOverlay->CountdownAnimation,0, 30);
+	}
+	
 }
 
 void AEverzonePlayerController::SetHUDAnnouncementTimer(float TimeRemaining)
@@ -405,21 +411,45 @@ void AEverzonePlayerController::HandleMatchHasStarted()
 
 void AEverzonePlayerController::HandleCooldown()
 {
+	AEverzoneGameState* EverzoneGameState = Cast<AEverzoneGameState>(UGameplayStatics::GetGameState(this));
+	AEverzonePlayerState* EverzonePlayerState = GetPlayerState<AEverzonePlayerState>();
 	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
-	if (EverzoneHUD)
+	if (!EverzoneHUD) return;
+	
+	EverzoneHUD->CharacterOverlay->RemoveFromParent();
+	bool bIsHUDValid = EverzoneHUD->AnnouncementOverlay &&
+	EverzoneHUD->AnnouncementOverlay->Announcement &&
+	EverzoneHUD->AnnouncementOverlay->InputInfo;
+
+	if (!bIsHUDValid) return;
+	FString AnnouncementText("New Match Starts In: ");
+	EverzoneHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	EverzoneHUD->AnnouncementOverlay->Announcement->SetText(FText::FromString(AnnouncementText));
+
+	if (EverzoneGameState && EverzonePlayerState)
 	{
-		EverzoneHUD->CharacterOverlay->RemoveFromParent();
-		bool bIsHUDValid = EverzoneHUD->AnnouncementOverlay &&
-			EverzoneHUD->AnnouncementOverlay->Announcement &&
-			EverzoneHUD->AnnouncementOverlay->InputInfo;
-		if (bIsHUDValid)
+		TArray<AEverzonePlayerState*> TopPlayers = EverzoneGameState->TopScoringPlayers;
+		FString InputInfoText;
+		if (TopPlayers.Num() == 0)
 		{
-			FString AnnouncementText("New Match Starts In: ");
-			EverzoneHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			EverzoneHUD->AnnouncementOverlay->Announcement->SetText(FText::FromString(AnnouncementText));
-			EverzoneHUD->AnnouncementOverlay->InputInfo->SetText(FText());
+			InputInfoText = FString("There is no winner :(");
 		}
+		else if (TopPlayers.Num() == 1)
+		{
+			InputInfoText = FString::Printf(TEXT("The winner is:\n%s"), *TopPlayers[0]->GetPlayerName());
+		}
+		else if (TopPlayers.Num() > 1)
+		{
+			InputInfoText = FString::Printf(TEXT("The winners are:\n"));
+			for (auto JointFirstPlayers : TopPlayers)
+			{
+				InputInfoText.Append(FString::Printf(TEXT("%s\n"), *JointFirstPlayers->GetPlayerName()));
+			}
+		}
+			
+		EverzoneHUD->AnnouncementOverlay->InputInfo->SetText(FText::FromString(InputInfoText));
 	}
+	
 	EverzoneCharacter = Cast<AEverzoneCharacter>(GetPawn());
 	
 	if (EverzoneCharacter && EverzoneCharacter->GetCombatComp())
