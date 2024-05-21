@@ -155,6 +155,7 @@ void UCombatComponent::OnRep_AmmoReserves()
 void UCombatComponent::InitAmmoReserves()
 {
 	AmmoReservesMap.Emplace(EWeaponType::EWT_AssaultRifle, InitialAmmoReserves);
+	AmmoReservesMap.Emplace(EWeaponType::EWT_RocketLauncher, InitialRocketAmmoReserves);
 }
 
 void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -273,8 +274,8 @@ int32 UCombatComponent::AmountToReload()
 	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
 		int32 ReservesAmount = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
-		int32 Least = FMath::Min(RoomInMagazine, ReservesAmount);
-		return FMath::Clamp(RoomInMagazine, 0, Least);
+		int32 Least = FMath::Min(RoomInMagazine, ReservesAmount); //returns the smaller value of room in magazine and reserves amount and stores it in least
+		return FMath::Clamp(RoomInMagazine, 0, Least); // room in mag will always return the same value as least
 	}
 	return 0;
 }

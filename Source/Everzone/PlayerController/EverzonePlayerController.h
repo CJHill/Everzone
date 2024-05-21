@@ -42,6 +42,9 @@ protected:
 	void SetHUDTime();
 	void PollInit();
 	void HandleMatchHasStarted();
+	/*
+	* Handle Cooldown: enables the announcment overlay checks the Game State's player array for top scorers, display's the winners name and disables gameplay ie shoot aim interact
+	*/ 
 	void HandleCooldown();
 	/*
 	* Sync time between client and server properties

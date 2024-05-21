@@ -48,7 +48,7 @@ void AEverzonePlayerController::SetHUDTime()
 		EverzoneGameMode = EverzoneGameMode== nullptr ? Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this)) : EverzoneGameMode;
 	   if (EverzoneGameMode)
 	   {
-		LevelStartTime = EverzoneGameMode->LevelStartTime;
+		LevelStartTime = EverzoneGameMode->LevelStartTime;//controller is created before the gamemode so we need to retrieve the time variables from that class
 		WarmUpTime = EverzoneGameMode->WarmUpTime;
 		MatchTime = EverzoneGameMode->MatchTime;
 		SecondsLeft = FMath::CeilToInt(EverzoneGameMode->GetCountdownTime() + LevelStartTime);
@@ -78,7 +78,7 @@ void AEverzonePlayerController::SetHUDTime()
 	
 }
 
-void AEverzonePlayerController::PollInit()
+void AEverzonePlayerController::PollInit() // purpose is to refresh these variables so that they always display the correct numbers
 {
 	if (CharacterOverlay != nullptr) return;
 	
@@ -284,7 +284,7 @@ void AEverzonePlayerController::ShowWeaponIcon(UTexture2D* WeaponIcon)
 		EverzoneHUD->CharacterOverlay->WeaponIcon;
 	if (bIsHUDValid)
 	{
-		EverzoneHUD->CharacterOverlay->WeaponIcon->SetBrushFromTexture(WeaponIcon, true);
+		EverzoneHUD->CharacterOverlay->WeaponIcon->SetBrushFromTexture(WeaponIcon, false);
 		EverzoneHUD->CharacterOverlay->WeaponIcon->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 }

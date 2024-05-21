@@ -142,6 +142,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 InitialAmmoReserves = 30;
+	UPROPERTY(EditAnywhere)
+	int32 InitialRocketAmmoReserves = 5;
 
 	// Initialising Ammo Reserves
 	void InitAmmoReserves();
