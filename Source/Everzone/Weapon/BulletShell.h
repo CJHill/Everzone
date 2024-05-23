@@ -6,11 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "BulletShell.generated.h"
 
-UCLASS()
+UCLASS() 
 class EVERZONE_API ABulletShell : public AActor
 {
 	GENERATED_BODY()
-	
+	//This class is for any weapon that ejects bullet shells. These bullet shells are purely for cosmetic purposes
 public:	
 	// Sets default values for this actor's properties
 	ABulletShell();

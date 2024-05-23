@@ -30,7 +30,7 @@ void ABulletShell::BeginPlay()
 	ShellVector.Y = FMath::RandRange(-0.2f, 0.2f);
 	ShellVector.Z = FMath::RandRange(-0.2f, 0.2f);
 	ShellMesh->AddImpulse(ShellVector* (FMath::RandRange(2.f, 2.f) + ShellEjectImpulse)); //Ejects the bullet along the X axis by multiplying it's length by the Eject Impulse variable
-	SetLifeSpan(3.f);
+	//SetLifeSpan(1.5f);
 	
 }
 
@@ -38,7 +38,8 @@ void ABulletShell::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrim
 {
 	if (ShellSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, ShellSound, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, ShellSound, GetActorLocation(), 0.1f);
+		Destroy();
 	}
 	
 }
