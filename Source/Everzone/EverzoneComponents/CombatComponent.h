@@ -8,7 +8,7 @@
 #include "Everzone/Weapon/WeaponTypes.h"
 #include "Everzone/EverzoneTypes/CombatState.h"
 #include "CombatComponent.generated.h"
-#define TRACE_LENGTH 80000.f
+
 class AWeapon;// forward delcaring as this class will be important for combat
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class EVERZONE_API UCombatComponent : public UActorComponent
@@ -148,6 +148,8 @@ private:
 	int32 InitialPistolAmmoReserves = 15;
 	UPROPERTY(EditAnywhere)
 	int32 InitialSMGAmmoReserves = 25;
+	UPROPERTY(EditAnywhere)
+	int32 InitialShotgunAmmoReserves = 10;
 
 	// Initialising Ammo Reserves
 	void InitAmmoReserves();

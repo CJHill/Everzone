@@ -158,6 +158,7 @@ void UCombatComponent::InitAmmoReserves()
 	AmmoReservesMap.Emplace(EWeaponType::EWT_RocketLauncher, InitialRocketAmmoReserves);
 	AmmoReservesMap.Emplace(EWeaponType::EWT_Pistol, InitialPistolAmmoReserves);
 	AmmoReservesMap.Emplace(EWeaponType::EWT_SMG, InitialSMGAmmoReserves);
+	AmmoReservesMap.Emplace(EWeaponType::EWT_Shotgun, InitialShotgunAmmoReserves);
 }
 
 void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
