@@ -74,11 +74,16 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UCombatComponent::SetAiming(bool bAiming)
 {
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
 	bIsAiming = bAiming;
 	ServerSetAiming(bIsAiming);
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Sniper)
+	{
+		Character->ShowSniperScope(bAiming);
 	}
 }
 void UCombatComponent::ServerSetAiming_Implementation(bool bAiming)
@@ -152,13 +157,15 @@ void UCombatComponent::OnRep_AmmoReserves()
 	}
 }
 
-void UCombatComponent::InitAmmoReserves()
+void UCombatComponent::InitAmmoReserves() // Setting the Ammo Reserves for each weapon
 {
 	AmmoReservesMap.Emplace(EWeaponType::EWT_AssaultRifle, InitialAmmoReserves);
 	AmmoReservesMap.Emplace(EWeaponType::EWT_RocketLauncher, InitialRocketAmmoReserves);
 	AmmoReservesMap.Emplace(EWeaponType::EWT_Pistol, InitialPistolAmmoReserves);
 	AmmoReservesMap.Emplace(EWeaponType::EWT_SMG, InitialSMGAmmoReserves);
 	AmmoReservesMap.Emplace(EWeaponType::EWT_Shotgun, InitialShotgunAmmoReserves);
+	AmmoReservesMap.Emplace(EWeaponType::EWT_Sniper, InitialSniperAmmoReserves);
+	AmmoReservesMap.Emplace(EWeaponType::EWT_GrenadeLauncher, InitialGrenadeLauncherAmmoReserves);
 }
 
 void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -447,7 +454,7 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 			}
 			CrosshairShootFactor = FMath::FInterpTo(CrosshairShootFactor, 0.f, DeltaTime, 40.f);
 
-			// The hard coded 0.3 float value is needed to prevent the crosshairs from shrinking and overlapping each other which makes the crosshair look distorted
+			// The hard coded 0.3 float value here is needed to prevent the crosshairs from shrinking and overlapping each other which makes the crosshair look distorted
 			HUDPackage.CrosshairSpread = 0.3f + CrosshairVelocityFactor + CrosshairInAirFactor + CrosshairAimFactor + CharacterTraceFactor + CrosshairShootFactor;
 
 			PlayerHUD->SetHUDPackage(HUDPackage);

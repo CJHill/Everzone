@@ -140,6 +140,7 @@ private:
 
 	TMap<EWeaponType, int32> AmmoReservesMap;
 
+	// Starting ammo for weapons
 	UPROPERTY(EditAnywhere)
 	int32 InitialAmmoReserves = 30;
 	UPROPERTY(EditAnywhere)
@@ -150,6 +151,10 @@ private:
 	int32 InitialSMGAmmoReserves = 25;
 	UPROPERTY(EditAnywhere)
 	int32 InitialShotgunAmmoReserves = 10;
+	UPROPERTY(EditAnywhere)
+	int32 InitialSniperAmmoReserves = 6;
+	UPROPERTY(EditAnywhere)
+	int32 InitialGrenadeLauncherAmmoReserves = 8;
 
 	// Initialising Ammo Reserves
 	void InitAmmoReserves();

@@ -81,6 +81,7 @@ void AEverzoneCharacter::Destroyed()
 	}
 }
 
+
 void AEverzoneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -127,7 +128,7 @@ void AEverzoneCharacter::PostInitializeComponents()
 		CombatComp->Character = this;
 	}
 }
-void AEverzoneCharacter::PlayShootMontage(bool bAiming)
+void AEverzoneCharacter::PlayShootMontage(bool bAiming) 
 {
 	if (CombatComp == nullptr || CombatComp->EquippedWeapon == nullptr) return;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -170,6 +171,12 @@ void AEverzoneCharacter::PlayReloadMontage()
 			SectionName = FName("Rifle");
 			break;
 		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_Sniper:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
 			SectionName = FName("Rifle");
 			break;
 		}
@@ -237,7 +244,15 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, DeathBotCue, GetActorLocation());
 	}
-	
+
+	// if the character dies whilst aiming with a sniper hide the scope
+	bool bHideSniperScope = IsLocallyControlled() &&
+		CombatComp->bIsAiming == true &&
+		CombatComp->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Sniper;
+	if (bHideSniperScope) 
+	{
+		ShowSniperScope(false);
+	}
 }
 void AEverzoneCharacter::EliminatedTimerFinished()
 {

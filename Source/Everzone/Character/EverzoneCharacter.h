@@ -29,8 +29,11 @@ public:
 	//We have two eliminated functions multicasteliminated handles functionality being replicated to all clients. Eliminated just handles server functionality
 	void Eliminated();
 	UFUNCTION(NetMulticast, Reliable)
-		void MulticastEliminated();
+	void MulticastEliminated();
 	virtual void Destroyed() override;
+
+	UFUNCTION(BlueprintImplementableEvent) // Showing the sniper scope will be handled by our blueprint class
+	void ShowSniperScope(bool bShowScope);
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
 protected:
