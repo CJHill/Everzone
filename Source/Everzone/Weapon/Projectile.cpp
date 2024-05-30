@@ -9,6 +9,8 @@
 #include "Sound/SoundCue.h"
 #include "Everzone/Character/EverzoneCharacter.h"
 #include "Everzone/Everzone.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 // Sets default values
 AProjectile::AProjectile()
 {
@@ -64,13 +66,56 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	Destroy();
 }
 
+void AProjectile::ExplosionDamage()
+{
+	
+	APawn* ShooterPawn = GetInstigator();
+	if (!ShooterPawn) return;
+	AController* ShooterController = ShooterPawn->GetController();
+	if (ShooterController && HasAuthority())
+	{
+		UGameplayStatics::ApplyRadialDamageWithFalloff(this, // World Context object
+			Damage,
+			10.f,// Minimum damage
+			GetActorLocation(), //Epicenter of damage
+			InnerDamageRadius, OuterDamageRadius,
+			1.f, // Damage Fall off 
+			UDamageType::StaticClass(), //DamageType Class
+			TArray<AActor*>(),  //Actors to ignore
+			this, // damage causer
+			ShooterController); // Controller of Instigator
+	}
+}
+
+void AProjectile::SpawnProjectileTrail()
+{
+	if (NS_SmokeTrail)
+	{
+		NSComp_SmokeTrail = UNiagaraFunctionLibrary::SpawnSystemAttached(NS_SmokeTrail, //Niagara System
+			GetRootComponent(), // Attachment to Rocket Mesh
+			FName(), // Empty as there is no socket to attach to
+			GetActorLocation(), //Spawns at the same location as rocket mesh
+			GetActorRotation(), //spawns at the same rotation as rocket mesh
+			EAttachLocation::KeepWorldPosition, // World Transfrom remains the same
+			false); // Auto destroy set to false as we want the FX to linger slightly after the impact of the projectile
+	}
+}
+
 // Called every frame
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectile::DestroyTimerFinished, DestroyTime);
+}
 
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
+}
 void AProjectile::Destroyed()
 {
 	Super::Destroyed();

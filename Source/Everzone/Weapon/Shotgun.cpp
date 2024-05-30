@@ -12,7 +12,7 @@ void AShotgun::Shoot(const FVector& HitTarget)
 {
 	// we're calling the weapon shoot function to handle the basic functionality like playing the animation and handling the bullet shell without inheriting the unique functionality from the
 	// Hit Scan Weapon class
-	AWeapon::Shoot(HitTarget); 
+	AWeapon::Shoot(HitTarget);
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn == nullptr) return;
 	AController* InstigatorController = OwnerPawn->GetController();
@@ -25,7 +25,7 @@ void AShotgun::Shoot(const FVector& HitTarget)
 	TMap<AEverzoneCharacter*, uint32>  HitMap;
 	for (uint32 i = 0; i < NumOfShotgunPellets; i++)
 	{
-		
+
 		FHitResult WeaponHit;
 		WeaponTraceHit(Start, HitTarget, WeaponHit);
 		AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(WeaponHit.GetActor());
@@ -46,7 +46,7 @@ void AShotgun::Shoot(const FVector& HitTarget)
 		}
 		if (ImpactSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, WeaponHit.ImpactPoint, .3f, FMath::RandRange(-.5f,.5f));
+			UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, WeaponHit.ImpactPoint, .3f, FMath::RandRange(-.5f, .5f));
 		}
 	}
 	for (auto HitPair : HitMap)
