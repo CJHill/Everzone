@@ -24,7 +24,13 @@ public:
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishedReload();
+
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+	bool IsShotgun();
+	void JumpToShotgunEnd();
     void ShootButtonPressed(bool bIsPressed);
+
 protected:
 	
 	virtual void BeginPlay() override;
@@ -159,7 +165,7 @@ private:
 	// Initialising Ammo Reserves
 	void InitAmmoReserves();
 	void UpdateAmmoAmount();
-
+	void UpdateShotgunAmmo();
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 

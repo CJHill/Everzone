@@ -162,22 +162,22 @@ void AEverzoneCharacter::PlayReloadMontage()
 			SectionName = FName("Rifle");
 			break;
 		case EWeaponType::EWT_RocketLauncher:
-			SectionName = FName("Rifle");
+			SectionName = FName("Rocket");
 			break;
 		case EWeaponType::EWT_Pistol:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_SMG:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_Shotgun:
-			SectionName = FName("Rifle");
+			SectionName = FName("Shotgun");
 			break;
 		case EWeaponType::EWT_Sniper:
-			SectionName = FName("Rifle");
+			SectionName = FName("Sniper");
 			break;
 		case EWeaponType::EWT_GrenadeLauncher:
-			SectionName = FName("Rifle");
+			SectionName = FName("Grenade");
 			break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);

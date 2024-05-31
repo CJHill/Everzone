@@ -11,6 +11,7 @@
 #include "BulletShell.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Everzone/PlayerController/EverzonePlayerController.h"
+#include "Everzone/EverzoneComponents/CombatComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -85,7 +86,13 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 }
 void AWeapon::OnRep_Ammo()
 {
+	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
+	if (EverzoneOwningCharacter && EverzoneOwningCharacter->GetCombatComp() && EverzoneOwningCharacter->GetCombatComp()->IsShotgun() && AmmoIsFull())
+	{
+		EverzoneOwningCharacter->GetCombatComp()->JumpToShotgunEnd();
+	}
 	SetHUDAmmo();
+
 }
 void AWeapon::UseAmmo()
 {
@@ -142,6 +149,10 @@ void AWeapon::SetWeaponState(EWeaponState State)
 bool AWeapon::AmmoIsEmpty()
 {
 	return Ammo <= 0;
+}
+bool AWeapon::AmmoIsFull()
+{
+	return Ammo == AmmoMagazine;
 }
 void AWeapon::OnRep_WeaponState()
 {

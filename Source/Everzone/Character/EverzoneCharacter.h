@@ -208,4 +208,5 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComp() const { return CombatComp; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 };

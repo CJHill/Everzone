@@ -15,6 +15,7 @@
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Everzone/Character/EverzoneAnimInstance.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -145,6 +146,11 @@ bool UCombatComponent::CanShoot()
 	{
 		return false;
 	}
+	if (!EquippedWeapon->AmmoIsEmpty() && bCanShoot && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+	{
+		// if the player is using a shotgun, is reloading and has ammo in the shotgun we can interupt the reload process by shooting
+		return true;
+	}
 	return !EquippedWeapon->AmmoIsEmpty() && bCanShoot && CombatState == ECombatState::ECS_Unoccupied;
 }
 
@@ -154,6 +160,15 @@ void UCombatComponent::OnRep_AmmoReserves()
 	if (PlayerController)
 	{
 		PlayerController->SetHUDAmmoReserves(AmmoReserves);
+	}
+	bool bJumpToShotgunEnd = CombatState == ECombatState::ECS_Reloading && 
+		EquippedWeapon != nullptr && 
+		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun
+		&& AmmoReserves == 0;
+
+	if (bJumpToShotgunEnd)
+	{
+		JumpToShotgunEnd();
 	}
 }
 
@@ -176,6 +191,13 @@ void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& Tra
 void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr) return;
+	if (Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+	{
+		Character->PlayShootMontage(bIsAiming);
+		EquippedWeapon->Shoot(TraceHitTarget);
+		CombatState = ECombatState::ECS_Unoccupied;
+		return;
+	}
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayShootMontage(bIsAiming);
@@ -267,6 +289,27 @@ void UCombatComponent::FinishedReload()
 		Shoot();
 	}
 }
+void UCombatComponent::ShotgunShellReload()
+{
+	if (Character && Character->HasAuthority())
+	{
+       UpdateShotgunAmmo();
+	}
+	
+}
+bool UCombatComponent::IsShotgun()
+{
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) return true;
+	else return false;
+}
+void UCombatComponent::JumpToShotgunEnd()
+{
+	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+	if (AnimInstance && Character->GetReloadMontage())
+	{
+		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"));
+	}
+}
 void UCombatComponent::ServerReload_Implementation()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
@@ -291,7 +334,7 @@ int32 UCombatComponent::AmountToReload()
 }
 void UCombatComponent::UpdateAmmoAmount()
 {
-	if (EquippedWeapon == nullptr) return;
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
 	int32 ReloadAmount = AmountToReload();
 	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
@@ -305,6 +348,28 @@ void UCombatComponent::UpdateAmmoAmount()
 	}
 	EquippedWeapon->AddAmmo(-ReloadAmount);
 }
+
+void UCombatComponent::UpdateShotgunAmmo()
+{
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		AmmoReservesMap[EquippedWeapon->GetWeaponType()] -= 1;
+		AmmoReserves = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
+	}
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDAmmoReserves(AmmoReserves);
+	}
+	EquippedWeapon->AddAmmo(-1);
+	bCanShoot = true;
+	if (EquippedWeapon->AmmoIsFull() || AmmoReserves == 0) // if full jump to the end of the reload animation
+	{
+		JumpToShotgunEnd();
+	}
+}
+
 
 void UCombatComponent::OnRep_EquippedWeapon()
 {
