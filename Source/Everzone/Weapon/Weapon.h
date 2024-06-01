@@ -73,6 +73,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	class USoundCue* EquipSound;
+
+	/*
+	* Properties for enabling and disabling custom depth stencil. This is for giving the weapon mesh a glow outline effect
+	*/
+	void EnableCustomDepth(bool bEnable);
+
 protected:
 	
 	virtual void BeginPlay() override;

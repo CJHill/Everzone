@@ -1,6 +1,12 @@
 #pragma once
 
 #define TRACE_LENGTH 80000.f // Length for line traces
+// Defining the colours used in the outline material uasset "PP_Highlight" found in Content/Materials
+#define CUSTOM_DEPTH_PURPLE 250
+#define CUSTOM_DEPTH_BLUE 251
+#define CUSTOM_DEPTH_TAN 252
+
+
 // EWT = EWeaponType
 UENUM(BlueprintType)
 enum class EWeaponType : uint8

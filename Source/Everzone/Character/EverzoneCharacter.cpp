@@ -114,6 +114,7 @@ void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AEverzoneCharacter::ShootButtonPressed);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AEverzoneCharacter::ShootButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AEverzoneCharacter::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &AEverzoneCharacter::GrenadeButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
@@ -142,7 +143,7 @@ void AEverzoneCharacter::PlayShootMontage(bool bAiming)
 void AEverzoneCharacter::PlayElimMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && ShootMontage)
+	if (AnimInstance && ElimMontage)
 	{
 		AnimInstance->Montage_Play(ElimMontage);
 		
@@ -181,6 +182,16 @@ void AEverzoneCharacter::PlayReloadMontage()
 			break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void AEverzoneCharacter::PlayThrowGrenadeMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+
 	}
 }
 
@@ -408,6 +419,14 @@ void AEverzoneCharacter::ShootButtonReleased()
 	{
 		CombatComp->ShootButtonPressed(false);
 	}
+}
+void AEverzoneCharacter::GrenadeButtonPressed()
+{
+	if (CombatComp)
+	{
+		CombatComp->ThrowGrenade();
+	}
+
 }
 void AEverzoneCharacter::Jump()
 {

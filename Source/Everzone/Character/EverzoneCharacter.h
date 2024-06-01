@@ -22,9 +22,11 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	//Animation Montage Functions
 	void PlayShootMontage(bool bAiming);
 	void PlayElimMontage();
 	void PlayReloadMontage();
+	void PlayThrowGrenadeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	//We have two eliminated functions multicasteliminated handles functionality being replicated to all clients. Eliminated just handles server functionality
 	void Eliminated();
@@ -52,6 +54,7 @@ protected:
 	void AimButtonReleased();
 	void ShootButtonPressed();
 	void ShootButtonReleased();
+	void GrenadeButtonPressed();
 	void PlayHitReactMontage();
 	//AIMOFFSET():checks if equipped weapon is a nullptr and will return if true
 	//Gets velocity and stores in a local float checks to see if speed is equal to 0 and player is not falling
@@ -67,25 +70,29 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class UCameraComponent* FollowCamera;
+	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UWidgetComponent* OverheadWidget;
+	class UWidgetComponent* OverheadWidget;
 
 	// Anim Montages
 	UPROPERTY(EditAnywhere, Category = Combat)
-		class UAnimMontage* ShootMontage;
+	class UAnimMontage* ShootMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-		UAnimMontage* HitReactMontage;
+	UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-		UAnimMontage* ElimMontage;
+	UAnimMontage* ElimMontage;
+
 	UPROPERTY(EditAnywhere, Category = Combat)
-		UAnimMontage* ReloadMontage;
+	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ThrowGrenadeMontage;
 
 	//Using a rep notify function because they don't get called on the server meaning that setting the pickup widget's visibility inside OnRep_OverlappingWeapon
 	//will allow the display text to only appear on the client that owns the pawn overlapping with the actor

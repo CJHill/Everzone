@@ -31,6 +31,8 @@ public:
 	void JumpToShotgunEnd();
     void ShootButtonPressed(bool bIsPressed);
 
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
 protected:
 	
 	virtual void BeginPlay() override;
@@ -44,7 +46,9 @@ protected:
 	void OnRep_EquippedWeapon();
 	void Shoot();
 
-	
+	void ThrowGrenade();
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
 
 	UFUNCTION(Server, Reliable)
 	void ServerShoot(const FVector_NetQuantize& TraceHitTarget);
@@ -75,6 +79,7 @@ protected:
 	* At the end we call the SetHUDPackage passing in the FHUDPackage variable here on Combat Component
 	*/
 	void SetHUDCrosshair(float DeltaTime);
+
 private:
 	UPROPERTY()
 	AEverzoneCharacter* Character;
