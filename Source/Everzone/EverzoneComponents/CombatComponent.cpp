@@ -48,6 +48,29 @@ void UCombatComponent::BeginPlay()
 	}
 	
 }
+void UCombatComponent::DropEquippedWeapon()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Dropped();
+	}
+}
+void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
+{
+	if (!Character || !Character->GetMesh() || !ActorToAttach) return;
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	if (HandSocket)
+	{
+		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+void UCombatComponent::PlayEquipWeaponSound()
+{
+	if (Character && EquippedWeapon && EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+	}
+}
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -117,6 +140,7 @@ void UCombatComponent::ThrowGrenade()
 	if (Character)
 	{
        Character->PlayThrowGrenadeMontage();
+	   AttachActorToLeftHand(EquippedWeapon);
 	}
 	if (Character && !Character->HasAuthority())
 	{
@@ -131,11 +155,14 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 	if (Character)
 	{
 		Character->PlayThrowGrenadeMontage();
+		AttachActorToLeftHand(EquippedWeapon);
 	}
 }
 void UCombatComponent::ThrowGrenadeFinished()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+	AttachActorToRightHand(EquippedWeapon);
+	
 }
 void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 {
@@ -239,41 +266,41 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-	if (EquippedWeapon)
-	{
-		EquippedWeapon->Dropped();
-	}
+	
+	DropEquippedWeapon();
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if (HandSocket)
-	{
-		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
-	}
+	AttachActorToRightHand(EquippedWeapon);
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
 	
-	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
-	{
-		AmmoReserves = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
-	}
-	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
-	if (PlayerController)
-	{
-		PlayerController->SetHUDAmmoReserves(AmmoReserves);
-		PlayerController->ShowWeaponIcon(EquippedWeapon->GetWeaponIcon());
-	}
-	if (EquippedWeapon->EquipSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
-	}
-	if (EquippedWeapon->AmmoIsEmpty())
-	{
-		Reload();
-	}
+	UpdateAmmoReserves();
+	PlayEquipWeaponSound();
+	ReloadEmptyWeapon();
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+}
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	/*
+	* We are setting the weapon state here to ensure that physics is disabled before attaching the weapon to the character
+	* on all clients as only setting on the server doesn't consider poor network performance may result in the attachment of the weapon taking place
+	* before physics are disabled by the weapon state
+	*/
+	if (EquippedWeapon && Character)
+	{
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToRightHand(EquippedWeapon);
+		PlayEquipWeaponSound();
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+		PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+		if (PlayerController)
+		{
+			PlayerController->ShowWeaponIcon(EquippedWeapon->GetWeaponIcon());
+		}
+	}
 }
 void UCombatComponent::OnRep_CombatState()
 {
@@ -292,6 +319,7 @@ void UCombatComponent::OnRep_CombatState()
 		if (Character && !Character->IsLocallyControlled())
 		{
 			Character->PlayThrowGrenadeMontage();
+			AttachActorToLeftHand(EquippedWeapon);
 		}
 		break;
 	}
@@ -350,6 +378,24 @@ void UCombatComponent::ServerReload_Implementation()
 	CombatState = ECombatState::ECS_Reloading;
 	HandleReload();
 }
+void UCombatComponent::ReloadEmptyWeapon()
+{
+	if (EquippedWeapon->AmmoIsEmpty())
+	{
+		Reload();
+	}
+}
+void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
+{
+	if (!Character || !Character->GetMesh() || !ActorToAttach || !EquippedWeapon) return;
+	bool bUsePistolSocket = EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol || EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SMG;
+	FName SocketName = bUsePistolSocket ? FName("PistolSocket") : FName("LeftHandSocket");
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(SocketName);
+	if (HandSocket)
+	{
+		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
 void UCombatComponent::HandleReload()
 {
 	Character->PlayReloadMontage();
@@ -382,6 +428,20 @@ void UCombatComponent::UpdateAmmoAmount()
 	}
 	EquippedWeapon->AddAmmo(-ReloadAmount);
 }
+void UCombatComponent::UpdateAmmoReserves()
+{
+	if (!EquippedWeapon) return;
+	if (AmmoReservesMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		AmmoReserves = AmmoReservesMap[EquippedWeapon->GetWeaponType()];
+	}
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDAmmoReserves(AmmoReserves);
+		PlayerController->ShowWeaponIcon(EquippedWeapon->GetWeaponIcon());
+	}
+}
 
 void UCombatComponent::UpdateShotgunAmmo()
 {
@@ -401,36 +461,6 @@ void UCombatComponent::UpdateShotgunAmmo()
 	if (EquippedWeapon->AmmoIsFull() || AmmoReserves == 0) // if full jump to the end of the reload animation
 	{
 		JumpToShotgunEnd();
-	}
-}
-
-
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	/*
-	* We are setting the weapon state here to ensure that physics is disabled before attaching the weapon to the character
-	* on all clients as only setting on the server doesn't consider poor network performance may result in the attachment of the weapon taking place
-	* before physics are disabled by the weapon state
-	*/
-	if (EquippedWeapon && Character)
-	{
-		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-		if (HandSocket)
-		{
-			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
-		}
-		if (EquippedWeapon->EquipSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
-		}
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
-		PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
-		if (PlayerController)
-		{
-			PlayerController->ShowWeaponIcon(EquippedWeapon->GetWeaponIcon());
-		}
 	}
 }
 
@@ -561,8 +591,9 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 	}
 }
 
+
 /*
-* This is responsible for the camera zooming in and out when the 
+* This is responsible for the camera zooming in and out when the player aims in and out
 */
 void UCombatComponent::InterpFov(float DeltaTime)
 {

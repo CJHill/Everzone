@@ -22,11 +22,13 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void EquipWeapon(AWeapon* WeaponToEquip);
 	void Reload();
+
+	//Blueprint Callable functions that will be used in the Anim BP for notify events in the reload montages
 	UFUNCTION(BlueprintCallable)
 	void FinishedReload();
-
 	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload();
+
 	bool IsShotgun();
 	void JumpToShotgunEnd();
     void ShootButtonPressed(bool bIsPressed);
@@ -36,6 +38,14 @@ public:
 protected:
 	
 	virtual void BeginPlay() override;
+	//Refactor for the Equip Weapon Function. All these functions may be used elsewhere, when appropriate
+	void DropEquippedWeapon();
+	void AttachActorToRightHand(AActor* ActorToAttach);
+	void PlayEquipWeaponSound();
+	void UpdateAmmoReserves();
+	void ReloadEmptyWeapon();
+
+	void AttachActorToLeftHand(AActor* ActorToAttach);
 
 	void SetAiming(bool bAiming);
 
@@ -79,7 +89,8 @@ protected:
 	* At the end we call the SetHUDPackage passing in the FHUDPackage variable here on Combat Component
 	*/
 	void SetHUDCrosshair(float DeltaTime);
-
+	
+	
 private:
 	UPROPERTY()
 	AEverzoneCharacter* Character;
