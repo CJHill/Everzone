@@ -185,10 +185,8 @@ private:
 	*/
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* DeathBotEffect;
-
 	UPROPERTY(VisibleAnywhere)
 	UParticleSystemComponent* DeathBotComp;
-
 	UPROPERTY(EditAnywhere)
 	class USoundCue* DeathBotCue;
 
@@ -197,6 +195,11 @@ private:
 
 	UPROPERTY()
 	class AEverzonePlayerState* EverzonePlayerState;
+
+	//Grenade
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped
@@ -216,4 +219,5 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComp() const { return CombatComp; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 };

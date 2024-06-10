@@ -16,6 +16,7 @@
 #include "Sound/SoundCue.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Everzone/Character/EverzoneAnimInstance.h"
+#include "Everzone/Weapon/Projectile.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -135,18 +136,27 @@ void UCombatComponent::Shoot()
 
 void UCombatComponent::ThrowGrenade()
 {
-	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
        Character->PlayThrowGrenadeMontage();
 	   AttachActorToLeftHand(EquippedWeapon);
+	   ShowAttachedGrenade(true);
 	}
 	if (Character && !Character->HasAuthority())
 	{
        ServerThrowGrenade();
 	}
 	
+}
+
+void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
+{
+	if (Character && Character->GetAttachedGrenade())
+	{
+		Character->GetAttachedGrenade()->SetVisibility(bShowGrenade);
+	}
 }
 
 void UCombatComponent::ServerThrowGrenade_Implementation()
@@ -156,6 +166,7 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 	{
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
+		ShowAttachedGrenade(true);
 	}
 }
 void UCombatComponent::ThrowGrenadeFinished()
@@ -163,6 +174,30 @@ void UCombatComponent::ThrowGrenadeFinished()
 	CombatState = ECombatState::ECS_Unoccupied;
 	AttachActorToRightHand(EquippedWeapon);
 	
+}
+void UCombatComponent::LaunchGrenade()
+{
+	ShowAttachedGrenade(false);
+	if (Character && Character->IsLocallyControlled())
+	{
+        ServerLaunchGrenade(HitTarget);
+	}
+	
+}
+void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	ShowAttachedGrenade(false);
+	if (Character  && GrenadeClass && Character->GetAttachedGrenade())
+	{
+		const FVector SpawnLocation = Character->GetAttachedGrenade()->GetComponentLocation();
+		FVector ToTarget = Target - SpawnLocation;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.Instigator = Character;
+		UWorld* World = GetWorld();
+		if (!World) return;
+		World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), SpawnParams);
+	}
 }
 void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 {
@@ -320,6 +355,7 @@ void UCombatComponent::OnRep_CombatState()
 		{
 			Character->PlayThrowGrenadeMontage();
 			AttachActorToLeftHand(EquippedWeapon);
+			ShowAttachedGrenade(true);
 		}
 		break;
 	}
@@ -333,7 +369,7 @@ void UCombatComponent::SetWeaponIcon()
 }
 void UCombatComponent::Reload()
 {
-	if (AmmoReserves > 0 && CombatState ==ECombatState::ECS_Unoccupied)
+	if (AmmoReserves > 0 && CombatState ==ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->AmmoIsFull())
 	{
 		ServerReload();
 	}

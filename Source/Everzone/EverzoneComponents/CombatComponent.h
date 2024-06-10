@@ -28,13 +28,19 @@ public:
 	void FinishedReload();
 	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload();
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
 
 	bool IsShotgun();
 	void JumpToShotgunEnd();
     void ShootButtonPressed(bool bIsPressed);
 
-	UFUNCTION(BlueprintCallable)
-	void ThrowGrenadeFinished();
+	
 protected:
 	
 	virtual void BeginPlay() override;
@@ -59,6 +65,9 @@ protected:
 	void ThrowGrenade();
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
+	void ShowAttachedGrenade(bool bShowGrenade);
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class AProjectile> GrenadeClass;
 
 	UFUNCTION(Server, Reliable)
 	void ServerShoot(const FVector_NetQuantize& TraceHitTarget);
