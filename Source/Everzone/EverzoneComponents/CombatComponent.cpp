@@ -78,6 +78,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, AmmoReserves, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UCombatComponent, Grenades, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState)
 }
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -136,6 +137,7 @@ void UCombatComponent::Shoot()
 
 void UCombatComponent::ThrowGrenade()
 {
+	if (Grenades == 0) return;
 	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
@@ -148,7 +150,11 @@ void UCombatComponent::ThrowGrenade()
 	{
        ServerThrowGrenade();
 	}
-	
+	if (Character && Character->HasAuthority())
+	{
+		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+		UpdateHUDGrenades();
+	}
 }
 
 void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
@@ -161,6 +167,7 @@ void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
 
 void UCombatComponent::ServerThrowGrenade_Implementation()
 {
+	if (Grenades == 0) return;
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
@@ -168,6 +175,8 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 		AttachActorToLeftHand(EquippedWeapon);
 		ShowAttachedGrenade(true);
 	}
+	Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+	UpdateHUDGrenades();
 }
 void UCombatComponent::ThrowGrenadeFinished()
 {
@@ -197,6 +206,14 @@ void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuant
 		UWorld* World = GetWorld();
 		if (!World) return;
 		World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), SpawnParams);
+	}
+}
+void UCombatComponent::UpdateHUDGrenades()
+{
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDGrenades(Grenades);
 	}
 }
 void UCombatComponent::ShootButtonPressed(bool bIsPressed)
@@ -337,6 +354,11 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		}
 	}
 }
+void UCombatComponent::OnRep_Grenades()
+{
+	UpdateHUDGrenades();
+}
+
 void UCombatComponent::OnRep_CombatState()
 {
 	switch (CombatState)
@@ -356,6 +378,14 @@ void UCombatComponent::OnRep_CombatState()
 			Character->PlayThrowGrenadeMontage();
 			AttachActorToLeftHand(EquippedWeapon);
 			ShowAttachedGrenade(true);
+		}
+		break;
+	case ECombatState::ECS_Melee:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->PlayMeleeMontage();
+			AttachActorToLeftHand(EquippedWeapon);
+			ShowAttachedKnife(true);
 		}
 		break;
 	}
@@ -431,6 +461,44 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 	{
 		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
 	}
+}
+void UCombatComponent::Melee()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;
+	CombatState = ECombatState::ECS_Melee;
+	if (Character)
+	{
+		Character->PlayMeleeMontage();
+		AttachActorToLeftHand(EquippedWeapon);
+		ShowAttachedKnife(true);
+	}
+	if (Character && !Character->HasAuthority())
+	{
+		ServerMelee();
+	}
+}
+void UCombatComponent::ServerMelee_Implementation()
+{
+	CombatState = ECombatState::ECS_Melee;
+	if (Character)
+	{
+		Character->PlayMeleeMontage();
+		AttachActorToLeftHand(EquippedWeapon);
+		ShowAttachedKnife(true);
+	}
+}
+void UCombatComponent::ShowAttachedKnife(bool bShowKnife)
+{
+	if (Character && Character->GetAttachedKnife())
+	{
+		Character->GetAttachedKnife()->SetVisibility(bShowKnife);
+	}
+}
+void UCombatComponent::MeleeFinished()
+{
+	ShowAttachedKnife(false);
+	CombatState = ECombatState::ECS_Unoccupied;
+	AttachActorToRightHand(EquippedWeapon);
 }
 void UCombatComponent::HandleReload()
 {

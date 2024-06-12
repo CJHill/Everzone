@@ -32,6 +32,8 @@ public:
 	void ThrowGrenadeFinished();
 	UFUNCTION(BlueprintCallable)
 	void LaunchGrenade();
+	UFUNCTION(BlueprintCallable)
+	void MeleeFinished();
 
 	UFUNCTION(Server, Reliable)
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
@@ -66,8 +68,8 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
 	void ShowAttachedGrenade(bool bShowGrenade);
-	UPROPERTY(EditAnywhere)
-		TSubclassOf<class AProjectile> GrenadeClass;
+	UPROPERTY(EditAnywhere, Category = "Grenades")
+	TSubclassOf<class AProjectile> GrenadeClass;
 
 	UFUNCTION(Server, Reliable)
 	void ServerShoot(const FVector_NetQuantize& TraceHitTarget);
@@ -75,6 +77,10 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShoot(const FVector_NetQuantize& TraceHitTarget);
 
+	void Melee();
+	UFUNCTION(Server, Reliable)
+	void ServerMelee();
+	void ShowAttachedKnife(bool bShowKnife);
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
@@ -157,7 +163,6 @@ private:
 	*/
 	FTimerHandle ShootTimer;
 	bool bCanShoot = true;
-
 	void StartShootTimer();
 	void EndShootTimer();
 	bool CanShoot();
@@ -191,8 +196,17 @@ private:
 	void InitAmmoReserves();
 	void UpdateAmmoAmount();
 	void UpdateShotgunAmmo();
+
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades = 2;
+	UPROPERTY(EditAnywhere, Category = "Grenades")
+	int32 MaxGrenades = 9;
+	UFUNCTION()
+	void OnRep_Grenades();
+	void UpdateHUDGrenades();
 
 	UFUNCTION()
 	void OnRep_CombatState();
@@ -201,7 +215,7 @@ private:
 	class UTexture2D* WeaponIconImage;
 	void SetWeaponIcon();
 public:	
-	
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	
 
 		

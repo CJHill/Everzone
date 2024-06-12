@@ -60,6 +60,10 @@ AEverzoneCharacter::AEverzoneCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	AttachedKnife = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Attached Knife"));
+	AttachedKnife->SetupAttachment(GetMesh(), FName("KnifeSocket"));
+	AttachedKnife->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -123,6 +127,7 @@ void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AEverzoneCharacter::ShootButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AEverzoneCharacter::ReloadButtonPressed);
 	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &AEverzoneCharacter::GrenadeButtonPressed);
+	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &AEverzoneCharacter::MeleeButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
@@ -203,6 +208,15 @@ void AEverzoneCharacter::PlayThrowGrenadeMontage()
 	}
 }
 
+void AEverzoneCharacter::PlayMeleeMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && MeleeMontage)
+	{
+		AnimInstance->Montage_Play(MeleeMontage);
+	}
+}
+
 void AEverzoneCharacter::OnRep_ReplicatedMovement()
 {
 	Super::OnRep_ReplicatedMovement();
@@ -242,6 +256,16 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 	if (CombatComp)
 	{
 		CombatComp->ShootButtonPressed(false);
+
+		bool bHideSniperScope = IsLocallyControlled() &&
+		CombatComp->bIsAiming == true &&
+		CombatComp->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Sniper;
+
+		// if the character dies whilst aiming with a sniper hide the scope
+		if (bHideSniperScope)
+		{
+			ShowSniperScope(false);
+		}
 	}
 	//disable movement and collision
 	GetCharacterMovement()->DisableMovement();
@@ -264,14 +288,6 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 		UGameplayStatics::SpawnSoundAtLocation(this, DeathBotCue, GetActorLocation());
 	}
 
-	// if the character dies whilst aiming with a sniper hide the scope
-	bool bHideSniperScope = IsLocallyControlled() &&
-		CombatComp->bIsAiming == true &&
-		CombatComp->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Sniper;
-	if (bHideSniperScope) 
-	{
-		ShowSniperScope(false);
-	}
 }
 void AEverzoneCharacter::EliminatedTimerFinished()
 {
@@ -436,6 +452,13 @@ void AEverzoneCharacter::GrenadeButtonPressed()
 	}
 
 }
+void AEverzoneCharacter::MeleeButtonPressed()
+{
+	if (CombatComp)
+	{
+		CombatComp->Melee();
+	}
+}
 void AEverzoneCharacter::Jump()
 {
 	if (bIsCrouched)
@@ -449,6 +472,7 @@ void AEverzoneCharacter::Jump()
 }
 void AEverzoneCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+	if (bIsEliminated) return;
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();

@@ -27,6 +27,7 @@ public:
 	void PlayElimMontage();
 	void PlayReloadMontage();
 	void PlayThrowGrenadeMontage();
+	void PlayMeleeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	//We have two eliminated functions multicasteliminated handles functionality being replicated to all clients. Eliminated just handles server functionality
 	void Eliminated();
@@ -55,6 +56,7 @@ protected:
 	void ShootButtonPressed();
 	void ShootButtonReleased();
 	void GrenadeButtonPressed();
+	void MeleeButtonPressed();
 	void PlayHitReactMontage();
 	//AIMOFFSET():checks if equipped weapon is a nullptr and will return if true
 	//Gets velocity and stores in a local float checks to see if speed is equal to 0 and player is not falling
@@ -66,7 +68,7 @@ protected:
 	void SimProxyRotate();
 	virtual void Jump() override;
 	UFUNCTION()
-		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -94,14 +96,17 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ThrowGrenadeMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* MeleeMontage;
+
 	//Using a rep notify function because they don't get called on the server meaning that setting the pickup widget's visibility inside OnRep_OverlappingWeapon
 	//will allow the display text to only appear on the client that owns the pawn overlapping with the actor
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
-		class AWeapon* OverlappingWeapon;
+	class AWeapon* OverlappingWeapon;
 	UFUNCTION()
-		void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UCombatComponent* CombatComp;
+	class UCombatComponent* CombatComp;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -200,6 +205,10 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
 
+	//Knife
+	UPROPERTY(EditAnywhere)
+	USkeletalMeshComponent* AttachedKnife;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	//Getter function that returns true if the weapon is equipped
@@ -220,4 +229,5 @@ public:
 	FORCEINLINE UCombatComponent* GetCombatComp() const { return CombatComp; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE USkeletalMeshComponent* GetAttachedKnife() const { return AttachedKnife; }
 };

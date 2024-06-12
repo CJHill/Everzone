@@ -80,19 +80,22 @@ void AEverzonePlayerController::SetHUDTime()
 
 void AEverzonePlayerController::PollInit() // purpose is to refresh these variables so that they always display the correct numbers
 {
-	if (CharacterOverlay != nullptr) return;
-	
-	if (EverzoneHUD && EverzoneHUD->CharacterOverlay)
+	if (CharacterOverlay == nullptr)
 	{
+		if (!EverzoneHUD || !EverzoneHUD->CharacterOverlay) return;
 		CharacterOverlay = EverzoneHUD->CharacterOverlay;
-		if (CharacterOverlay)
+		if (!CharacterOverlay) return;
+		
+		SetHUDHealth(HUDCurrentHealth, HUDMaxHealth);
+		SetHUDScore(HUDScore);
+		SetHUDDeaths(HUDDeaths);
+
+		EverzoneCharacter = Cast<AEverzoneCharacter>(GetPawn());
+		if (EverzoneCharacter && EverzoneCharacter->GetCombatComp())
 		{
-			SetHUDHealth(HUDCurrentHealth, HUDMaxHealth);
-			SetHUDScore(HUDScore);
-			SetHUDDeaths(HUDDeaths);
+			SetHUDGrenades(EverzoneCharacter->GetCombatComp()->GetGrenades());
 		}
 	}
-	
 }
 
 void AEverzonePlayerController::RefreshTimeSync(float DeltaTime)
@@ -273,6 +276,23 @@ void AEverzonePlayerController::SetHUDAmmoReserves(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		EverzoneHUD->CharacterOverlay->AmmoReserves->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void AEverzonePlayerController::SetHUDGrenades(int32 Grenades)
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->GrenadesAmount;
+	if (bIsHUDValid)
+	{
+		FString GrenadeText = FString::Printf(TEXT("%d"), Grenades);
+		EverzoneHUD->CharacterOverlay->GrenadesAmount->SetText(FText::FromString(GrenadeText));
+	}
+	else
+	{
+		HUDGrenades = Grenades;
 	}
 }
 

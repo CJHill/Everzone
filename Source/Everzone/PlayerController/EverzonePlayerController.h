@@ -27,6 +27,7 @@ public:
 	void HideDeathMessage();
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDAmmoReserves(int32 Ammo);
+	void SetHUDGrenades(int32 Grenades);
 	void ShowWeaponIcon(UTexture2D* WeaponIcon);
 	void HideWeaponIcon();
 	void SetHUDMatchTimer(float TimeRemaining);
@@ -97,6 +98,6 @@ private:
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDeaths;
-
+	int32 HUDGrenades;
 	
 };

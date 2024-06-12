@@ -73,7 +73,7 @@ void UEverzoneAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		
 		
 	}
-	// bUseFabrik is true if combat state is not set to reloading
+	// bUseFabrik, bUseAimOffset and bTransformRightHand is true if combat state is unoccupied every other state requires it to be disabled for the animations to look right
 	bUseFabrik = EverzoneCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 	bUseAimOffset = EverzoneCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 	bTransformRightHand = EverzoneCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
