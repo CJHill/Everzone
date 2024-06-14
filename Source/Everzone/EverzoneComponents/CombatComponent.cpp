@@ -482,6 +482,7 @@ void UCombatComponent::ServerMelee_Implementation()
 	CombatState = ECombatState::ECS_Melee;
 	if (Character)
 	{
+	
 		Character->PlayMeleeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 		ShowAttachedKnife(true);

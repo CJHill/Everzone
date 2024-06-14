@@ -49,6 +49,7 @@ protected:
 	//Refactor for the Equip Weapon Function. All these functions may be used elsewhere, when appropriate
 	void DropEquippedWeapon();
 	void AttachActorToRightHand(AActor* ActorToAttach);
+
 	void PlayEquipWeaponSound();
 	void UpdateAmmoReserves();
 	void ReloadEmptyWeapon();
@@ -80,6 +81,8 @@ protected:
 	void Melee();
 	UFUNCTION(Server, Reliable)
 	void ServerMelee();
+	UPROPERTY(EditAnywhere, Category = "Melee")
+	TSubclassOf<class AMeleeKnife> MeleeClass;
 	void ShowAttachedKnife(bool bShowKnife);
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
@@ -116,6 +119,8 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+
 
 	UPROPERTY(Replicated)
 	bool bIsAiming;
