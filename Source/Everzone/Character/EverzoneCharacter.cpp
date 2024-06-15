@@ -61,9 +61,7 @@ AEverzoneCharacter::AEverzoneCharacter()
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	AttachedKnife = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Attached Knife"));
-	AttachedKnife->SetupAttachment(GetMesh(), FName("KnifeSocket"));
-	AttachedKnife->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

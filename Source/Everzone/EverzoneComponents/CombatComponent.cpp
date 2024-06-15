@@ -17,6 +17,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Everzone/Character/EverzoneAnimInstance.h"
 #include "Everzone/Weapon/Projectile.h"
+#include "Everzone/Weapon/MeleeKnife.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -63,6 +64,7 @@ void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
 	if (HandSocket)
 	{
 		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
+		
 	}
 }
 void UCombatComponent::PlayEquipWeaponSound()
@@ -206,6 +208,7 @@ void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuant
 		UWorld* World = GetWorld();
 		if (!World) return;
 		World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), SpawnParams);
+		
 	}
 }
 void UCombatComponent::UpdateHUDGrenades()
@@ -337,7 +340,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 {
 	/*
 	* We are setting the weapon state here to ensure that physics is disabled before attaching the weapon to the character
-	* on all clients as only setting on the server doesn't consider poor network performance may result in the attachment of the weapon taking place
+	* on all clients as only setting the weapon state on the server doesn't consider poor network performance may result in the attachment of the weapon taking place
 	* before physics are disabled by the weapon state
 	*/
 	if (EquippedWeapon && Character)
@@ -383,9 +386,10 @@ void UCombatComponent::OnRep_CombatState()
 	case ECombatState::ECS_Melee:
 		if (Character && !Character->IsLocallyControlled())
 		{
-			Character->PlayMeleeMontage();
 			AttachActorToLeftHand(EquippedWeapon);
-			ShowAttachedKnife(true);
+			SpawnKnifeActor();
+			Character->PlayMeleeMontage();
+			
 		}
 		break;
 	}
@@ -468,9 +472,12 @@ void UCombatComponent::Melee()
 	CombatState = ECombatState::ECS_Melee;
 	if (Character)
 	{
-		Character->PlayMeleeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
-		ShowAttachedKnife(true);
+		SpawnKnifeActor();
+		if (!KnifeActor) return;
+		AttachActorToRightHand(Cast<AActor>(KnifeActor));
+		Character->PlayMeleeMontage();
+		
 	}
 	if (Character && !Character->HasAuthority())
 	{
@@ -480,24 +487,33 @@ void UCombatComponent::Melee()
 void UCombatComponent::ServerMelee_Implementation()
 {
 	CombatState = ECombatState::ECS_Melee;
-	if (Character)
+	if (Character && MeleeClass)
 	{
-	
-		Character->PlayMeleeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
-		ShowAttachedKnife(true);
+		SpawnKnifeActor();
+		if (!KnifeActor) return;
+		AttachActorToRightHand(Cast<AActor>(KnifeActor));
+		Character->PlayMeleeMontage();
+		
 	}
 }
-void UCombatComponent::ShowAttachedKnife(bool bShowKnife)
+
+void UCombatComponent::SpawnKnifeActor()
 {
-	if (Character && Character->GetAttachedKnife())
-	{
-		Character->GetAttachedKnife()->SetVisibility(bShowKnife);
-	}
+	const FVector SpawnLocation = Character->GetMesh()->GetSocketLocation(FName("KnifeSocket"));
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = Character;
+	SpawnParams.Instigator = Character;
+	UWorld* World = GetWorld();
+	if (!World) return;
+	KnifeActor = World->SpawnActor<AMeleeKnife>(MeleeClass, SpawnLocation, FRotator(), SpawnParams);
 }
 void UCombatComponent::MeleeFinished()
 {
-	ShowAttachedKnife(false);
+	
+	UWorld* World = GetWorld();
+	if (!World) return;
+	World->DestroyActor(Cast<AActor>(KnifeActor));
 	CombatState = ECombatState::ECS_Unoccupied;
 	AttachActorToRightHand(EquippedWeapon);
 }

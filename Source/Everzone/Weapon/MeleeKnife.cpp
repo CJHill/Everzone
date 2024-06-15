@@ -67,7 +67,7 @@ void AMeleeKnife::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 
 
 		MulticastOnHit(Character);
-		KnifeDamage(OtherActor);
+		KnifeDamage(Character);
 	}
 	else
 	{

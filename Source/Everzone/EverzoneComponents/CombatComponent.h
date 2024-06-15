@@ -7,6 +7,7 @@
 #include "Everzone/HUD/EverzoneHUD.h"
 #include "Everzone/Weapon/WeaponTypes.h"
 #include "Everzone/EverzoneTypes/CombatState.h"
+#include "Everzone/Weapon/MeleeKnife.h"
 #include "CombatComponent.generated.h"
 
 class AWeapon;// forward delcaring as this class will be important for combat
@@ -83,7 +84,8 @@ protected:
 	void ServerMelee();
 	UPROPERTY(EditAnywhere, Category = "Melee")
 	TSubclassOf<class AMeleeKnife> MeleeClass;
-	void ShowAttachedKnife(bool bShowKnife);
+	void SpawnKnifeActor();
+
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
@@ -120,6 +122,10 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
+	UPROPERTY()
+	AWeapon* KnifeWeapon;
+	UPROPERTY()
+	class AMeleeKnife* KnifeActor;
 
 
 	UPROPERTY(Replicated)

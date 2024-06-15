@@ -205,9 +205,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
 
-	//Knife
-	UPROPERTY(EditAnywhere)
-	USkeletalMeshComponent* AttachedKnife;
+	
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -229,5 +227,5 @@ public:
 	FORCEINLINE UCombatComponent* GetCombatComp() const { return CombatComp; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
-	FORCEINLINE USkeletalMeshComponent* GetAttachedKnife() const { return AttachedKnife; }
+	
 };
