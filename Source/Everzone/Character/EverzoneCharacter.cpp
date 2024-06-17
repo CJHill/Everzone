@@ -125,7 +125,7 @@ void AEverzoneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AEverzoneCharacter::ShootButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AEverzoneCharacter::ReloadButtonPressed);
 	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &AEverzoneCharacter::GrenadeButtonPressed);
-	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &AEverzoneCharacter::MeleeButtonPressed);
+	//PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &AEverzoneCharacter::MeleeButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEverzoneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEverzoneCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AEverzoneCharacter::Turn);
@@ -450,13 +450,13 @@ void AEverzoneCharacter::GrenadeButtonPressed()
 	}
 
 }
-void AEverzoneCharacter::MeleeButtonPressed()
-{
-	if (CombatComp)
-	{
-		CombatComp->Melee();
-	}
-}
+//void AEverzoneCharacter::MeleeButtonPressed()
+//{
+//	if (CombatComp)
+//	{
+//		CombatComp->Melee();
+//	}
+//}
 void AEverzoneCharacter::Jump()
 {
 	if (bIsCrouched)

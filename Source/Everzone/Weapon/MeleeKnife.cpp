@@ -8,8 +8,9 @@
 #include "Particles/ParticleSystem.h"
 #include "Everzone/Everzone.h"
 #include "Sound/SoundCue.h"
+#include "DrawDebugHelpers.h"
 
-// Sets default values
+// look at hitscan weapon trace hit for implementing dmg for knife
 AMeleeKnife::AMeleeKnife()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -56,24 +57,38 @@ void AMeleeKnife::MulticastOnHit_Implementation(AEverzoneCharacter* HitPlayer)
 void AMeleeKnife::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	MeleeTraceHit();
+	if (!MeleeHit.GetActor()) return;
+	KnifeDamage(MeleeHit.GetActor());
 }
 
-void AMeleeKnife::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void  AMeleeKnife::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	AEverzoneCharacter* Character = Cast<AEverzoneCharacter>(OtherActor);
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
+	if (Character)
+	{
+		AController* Controller = Character->Controller;
+		if (Controller)
+		{
+			UGameplayStatics::ApplyDamage(OtherActor, Damage, Controller, this, UDamageType::StaticClass());
+
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Character Hit"));
+	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(OtherActor);
 	if (Character && Character->Implements<UCrosshairInterface>())
 	{
 
 
-		MulticastOnHit(Character);
-		KnifeDamage(Character);
+		MulticastOnHit(EverzoneCharacter);
+
 	}
 	else
 	{
 		MulticastOnHit(nullptr);
 	}
 }
+
 
 void AMeleeKnife::KnifeDamage(AActor* OtherActor)
 {
@@ -83,6 +98,24 @@ void AMeleeKnife::KnifeDamage(AActor* OtherActor)
 	if (InstigatorController && HasAuthority())
 	{
 		UGameplayStatics::ApplyDamage(OtherActor, Damage, InstigatorController, this, UDamageType::StaticClass());
+	}
+}
+
+void AMeleeKnife::MeleeTraceHit()
+{
+	
+	FVector TraceStart = GetActorLocation();
+	FVector TraceEnd = GetActorLocation() + GetActorForwardVector() * 50.0f;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this->Owner);
+	UWorld* World = GetWorld();
+	if (!World) return;
+	World->LineTraceSingleByChannel(MeleeHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
+	DrawDebugLine(World, TraceStart, TraceEnd, MeleeHit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
+	if (MeleeHit.bBlockingHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Trace Hit Actor!"));
 	}
 }
 

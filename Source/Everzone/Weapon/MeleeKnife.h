@@ -16,12 +16,14 @@ public:
 	AMeleeKnife();
 	UFUNCTION(Server, Reliable)
 	void MulticastOnHit(AEverzoneCharacter* HitPlayer);
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	void KnifeDamage(AActor* OtherActor);
+	void MeleeTraceHit();
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
 
@@ -34,7 +36,7 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Melee Properties")
 	USkeletalMeshComponent* KnifeMesh;
-
+	FHitResult MeleeHit;
 	float Damage = 100;
 public:	
 	FORCEINLINE USkeletalMeshComponent* GetKnifeMesh() const { return KnifeMesh; }

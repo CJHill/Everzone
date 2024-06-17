@@ -43,7 +43,7 @@ public:
 	void JumpToShotgunEnd();
     void ShootButtonPressed(bool bIsPressed);
 
-	
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 protected:
 	
 	virtual void BeginPlay() override;
@@ -85,6 +85,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Melee")
 	TSubclassOf<class AMeleeKnife> MeleeClass;
 	void SpawnKnifeActor();
+	UFUNCTION(Server, Reliable)
+	void ServerSpawnKnifeActor();
 
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
@@ -186,7 +188,8 @@ private:
 	void OnRep_AmmoReserves();
 
 	TMap<EWeaponType, int32> AmmoReservesMap;
-
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmoReserves = 600;
 	// Starting ammo for weapons
 	UPROPERTY(EditAnywhere)
 	int32 InitialAmmoReserves = 30;

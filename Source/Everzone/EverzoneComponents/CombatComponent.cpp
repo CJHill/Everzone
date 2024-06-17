@@ -228,6 +228,20 @@ void UCombatComponent::ShootButtonPressed(bool bIsPressed)
 	 }
 }
 
+void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
+{
+	if (AmmoReservesMap.Contains(WeaponType))
+	{
+		AmmoReservesMap[WeaponType] = FMath::Clamp(AmmoReservesMap[WeaponType] + AmmoAmount, 0, MaxAmmoReserves);
+		UpdateAmmoReserves();
+	}
+	if (EquippedWeapon && EquippedWeapon->AmmoIsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
+	{
+		ReloadEmptyWeapon();
+	}
+
+}
+
 void UCombatComponent::StartShootTimer()
 {
 	if (EquippedWeapon == nullptr) return;
@@ -500,13 +514,35 @@ void UCombatComponent::ServerMelee_Implementation()
 
 void UCombatComponent::SpawnKnifeActor()
 {
-	const FVector SpawnLocation = Character->GetMesh()->GetSocketLocation(FName("KnifeSocket"));
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Character;
-	SpawnParams.Instigator = Character;
-	UWorld* World = GetWorld();
-	if (!World) return;
-	KnifeActor = World->SpawnActor<AMeleeKnife>(MeleeClass, SpawnLocation, FRotator(), SpawnParams);
+	if (Character && Character->IsLocallyControlled())
+	{
+		ServerSpawnKnifeActor();
+	}
+	if (Character && MeleeClass)
+	{
+		const FVector SpawnLocation = Character->GetMesh()->GetSocketLocation(FName("KnifeSocket"));
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.Instigator = Character;
+		UWorld* World = GetWorld();
+		if (!World) return;
+		KnifeActor = World->SpawnActor<AMeleeKnife>(MeleeClass, SpawnLocation, FRotator(), SpawnParams);
+		
+	}
+
+}
+void UCombatComponent::ServerSpawnKnifeActor_Implementation()
+{
+	if (Character && MeleeClass)
+	{
+		const FVector SpawnLocation = Character->GetMesh()->GetSocketLocation(FName("KnifeSocket"));
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.Instigator = Character;
+		UWorld* World = GetWorld();
+		if (!World) return;
+		KnifeActor = World->SpawnActor<AMeleeKnife>(MeleeClass, SpawnLocation, FRotator(), SpawnParams);
+	}
 }
 void UCombatComponent::MeleeFinished()
 {
