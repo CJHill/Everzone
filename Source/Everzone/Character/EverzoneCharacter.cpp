@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Everzone/Weapon/Weapon.h"
 #include "Everzone/EverzoneComponents/CombatComponent.h"
+#include "Everzone/EverzoneComponents/BuffComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EverzoneAnimInstance.h"
@@ -44,6 +45,9 @@ AEverzoneCharacter::AEverzoneCharacter()
 	//Combat component will contain variables that need replicating so it's important that the component itself is also replicated
 	CombatComp = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
 	CombatComp->SetIsReplicated(true);
+
+	BuffComp = CreateDefaultSubobject<UBuffComponent>(TEXT("Buff Component"));
+	BuffComp->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -138,6 +142,10 @@ void AEverzoneCharacter::PostInitializeComponents()
 	if (CombatComp)
 	{
 		CombatComp->Character = this;
+	}
+	if (BuffComp)
+	{
+		BuffComp->Character = this;
 	}
 }
 void AEverzoneCharacter::PlayShootMontage(bool bAiming) 
@@ -638,10 +646,14 @@ void AEverzoneCharacter::HideCamera()
 	}
 }
 
-void AEverzoneCharacter::OnRep_Health()
+void AEverzoneCharacter::OnRep_Health(float LastHealthValue)
 {
 	UpdateHUDHealth();
-	PlayHitReactMontage();
+	if (CurrentHealth < LastHealthValue) //if check is to see if health has decreased, if so it means we've taken dmg so play the hit react montage
+	{
+		PlayHitReactMontage();
+	}
+	
 }
 void AEverzoneCharacter::UpdateHUDHealth()
 {

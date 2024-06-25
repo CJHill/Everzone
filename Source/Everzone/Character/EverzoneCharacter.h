@@ -39,9 +39,11 @@ public:
 	void ShowSniperScope(bool bShowScope);
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
+
+	void UpdateHUDHealth();
 protected:
 	virtual void BeginPlay() override;
-	void UpdateHUDHealth();
+	
 	//GetAndInitHUD: Get and initialise relevent properties for the players HUD
 	void GetAndInitHUD();
 	void MoveForward(float value);
@@ -107,6 +109,8 @@ private:
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComp;
+	UPROPERTY(VisibleAnywhere)
+	class UBuffComponent* BuffComp;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -150,7 +154,7 @@ private:
 	float CurrentHealth = 100.f;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealthValue);
 
 	/*
 	* Elimination properties
@@ -223,9 +227,10 @@ public:
 	FORCEINLINE bool IsEliminated() const { return bIsEliminated; }
 	FORCEINLINE float GetHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE float SetHealth(float HealAmount) { return CurrentHealth = HealAmount; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComp() const { return CombatComp; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
-	
+	FORCEINLINE UBuffComponent* GetBuffComp() const { return BuffComp; }
 };
