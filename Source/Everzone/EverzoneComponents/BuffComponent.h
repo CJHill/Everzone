@@ -17,6 +17,10 @@ public:
 	UBuffComponent();
 	friend class AEverzoneCharacter;
 	void Heal(float HealAmount, float HealOverTime);
+	void BuffSpeed(float BaseSpdIncrease, float BaseCrouchSpdIncrease, float SpdBuffTime);
+
+	// SetInitialSpd will be called in post initialise components function in everzone character's cpp file passing in max walk speed and max walk speed crouched
+	void SetInitialSpd(float BaseSpd, float BaseCrouchSpd); 
 virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 protected:
 	
@@ -26,9 +30,20 @@ private:
 	UPROPERTY()
 	class AEverzoneCharacter* Character;
 
+	//Speed buff properties
+	FTimerHandle SpeedTimer;
+	void ResetSpeedTimer();
+	float InitialBaseSpd;
+	float InitialCrouchSpd;
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSpdBuff(float BaseSpd, float BaseCrouchSpd);
+
+	//Healing buff properties
 	bool bHealing = false;
 	float HealingRate = 0.f;
 	float AmountToHeal = 0.f;
+
+
 public:	
 	
 	

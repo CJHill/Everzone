@@ -3,6 +3,7 @@
 
 #include "BuffComponent.h"
 #include "Everzone/Character/EverzoneCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 // Sets default values for this component's properties
 UBuffComponent::UBuffComponent()
 {
@@ -39,12 +40,44 @@ void UBuffComponent::HealOverTime(float DeltaTime)
 	}
 }
 
-
 void UBuffComponent::Heal(float HealAmount, float HealOverTime)
 {
 	bHealing = true;
 	HealingRate = HealAmount / HealOverTime;
 	AmountToHeal += HealAmount;
+}
+
+void UBuffComponent::BuffSpeed(float BaseSpdIncrease, float BaseCrouchSpdIncrease, float SpdBuffTime)
+{
+	if (Character)
+	{
+		Character->GetWorldTimerManager().SetTimer(SpeedTimer, this, &UBuffComponent::ResetSpeedTimer, SpdBuffTime);
+	}
+	if (Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BaseSpdIncrease;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BaseCrouchSpdIncrease;
+	}
+	MulticastSpdBuff(BaseSpdIncrease, BaseCrouchSpdIncrease);
+}
+
+void UBuffComponent::SetInitialSpd(float BaseSpd, float BaseCrouchSpd)
+{
+	InitialBaseSpd = BaseSpd;
+	InitialCrouchSpd = BaseCrouchSpd;
+}
+void UBuffComponent::ResetSpeedTimer()
+{
+	if (!Character || !Character->GetCharacterMovement()) return;
+	Character->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpd;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpd;
+	MulticastSpdBuff(InitialBaseSpd, InitialCrouchSpd);
+}
+
+void UBuffComponent::MulticastSpdBuff_Implementation(float BaseSpd, float BaseCrouchSpd)
+{
+	Character->GetCharacterMovement()->MaxWalkSpeed = BaseSpd;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BaseCrouchSpd;
 }
 
 // Called every frame

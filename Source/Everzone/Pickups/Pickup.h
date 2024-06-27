@@ -37,6 +37,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Pickups")
 	UStaticMeshComponent* PickupMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Pickups")
+		class UNiagaraComponent* PickupEffectComp;
+
+	UPROPERTY(EditAnywhere, Category = "Pickups")
+		class UNiagaraSystem* PickupEffect;
 public:	
 
 	

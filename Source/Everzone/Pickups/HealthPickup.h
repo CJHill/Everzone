@@ -15,10 +15,8 @@ class EVERZONE_API AHealthPickup : public APickup
 	GENERATED_BODY()
 public:
 	AHealthPickup();
-	virtual void Destroyed() override;
 	
 protected:
-	
 		virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 			AActor* OtherActor,
 			UPrimitiveComponent* OtherComp,
@@ -34,11 +32,6 @@ private:
 
 	
 
-	UPROPERTY(VisibleAnywhere, Category = "Health Pickups")
-	class UNiagaraComponent* PickupEffectComp;
-
-	UPROPERTY(EditAnywhere, Category = "Health Pickups")
-	class UNiagaraSystem* PickupEffect;
 
 	
 };

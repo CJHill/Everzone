@@ -146,6 +146,7 @@ void AEverzoneCharacter::PostInitializeComponents()
 	if (BuffComp)
 	{
 		BuffComp->Character = this;
+		BuffComp->SetInitialSpd(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
 	}
 }
 void AEverzoneCharacter::PlayShootMontage(bool bAiming) 
