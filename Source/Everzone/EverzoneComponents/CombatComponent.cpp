@@ -242,6 +242,14 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 
 }
 
+void UCombatComponent::SetSpeeds(float BaseSpd, float BaseCrouchSpd)
+{
+	if (Character == nullptr || Character->GetCharacterMovement() == nullptr) return;
+	AimWalkSpeed = BaseSpd;
+	BaseWalkSpeed = BaseSpd;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BaseCrouchSpd;
+}
+
 void UCombatComponent::StartShootTimer()
 {
 	if (EquippedWeapon == nullptr) return;

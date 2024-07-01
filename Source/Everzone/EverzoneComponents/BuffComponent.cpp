@@ -4,6 +4,7 @@
 #include "BuffComponent.h"
 #include "Everzone/Character/EverzoneCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Everzone/EverzoneComponents/CombatComponent.h"
 // Sets default values for this component's properties
 UBuffComponent::UBuffComponent()
 {
@@ -78,6 +79,38 @@ void UBuffComponent::MulticastSpdBuff_Implementation(float BaseSpd, float BaseCr
 {
 	Character->GetCharacterMovement()->MaxWalkSpeed = BaseSpd;
 	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BaseCrouchSpd;
+	if (Character->GetCombatComp())
+	{
+		Character->GetCombatComp()->SetSpeeds(BaseSpd, BaseCrouchSpd);
+	}
+}
+
+void UBuffComponent::JumpBuff(float BuffJumpVelocityZ, float JumpBuffTime)
+{
+	if (!Character) return;
+	Character->GetWorldTimerManager().SetTimer(JumpBuffTimer, this, &UBuffComponent::ResetJumpVelocity, JumpBuffTime);
+	if (Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->JumpZVelocity = BuffJumpVelocityZ;
+	}
+	MulticastJumpBuff(BuffJumpVelocityZ);
+}
+
+void UBuffComponent::SetInitialJumpVelocity(float JumpVelocity)
+{
+	InitialJumpVelocity = JumpVelocity;
+}
+void UBuffComponent::ResetJumpVelocity()
+{
+	MulticastJumpBuff(InitialJumpVelocity);
+}
+
+void UBuffComponent::MulticastJumpBuff_Implementation(float JumpVelocity)
+{
+	if (Character && Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->JumpZVelocity = JumpVelocity;
+	}
 }
 
 // Called every frame
