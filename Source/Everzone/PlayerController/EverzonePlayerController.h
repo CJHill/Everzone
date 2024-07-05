@@ -21,6 +21,7 @@ public:
 	virtual void Tick(float DeltaTime);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void SetHUDHealth(float CurrentHealth, float MaxHealth);
+	void SetHUDShield(float ShieldAmount, float MaxShieldAmount);
 	void SetHUDScore(float Score);
 	void SetHUDDeaths(int32 Deaths);
 	void ShowDeathMessage(const FString KilledBy);
@@ -96,6 +97,8 @@ private:
 
 	float HUDCurrentHealth;
 	float HUDMaxHealth;
+	float HUDShield;
+	float HUDMaxShield;
 	float HUDScore;
 	int32 HUDDeaths;
 	int32 HUDGrenades;

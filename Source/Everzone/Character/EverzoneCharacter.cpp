@@ -73,6 +73,7 @@ void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(AEverzoneCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(AEverzoneCharacter, CurrentHealth);
+	DOREPLIFETIME(AEverzoneCharacter, Shield);
 	DOREPLIFETIME(AEverzoneCharacter, bDisableGameplay);
 }
 
@@ -297,6 +298,7 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 	}
 
 }
+
 void AEverzoneCharacter::EliminatedTimerFinished()
 {
 	AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>(); // Use this line to get the game mode when you need it
@@ -663,6 +665,22 @@ void AEverzoneCharacter::UpdateHUDHealth()
 	if (PlayerController)
 	{
 		PlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+	}
+}
+void AEverzoneCharacter::UpdateHUDShield()
+{
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+void AEverzoneCharacter::OnRep_Shield(float LastShieldValue)
+{
+	UpdateHUDShield();
+	if (Shield < LastShieldValue)
+	{
+		PlayHitReactMontage();
 	}
 }
 

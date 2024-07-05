@@ -22,25 +22,31 @@ public:
 	class UTextBlock* HealthText;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* ScoreAmount;
+    UProgressBar* ShieldBar;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* DeathAmount;
+	UTextBlock* ShieldText;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* DeathMessage;
+	UTextBlock* ScoreAmount;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* KilledBy;
+	UTextBlock* DeathAmount;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* AmmoAmount;
+	UTextBlock* DeathMessage;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* AmmoReserves;
+	UTextBlock* KilledBy;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* MatchTimer;
+	UTextBlock* AmmoAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* AmmoReserves;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MatchTimer;
 
 	UPROPERTY(meta = (BindWidget))
 	class UImage* WeaponIcon;
@@ -49,5 +55,5 @@ public:
 	class UWidgetAnimation* CountdownAnimation;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* GrenadesAmount;
+	UTextBlock* GrenadesAmount;
 };

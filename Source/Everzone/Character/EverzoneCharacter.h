@@ -41,6 +41,7 @@ public:
 	bool bDisableGameplay = false;
 
 	void UpdateHUDHealth();
+	void UpdateHUDShield();
 protected:
 	virtual void BeginPlay() override;
 	
@@ -155,6 +156,19 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health(float LastHealthValue);
+
+	/*
+	* Shield Properties
+	*/
+
+	UPROPERTY(EditAnywhere, Category = "Player Properties")
+	float MaxShield = 100;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield,VisibleAnywhere, Category = "Player Properties")
+	float Shield = 0.f;
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShieldValue);
 
 	/*
 	* Elimination properties
