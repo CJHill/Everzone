@@ -97,6 +97,7 @@ void AEverzoneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	if (PlayerController)
 	{
 		PlayerController->HideDeathMessage();
@@ -483,8 +484,28 @@ void AEverzoneCharacter::Jump()
 void AEverzoneCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
 	if (bIsEliminated) return;
-	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.f, MaxHealth);
+	float DamageToHealth = Damage;
+	if (Shield > 0)
+	{
+		if (Shield >= Damage)// check to see if the shield can withstand the damage just received
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			// How much damage the shield has absorbed before emptying
+			const float ShieldAbsorb = FMath::Clamp(DamageToHealth - Shield, 0.f, MaxShield);
+			// Subtract damage from the Shield
+			Shield = FMath::Clamp(Shield - DamageToHealth, 0.f, MaxShield);
+			//Subtract ShieldAbsorb from DamageToHealth. For example if Damage is 170 and shield is 100 the shield would absorb 100 leaving 70 remaining to do damamge to the player's health
+			DamageToHealth -= FMath::Clamp(DamageToHealth - ShieldAbsorb, 0.f, Damage);
+		}
+	}
+
+	CurrentHealth = FMath::Clamp(CurrentHealth - DamageToHealth, 0.f, MaxHealth);
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	PlayHitReactMontage();
 	if (CurrentHealth == 0.f)
 	{

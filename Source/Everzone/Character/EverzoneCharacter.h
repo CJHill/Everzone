@@ -242,6 +242,9 @@ public:
 	FORCEINLINE float GetHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE float SetHealth(float HealAmount) { return CurrentHealth = HealAmount; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	FORCEINLINE float SetShield(float RegenAmount) { return Shield = RegenAmount; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComp() const { return CombatComp; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }

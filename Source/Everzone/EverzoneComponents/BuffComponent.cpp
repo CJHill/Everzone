@@ -48,6 +48,26 @@ void UBuffComponent::Heal(float HealAmount, float HealOverTime)
 	AmountToHeal += HealAmount;
 }
 
+void UBuffComponent::RegenShield(float RegenAmount, float RegenTime)
+{
+	bRegenShield = true;
+	RegenRate = RegenAmount / RegenTime;
+	AmountToRegen += RegenAmount;
+}
+void UBuffComponent::RegenOverTime(float DeltaTime)
+{
+	if (!bRegenShield || Character == nullptr || Character->IsEliminated()) return;
+	const float RegenThisFrame = RegenRate * DeltaTime;
+	Character->SetShield(FMath::Clamp(Character->GetShield() + RegenThisFrame, 0.f, Character->GetMaxShield()));
+	Character->UpdateHUDShield();
+	AmountToRegen -= RegenThisFrame;
+	if (AmountToRegen <= 0.f || Character->GetShield() >= Character->GetMaxShield())
+	{
+		bRegenShield = false;
+		AmountToRegen = 0.f;
+	}
+}
+
 void UBuffComponent::BuffSpeed(float BaseSpdIncrease, float BaseCrouchSpdIncrease, float SpdBuffTime)
 {
 	if (Character)
@@ -119,5 +139,6 @@ void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	HealOverTime(DeltaTime);
+	RegenOverTime(DeltaTime);
 }
 

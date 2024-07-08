@@ -158,6 +158,7 @@ void AEverzonePlayerController::OnPossess(APawn* InPawn)
 	if (PlayerCharacter)
 	{
 		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
+		SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
 		HideDeathMessage();
 	}
 }
@@ -178,7 +179,7 @@ void AEverzonePlayerController::SetHUDHealth(float CurrentHealth, float MaxHealt
 	}
 	else
 	{
-		bInitCharacterOverlay = true;
+		bInitHUDHealth = true;
 		HUDCurrentHealth = CurrentHealth;
 		HUDMaxHealth = MaxHealth;
 	}
@@ -194,13 +195,13 @@ void AEverzonePlayerController::SetHUDShield(float ShieldAmount, float MaxShield
 	if (bIsHUDValid)
 	{
 		const float ShieldPercent = ShieldAmount / MaxShieldAmount;
-		EverzoneHUD->CharacterOverlay->HealthBar->SetPercent(ShieldPercent);
+		EverzoneHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
 		FString ShieldText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(ShieldAmount), FMath::CeilToInt(MaxShieldAmount));
 		EverzoneHUD->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
 	}
 	else
 	{
-		bInitCharacterOverlay = true;
+		bInitHUDShield = true;
 		HUDShield = ShieldAmount;
 		HUDMaxShield = MaxShieldAmount;
 	}
@@ -219,7 +220,7 @@ void AEverzonePlayerController::SetHUDScore(float Score)
 	}
 	else 
 	{
-		bInitCharacterOverlay = true;
+		bInitHUDScore = true;
 		HUDScore = Score;
 	}
 }
@@ -237,7 +238,7 @@ void AEverzonePlayerController::SetHUDDeaths(int32 Deaths)
 	}
 	else
 	{
-		bInitCharacterOverlay = true;
+		bInitHUDDeath = true;
 		HUDDeaths = Deaths;
 	}
 }
@@ -315,6 +316,7 @@ void AEverzonePlayerController::SetHUDGrenades(int32 Grenades)
 	}
 	else
 	{
+		bInitHUDGrenade = true;
 		HUDGrenades = Grenades;
 	}
 }

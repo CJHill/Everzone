@@ -93,8 +93,11 @@ private:
 
 	UPROPERTY()
 	class UOverlayWidget* CharacterOverlay;
-	bool bInitCharacterOverlay = false;
-
+	bool bInitHUDHealth = false;
+	bool bInitHUDShield = false;
+	bool bInitHUDScore = false;
+	bool bInitHUDDeath = false;
+	bool bInitHUDGrenade = false;
 	float HUDCurrentHealth;
 	float HUDMaxHealth;
 	float HUDShield;
