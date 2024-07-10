@@ -43,6 +43,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Pickups")
 		class UNiagaraSystem* PickupEffect;
+
+	// Properties for delaying overlap events. This is needed to ensure that the pickup gets spawned even if the player is sitting on the spawn point before the pickup is spawned in
+	// Without these properties the pickup will be destroyed so quickly that no other functionality can be fired
+	FTimerHandle OverlapTimer;
+	float OverlapTimeDelay = 0.25f;
+	void OverlapTimerFinished();
 public:	
 
 	
