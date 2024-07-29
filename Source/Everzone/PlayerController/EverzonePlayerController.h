@@ -98,6 +98,8 @@ private:
 	bool bInitHUDScore = false;
 	bool bInitHUDDeath = false;
 	bool bInitHUDGrenade = false;
+	bool bInitHUDAmmoReserves = false;
+	bool bInitHUDWeaponAmmo = false;
 	float HUDCurrentHealth;
 	float HUDMaxHealth;
 	float HUDShield;
@@ -105,5 +107,6 @@ private:
 	float HUDScore;
 	int32 HUDDeaths;
 	int32 HUDGrenades;
-	
+	int32 HUDWeaponAmmo;
+	int32 HUDAmmoReserves;
 };
