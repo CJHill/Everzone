@@ -395,15 +395,7 @@ void AEverzoneCharacter::EquipButtonPressed()
 	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
-		
-		if (HasAuthority())
-		{
-			CombatComp->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 
