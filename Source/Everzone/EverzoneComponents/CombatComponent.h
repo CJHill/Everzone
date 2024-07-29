@@ -22,7 +22,6 @@ public:
 	friend class AEverzoneCharacter;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void EquipWeapon(AWeapon* WeaponToEquip);
-	void SwapWeapons();
 	void Reload();
 
 	//Blueprint Callable functions that will be used in the Anim BP for notify events in the reload montages
@@ -239,7 +238,7 @@ private:
 	void SetWeaponIcon();
 public:	
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
-	bool bShouldSwapWeapons();
+	
 
 		
 };

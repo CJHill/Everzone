@@ -78,7 +78,7 @@ void AEverzonePlayerController::SetHUDTime()
 	
 }
 
-void AEverzonePlayerController::PollInit() // purpose is to refresh these variables so that they always display the correct values
+void AEverzonePlayerController::PollInit() // purpose is to refresh these variables so that they always display the correct numbers
 {
 	if (CharacterOverlay == nullptr)
 	{
@@ -92,7 +92,6 @@ void AEverzonePlayerController::PollInit() // purpose is to refresh these variab
 		if(bInitHUDDeath)  SetHUDDeaths(HUDDeaths);
 		if(bInitHUDAmmoReserves) SetHUDAmmoReserves(HUDAmmoReserves);
 		if (bInitHUDWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
-		if (bInitHUDWeaponIcon) ShowWeaponIcon(HUDWeaponIcon);
 
 		EverzoneCharacter = Cast<AEverzoneCharacter>(GetPawn());
 		if (EverzoneCharacter && EverzoneCharacter->GetCombatComp())
@@ -345,12 +344,6 @@ void AEverzonePlayerController::ShowWeaponIcon(UTexture2D* WeaponIcon)
 		EverzoneHUD->CharacterOverlay->WeaponIcon->SetBrushFromTexture(WeaponIcon, false);
 		EverzoneHUD->CharacterOverlay->WeaponIcon->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
-	else
-	{
-		bInitHUDWeaponIcon = true;
-		HUDWeaponIcon = WeaponIcon;
-	}
-
 }
 
 void AEverzonePlayerController::HideWeaponIcon()

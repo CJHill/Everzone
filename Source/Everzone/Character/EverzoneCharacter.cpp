@@ -401,17 +401,10 @@ void AEverzoneCharacter::EquipButtonPressed()
 
 void AEverzoneCharacter::ServerEquipButtonPressed_Implementation()
 {
-	if (!CombatComp) return;
-	
-	if (OverlappingWeapon)
+	if (CombatComp)
 	{
 		CombatComp->EquipWeapon(OverlappingWeapon);
 	}
-	else if (CombatComp->bShouldSwapWeapons())
-	{
-		CombatComp->SwapWeapons();
-	}
-	
 }
 void AEverzoneCharacter::CrouchButtonPressed()
 {

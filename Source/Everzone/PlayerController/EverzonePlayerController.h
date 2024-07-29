@@ -100,7 +100,6 @@ private:
 	bool bInitHUDGrenade = false;
 	bool bInitHUDAmmoReserves = false;
 	bool bInitHUDWeaponAmmo = false;
-	bool bInitHUDWeaponIcon = false;
 	float HUDCurrentHealth;
 	float HUDMaxHealth;
 	float HUDShield;
@@ -110,6 +109,4 @@ private:
 	int32 HUDGrenades;
 	int32 HUDWeaponAmmo;
 	int32 HUDAmmoReserves;
-	UPROPERTY()
-	UTexture2D* HUDWeaponIcon;
 };
