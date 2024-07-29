@@ -96,8 +96,6 @@ void AEverzoneCharacter::Destroyed()
 void AEverzoneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
 	UpdateHUDHealth();
 	UpdateHUDShield();
 	if (PlayerController)
@@ -242,15 +240,7 @@ void AEverzoneCharacter::Eliminated()
 {
 	if (CombatComp && CombatComp->EquippedWeapon)
 	{
-		if (CombatComp->EquippedWeapon->bDestroyWeapon)
-		{
-			CombatComp->EquippedWeapon->Destroy();
-		}
-		else
-		{
-           CombatComp->EquippedWeapon->Dropped();
-		}
-		
+		CombatComp->EquippedWeapon->Dropped();
 	}
 	MulticastEliminated();
 	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &AEverzoneCharacter::EliminatedTimerFinished, EliminatedDelay);
@@ -704,29 +694,6 @@ void AEverzoneCharacter::UpdateHUDShield()
 	if (PlayerController)
 	{
 		PlayerController->SetHUDShield(Shield, MaxShield);
-	}
-}
-void AEverzoneCharacter::UpdateHUDAmmo()
-{
-	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Controller) : PlayerController;
-	if (PlayerController && CombatComp && CombatComp->EquippedWeapon)
-	{
-		PlayerController->SetHUDAmmoReserves(CombatComp->AmmoReserves);
-		PlayerController->SetHUDWeaponAmmo(CombatComp->EquippedWeapon->GetAmmo());
-	}
-}
-void AEverzoneCharacter::SpawnDefaultWeapon()
-{
-	AEverzoneGameMode* EverzoneGameMode = Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this));
-	UWorld* World = GetWorld();
-	if (EverzoneGameMode && World && !bIsEliminated && DefaultWeaponClass)
-	{
-		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
-		StartingWeapon->bDestroyWeapon = true;
-		if (CombatComp)
-		{
-			CombatComp->EquipWeapon(StartingWeapon);
-		}
 	}
 }
 void AEverzoneCharacter::OnRep_Shield(float LastShieldValue)

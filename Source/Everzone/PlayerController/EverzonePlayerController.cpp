@@ -86,12 +86,10 @@ void AEverzonePlayerController::PollInit() // purpose is to refresh these variab
 		CharacterOverlay = EverzoneHUD->CharacterOverlay;
 		if (!CharacterOverlay) return;
 		
-		if(bInitHUDHealth) SetHUDHealth(HUDCurrentHealth, HUDMaxHealth);
-		if(bInitHUDShield) SetHUDShield(HUDShield, HUDMaxShield);
-		if(bInitHUDScore)  SetHUDScore(HUDScore);
-		if(bInitHUDDeath)  SetHUDDeaths(HUDDeaths);
-		if(bInitHUDAmmoReserves) SetHUDAmmoReserves(HUDAmmoReserves);
-		if (bInitHUDWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
+		SetHUDHealth(HUDCurrentHealth, HUDMaxHealth);
+		SetHUDShield(HUDShield, HUDMaxShield);
+		SetHUDScore(HUDScore);
+		SetHUDDeaths(HUDDeaths);
 
 		EverzoneCharacter = Cast<AEverzoneCharacter>(GetPawn());
 		if (EverzoneCharacter && EverzoneCharacter->GetCombatComp())
@@ -290,11 +288,6 @@ void AEverzonePlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		EverzoneHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString(AmmoText));
 	}
-	else
-	{
-		bInitHUDWeaponAmmo = true;
-		HUDWeaponAmmo = Ammo;
-	}
 }
 
 void AEverzonePlayerController::SetHUDAmmoReserves(int32 Ammo)
@@ -307,11 +300,6 @@ void AEverzonePlayerController::SetHUDAmmoReserves(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		EverzoneHUD->CharacterOverlay->AmmoReserves->SetText(FText::FromString(AmmoText));
-	}
-	else
-	{
-		bInitHUDAmmoReserves = true;
-		HUDAmmoReserves = Ammo;
 	}
 }
 
