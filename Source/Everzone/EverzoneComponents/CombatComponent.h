@@ -49,27 +49,23 @@ public:
 protected:
 	
 	virtual void BeginPlay() override;
-	//Refactor for the Equip Weapon Function. All these functions may be used elsewhere, when appropriate. These functions include drop equipped weapon to attach actor to left hand
+	//Refactor for the Equip Weapon Function. All these functions may be used elsewhere, when appropriate
 	void DropEquippedWeapon();
 	void AttachActorToRightHand(AActor* ActorToAttach);
-	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
+
+	void PlayEquipWeaponSound();
 	void UpdateAmmoReserves();
 	void ReloadEmptyWeapon();
+
 	void AttachActorToLeftHand(AActor* ActorToAttach);
-	void AttachActorToBackpack(AActor* ActorToAttach);
+
 	void SetAiming(bool bAiming);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bAiming);
 
-	void EquipPrimaryWeapon(AWeapon* PrimaryWeapon);
-	void EquipSecondaryWeapon(AWeapon* SecondWeapon);
-
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
-	UFUNCTION()
-	void OnRep_SecondaryWeapon();
-
 	void Shoot();
 
 	void ThrowGrenade();
@@ -129,8 +125,6 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
-	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
-	AWeapon* SecondaryWeapon;
 
 	UPROPERTY()
 	AWeapon* KnifeWeapon;
