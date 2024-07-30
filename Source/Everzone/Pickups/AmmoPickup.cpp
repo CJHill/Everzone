@@ -13,7 +13,7 @@ void AAmmoPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		UCombatComponent* CombatComp = EverzoneCharacter->GetCombatComp();
 		if (!CombatComp) return;
-		CombatComp->PickupAmmo(WeaponType, AmmoAmount);
+		CombatComp->PickupAmmo(WeaponType, AmountOfAmmo);
 	}
 	Destroy();
 }

@@ -24,7 +24,7 @@ protected:
 		const FHitResult& SweepResult) override;
 private:
 	UPROPERTY(EditAnywhere, Category = "Ammo Pickups")
-	int32 AmmoAmount = 30;
+	int32 AmountOfAmmo = 30;
 	UPROPERTY(EditAnywhere, Category = "Ammo Pickups")
 	EWeaponType WeaponType;
 };

@@ -124,6 +124,7 @@ void AWeapon::SetHUDAmmo()
 		if (EverzoneOwningController)
 		{
 			EverzoneOwningController->SetHUDWeaponAmmo(Ammo);
+			EverzoneOwningController->SetHUDAmmoReserves(AmmoMagazine);
 		}
 	}
 }
@@ -157,6 +158,7 @@ void AWeapon::HandleOnEquipped()
 	WeaponMesh->SetSimulatePhysics(false);
 	WeaponMesh->SetEnableGravity(false);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SetHUDAmmo();
 	if (WeaponType == EWeaponType::EWT_SMG)
 	{
 		//This is to enable the strap physics for the SMG and prevent the strap with colliding with other objects

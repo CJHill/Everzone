@@ -27,7 +27,7 @@ void AEverzonePlayerController::BeginPlay()
 void AEverzonePlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 	SetHUDTime();
 	PollInit();
 	RefreshTimeSync(DeltaTime);

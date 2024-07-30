@@ -21,6 +21,9 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
 #include "Everzone/Weapon/WeaponTypes.h"
+#include "Everzone/HUD/EverzoneHUD.h"
+#include "Everzone/HUD/OverlayWidget.h"
+
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -100,6 +103,7 @@ void AEverzoneCharacter::BeginPlay()
 	UpdateHUDAmmo();
 	UpdateHUDHealth();
 	UpdateHUDShield();
+
 	if (PlayerController)
 	{
 		PlayerController->HideDeathMessage();
@@ -240,17 +244,11 @@ void AEverzoneCharacter::OnRep_ReplicatedMovement()
 
 void AEverzoneCharacter::Eliminated()
 {
-	if (CombatComp && CombatComp->EquippedWeapon)
+	HandleWeaponsOnDeath();
+
+	if (PlayerController)
 	{
-		if (CombatComp->EquippedWeapon->bDestroyWeapon)
-		{
-			CombatComp->EquippedWeapon->Destroy();
-		}
-		else
-		{
-           CombatComp->EquippedWeapon->Dropped();
-		}
-		
+		PlayerController->HideWeaponIcon();
 	}
 	MulticastEliminated();
 	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &AEverzoneCharacter::EliminatedTimerFinished, EliminatedDelay);
@@ -261,6 +259,7 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 	if (PlayerController)
 	{
 		PlayerController->SetHUDWeaponAmmo(0);
+
 	}
 	bIsEliminated = true;
 	PlayElimMontage();
@@ -317,9 +316,35 @@ void AEverzoneCharacter::EliminatedTimerFinished()
 	{
 		EverzoneGameMode->RequestRespawn(this, PlayerController);
 	}
+	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(this->Controller) : PlayerController;
 	if (PlayerController)
 	{
 		PlayerController->HideDeathMessage();
+	}
+}
+void AEverzoneCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
+}
+void AEverzoneCharacter::HandleWeaponsOnDeath()
+{
+	if (!CombatComp) return;
+
+	if (CombatComp->EquippedWeapon)
+	{
+		DropOrDestroyWeapon(CombatComp->EquippedWeapon);
+	}
+	if (CombatComp->SecondaryWeapon)
+	{
+		DropOrDestroyWeapon(CombatComp->SecondaryWeapon);
 	}
 }
 void AEverzoneCharacter::UpdateDissolveMat(float DissolveMatValue)
@@ -529,6 +554,7 @@ void AEverzoneCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const
 	
 }
 
+
 void AEverzoneCharacter::AimOffset(float DeltaTime)
 {
 	if (CombatComp && CombatComp->EquippedWeapon == nullptr) return;
@@ -725,6 +751,12 @@ void AEverzoneCharacter::SpawnDefaultWeapon()
 		if (CombatComp)
 		{
 			CombatComp->EquipWeapon(StartingWeapon);
+			UpdateHUDAmmo();
+		}
+		PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Controller) : PlayerController;
+		if (PlayerController)
+		{
+			PlayerController->HideWeaponIcon();
 		}
 	}
 }
