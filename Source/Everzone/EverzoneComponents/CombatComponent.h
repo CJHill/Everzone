@@ -47,6 +47,7 @@ public:
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	//SetSpeeds: This function is for ensuring the player maintains the correct speed whilst aiming and while the speed buff is active.
 	void SetSpeeds(float BaseSpd, float BaseCrouchSpd);
+	void PickupGrenades(int32 GrenadesAmount);
 protected:
 	
 	virtual void BeginPlay() override;
@@ -58,8 +59,8 @@ protected:
 	void ReloadEmptyWeapon();
 	void AttachActorToLeftHand(AActor* ActorToAttach);
 	void AttachActorToBackpack(AActor* ActorToAttach);
-	void SetAiming(bool bAiming);
 
+	void SetAiming(bool bAiming);
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bAiming);
 

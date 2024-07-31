@@ -242,7 +242,13 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 	}
 
 }
+void UCombatComponent::PickupGrenades(int32 GrenadesAmount)
+{
+	if (!GrenadesAmount) return;
+	Grenades = FMath::Clamp(Grenades + GrenadesAmount, 0, MaxGrenades);
+	UpdateHUDGrenades();
 
+}
 void UCombatComponent::SetSpeeds(float BaseSpd, float BaseCrouchSpd)
 {
 	if (Character == nullptr || Character->GetCharacterMovement() == nullptr) return;
@@ -250,6 +256,8 @@ void UCombatComponent::SetSpeeds(float BaseSpd, float BaseCrouchSpd)
 	BaseWalkSpeed = BaseSpd;
 	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BaseCrouchSpd;
 }
+
+
 
 void UCombatComponent::StartShootTimer()
 {
