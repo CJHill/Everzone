@@ -53,8 +53,9 @@ protected:
 	*/
 	UFUNCTION(Server, Reliable)
 	void RequestServerTime(float TimeServerRequest); //Requests the current time on the server. Passes in the time when the request was made
+	//ReportServerTime: Reports the server time in response to request server time function. Passes in the time when the request was made and the time the server received the request
 	UFUNCTION(Client, Reliable)
-	void ReportServerTime(float TimeOfServerRequest, float TimeReceivedServerRequest); // Reports the server time in response to request server time function. Passes in the time when the request was made and the time the server received the request
+	void ReportServerTime(float TimeOfServerRequest, float TimeReceivedServerRequest); 
 	
 	float ClientServerDeltaTime = 0.f; //difference between server and client time
 

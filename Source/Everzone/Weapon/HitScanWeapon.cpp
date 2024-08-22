@@ -53,12 +53,13 @@ void AHitScanWeapon::Shoot(const FVector& HitTarget)
 
 FVector AHitScanWeapon::TraceEndPointWithScatter(const FVector& TraceStart, const FVector& HitTarget)
 {
-	FVector ToTargetNormalised = (HitTarget - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTargetNormalised * DistanceToSphere;
-	FVector RandVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, SphereRadius);
+	FVector ToTargetNormalised = (HitTarget - TraceStart).GetSafeNormal(); //distance between the crosshair hit target and the muzzle flash in a noramlised vector
+	FVector SphereCenter = TraceStart + ToTargetNormalised * DistanceToSphere; //calculation to extend the center of bullet radius outwards in the game's world
+	FVector RandVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, SphereRadius); //gets a random point in the bullet sphere radius 
 	FVector EndLocation = SphereCenter + RandVector;
 	FVector ToEndLocation = EndLocation - TraceStart;
-	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
+	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size()); 
+	//dividing by to end locations size as trace length is 80000.f so multipling by this alone could lead to an unnecessarily long line trace
 }
 
 void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutputHit)
@@ -66,7 +67,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	
 	UWorld* World = GetWorld();
 	if (!World) return;
-	FVector End = bUseScatter ? TraceEndPointWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+	FVector End = bUseScatter ? TraceEndPointWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f; // if not using scatter perform a basic line trace
 	World->LineTraceSingleByChannel(OutputHit,
 		TraceStart,
 		End,

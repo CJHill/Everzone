@@ -48,7 +48,7 @@ void AEverzonePlayerController::SetHUDTime()
 		EverzoneGameMode = EverzoneGameMode== nullptr ? Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this)) : EverzoneGameMode;
 	   if (EverzoneGameMode)
 	   {
-		LevelStartTime = EverzoneGameMode->LevelStartTime;//controller is created before the gamemode so we need to retrieve the time variables from that class
+		LevelStartTime = EverzoneGameMode->LevelStartTime;//controller is created before the gamemode so we need to retrieve the time variables from the game mode class
 		WarmUpTime = EverzoneGameMode->WarmUpTime;
 		MatchTime = EverzoneGameMode->MatchTime;
 		SecondsLeft = FMath::CeilToInt(EverzoneGameMode->GetCountdownTime() + LevelStartTime);
@@ -102,7 +102,7 @@ void AEverzonePlayerController::PollInit() // purpose is to refresh these variab
 	}
 }
 
-void AEverzonePlayerController::RefreshTimeSync(float DeltaTime)
+void AEverzonePlayerController::RefreshTimeSync(float DeltaTime) // responsible for calling the server time request 
 {
 	TimeSinceLastSync += DeltaTime;
 	if (IsLocalController() && TimeSinceLastSync > TimeSyncFrequency)

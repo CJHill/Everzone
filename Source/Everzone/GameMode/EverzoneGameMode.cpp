@@ -27,7 +27,7 @@ void AEverzoneGameMode::BeginPlay()
 void AEverzoneGameMode::OnMatchStateSet()
 {
 	Super::OnMatchStateSet();
-
+	//iterates through every controller in game and handles the match state functionality depending on what stage the game is at
 	for (FConstPlayerControllerIterator ControllerIt = GetWorld()->GetPlayerControllerIterator(); ControllerIt; ++ControllerIt)
 	{
 		AEverzonePlayerController* EverzonePlayerController = Cast<AEverzonePlayerController>(*ControllerIt);
