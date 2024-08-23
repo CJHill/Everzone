@@ -29,6 +29,7 @@ public:
 	void AddToPlayerDeaths(int32 DeathAmount);
 	void SetKillersName(FString KillersName);
 	void UpdateDeathMessage();
+	
 private:
 	//Note: It's important to make sure pointers are giving UProperty Macro to make sure they are null without doing so results in undefined behaviour
 	UPROPERTY()

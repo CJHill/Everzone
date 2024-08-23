@@ -15,6 +15,7 @@
 #include "Everzone/EverzoneComponents/CombatComponent.h"
 #include "Everzone/GameState/EverzoneGameState.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
+#include "Components/Image.h"
 
 void AEverzonePlayerController::BeginPlay()
 {
@@ -31,7 +32,15 @@ void AEverzonePlayerController::Tick(float DeltaTime)
 	SetHUDTime();
 	PollInit();
 	RefreshTimeSync(DeltaTime);
-	
+	HighPingTimeShown += DeltaTime;
+	if (HighPingTimeShown > CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if (PlayerState)
+		{
+			PlayerState->GetPing() * 4;
+		}
+	}
 }
 void AEverzonePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -110,6 +119,40 @@ void AEverzonePlayerController::RefreshTimeSync(float DeltaTime) // responsible 
 		RequestServerTime(GetWorld()->GetTimeSeconds());
 		TimeSinceLastSync = 0.f;
 	}
+}
+
+void AEverzonePlayerController::ShowHighPingWarning()
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->WifiIcon && 
+		EverzoneHUD->CharacterOverlay->HighPingAnimation;
+	if (bIsHUDValid)
+	{
+		EverzoneHUD->CharacterOverlay->WifiIcon->SetOpacity(1.f);
+		EverzoneHUD->CharacterOverlay->PlayAnimation(EverzoneHUD->CharacterOverlay->HighPingAnimation);
+	}
+
+}
+
+void AEverzonePlayerController::HideHighPingWarning()
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->WifiIcon &&
+		EverzoneHUD->CharacterOverlay->HighPingAnimation;
+	if (bIsHUDValid)
+	{
+		EverzoneHUD->CharacterOverlay->WifiIcon->SetOpacity(0.f);
+		if (EverzoneHUD->CharacterOverlay->IsAnimationPlaying(EverzoneHUD->CharacterOverlay->HighPingAnimation))
+		{
+			EverzoneHUD->CharacterOverlay->StopAnimation(EverzoneHUD->CharacterOverlay->HighPingAnimation);
+		}
+		
+	}
+
 }
 
 void AEverzonePlayerController::CheckMatchState_Implementation()

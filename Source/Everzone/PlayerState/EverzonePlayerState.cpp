@@ -106,3 +106,5 @@ void AEverzonePlayerState::UpdateDeathMessage()
 		}
 	}
 }
+
+

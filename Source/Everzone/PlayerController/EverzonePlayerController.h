@@ -70,6 +70,9 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidGame(FName StateOfTheMatch, float Warmup,float Cooldown, float Match, float StartingTime);
+
+	void ShowHighPingWarning();
+	void HideHighPingWarning();
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
@@ -113,4 +116,12 @@ private:
 	int32 HUDAmmoReserves;
 	UPROPERTY()
 	UTexture2D* HUDWeaponIcon;
+
+
+	//Ping Variables needed for displaying the ping issue symbol at appropriate times
+	float HighPingTimeShown = 0.f;
+	UPROPERTY(EditAnywhere)
+	float HighPingDuration = 5.f;
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20.f;
 };

@@ -50,6 +50,11 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UImage* WeaponIcon;
+	UPROPERTY(meta = (BindWidget))
+	class UImage* WifiIcon;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation* HighPingAnimation;
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation* CountdownAnimation;
