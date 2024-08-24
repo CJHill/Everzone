@@ -73,6 +73,7 @@ protected:
 
 	void ShowHighPingWarning();
 	void HideHighPingWarning();
+	void CheckPing(float DeltaTime);
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
@@ -124,4 +125,9 @@ private:
 	float HighPingDuration = 5.f;
 	UPROPERTY(EditAnywhere)
 	float CheckPingFrequency = 20.f;
+
+	float HighPingThreshold = 50.f;
+
+	float PingAnimationDisplayTime = 0.f;
+	float CurrentPing = 0.f;
 };

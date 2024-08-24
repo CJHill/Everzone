@@ -32,15 +32,9 @@ void AEverzonePlayerController::Tick(float DeltaTime)
 	SetHUDTime();
 	PollInit();
 	RefreshTimeSync(DeltaTime);
-	HighPingTimeShown += DeltaTime;
-	if (HighPingTimeShown > CheckPingFrequency)
-	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
-		if (PlayerState)
-		{
-			PlayerState->GetPing() * 4;
-		}
-	}
+	CheckPing(DeltaTime);
+	
+	
 }
 void AEverzonePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -153,6 +147,38 @@ void AEverzonePlayerController::HideHighPingWarning()
 		
 	}
 
+}
+
+void AEverzonePlayerController::CheckPing(float DeltaTime)
+{
+	HighPingTimeShown += DeltaTime;
+	if (HighPingTimeShown > CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if (PlayerState)
+		{
+			if (PlayerState->GetPing() * 4 > HighPingThreshold) // Ping is compressed as it's divided by 4. We need to multiply by 4 to return it to uncompressed format
+			{
+				CurrentPing = PlayerState->GetPing() * 4;
+				ShowHighPingWarning();
+				PingAnimationDisplayTime = 0.f;
+			}
+		}
+		HighPingTimeShown = 0.f;
+	}
+	bool bIsHighPingAnimationPlaying = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->HighPingAnimation &&
+		EverzoneHUD->CharacterOverlay->IsAnimationPlaying(EverzoneHUD->CharacterOverlay->HighPingAnimation);
+
+	if (bIsHighPingAnimationPlaying)
+	{
+		PingAnimationDisplayTime += DeltaTime;
+		if (PingAnimationDisplayTime > HighPingDuration)
+		{
+			HideHighPingWarning();
+		}
+	}
 }
 
 void AEverzonePlayerController::CheckMatchState_Implementation()
