@@ -287,6 +287,10 @@ void AWeapon::Shoot(const FVector& HitTarget)
 			
 		}
 	}
-	UseAmmo();
+	if (HasAuthority())
+	{
+		UseAmmo();
+	}
+	
 }
 

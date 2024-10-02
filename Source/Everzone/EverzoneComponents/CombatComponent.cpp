@@ -129,6 +129,7 @@ void UCombatComponent::Shoot()
 	{
 		bCanShoot = false;
 		ServerShoot(HitTarget);
+		LocalShoot(HitTarget);
 		if (EquippedWeapon)
 		{
 			CrosshairShootFactor = 0.9f;
@@ -136,6 +137,23 @@ void UCombatComponent::Shoot()
 		StartShootTimer();
 	}
 	
+}
+
+void UCombatComponent::LocalShoot(const FVector_NetQuantize& TraceHitTarget)
+{
+	if (EquippedWeapon == nullptr) return;
+	if (Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+	{
+		Character->PlayShootMontage(bIsAiming);
+		EquippedWeapon->Shoot(TraceHitTarget);
+		CombatState = ECombatState::ECS_Unoccupied;
+		return;
+	}
+	if (Character && CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayShootMontage(bIsAiming);
+		EquippedWeapon->Shoot(TraceHitTarget);
+	}
 }
 
 void UCombatComponent::ThrowGrenade()
@@ -330,19 +348,8 @@ void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& Tra
 
 void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	if (EquippedWeapon == nullptr) return;
-	if (Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
-	{
-		Character->PlayShootMontage(bIsAiming);
-		EquippedWeapon->Shoot(TraceHitTarget);
-		CombatState = ECombatState::ECS_Unoccupied;
-		return;
-	}
-	if (Character && CombatState == ECombatState::ECS_Unoccupied)
-	{
-		Character->PlayShootMontage(bIsAiming);
-		EquippedWeapon->Shoot(TraceHitTarget);
-	}
+	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+	LocalShoot(TraceHitTarget);
 }
 /* Checks to see if the character and weapon to equip variable is equal to null if it is then it calls return.Otherwise it changes the weapon state to equipped
 * Gets the hand socket the from the characters skeleton in the editor
@@ -367,6 +374,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 }
 void UCombatComponent::SwapWeapons()
 {
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
 	AWeapon* WeaponToSwap = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = WeaponToSwap;
