@@ -17,6 +17,15 @@ enum class EWeaponState : uint8
 
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
+UENUM(BlueprintType)
+enum class ETypeOfShot : uint8
+{
+	ETOS_HitScan UMETA(DisplayName = "HitScan Weapon"),
+	ETOS_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	ETOS_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+	ETOS_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class EVERZONE_API AWeapon : public AActor
 {
@@ -76,12 +85,17 @@ public:
 	class USoundCue* EquipSound;
 
 	/*
-	* Properties for enabling and disabling custom depth stencil. This is for giving the weapon mesh a glow outline effect
+	* function for enabling and disabling custom depth stencil. This is for giving the weapon mesh a glow outline effect
 	*/
 	void EnableCustomDepth(bool bEnable);
 
-
+	UPROPERTY(EditAnywhere)
+	ETypeOfShot ShotType;
 	bool bDestroyWeapon = false;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter = false;
+	FVector TraceEndPointWithScatter(const FVector& HitTarget);
 protected:
 	
 	virtual void BeginPlay() override;
@@ -104,6 +118,8 @@ protected:
 	virtual void HandleOnEquipped();
 	virtual void HandleOnDropped();
 	virtual void HandleOnEquipSecondary();
+
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -138,6 +154,16 @@ private:
 	UFUNCTION()
 	void OnRep_Ammo();
 	void UseAmmo();
+
+/*
+* Calculating end point for line trace with scatter
+*/
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 80.f;
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;

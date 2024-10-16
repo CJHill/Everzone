@@ -73,6 +73,9 @@ protected:
 	void OnRep_SecondaryWeapon();
 
 	void Shoot();
+	void ShootProjectileWeapon();
+	void ShootHitScanWeapon();
+	void ShootShotgun();
 	void LocalShoot(const FVector_NetQuantize& TraceHitTarget);
 	void ThrowGrenade();
 	UFUNCTION(Server, Reliable)

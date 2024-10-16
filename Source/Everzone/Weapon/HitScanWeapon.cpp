@@ -7,7 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
-#include "Kismet/KismetMathLibrary.h"
+
 #include "DrawDebugHelpers.h"
 #include "WeaponTypes.h"
 void AHitScanWeapon::Shoot(const FVector& HitTarget)
@@ -51,23 +51,14 @@ void AHitScanWeapon::Shoot(const FVector& HitTarget)
 	
 }
 
-FVector AHitScanWeapon::TraceEndPointWithScatter(const FVector& TraceStart, const FVector& HitTarget)
-{
-	FVector ToTargetNormalised = (HitTarget - TraceStart).GetSafeNormal(); //distance between the crosshair hit target and the muzzle flash in a noramlised vector
-	FVector SphereCenter = TraceStart + ToTargetNormalised * DistanceToSphere; //calculation to extend the center of bullet radius outwards in the game's world
-	FVector RandVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, SphereRadius); //gets a random point in the bullet sphere radius 
-	FVector EndLocation = SphereCenter + RandVector;
-	FVector ToEndLocation = EndLocation - TraceStart;
-	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size()); 
-	//dividing by to end locations size as trace length is 80000.f so multipling by this alone could lead to an unnecessarily long line trace
-}
+
 
 void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutputHit)
 {
 	
 	UWorld* World = GetWorld();
 	if (!World) return;
-	FVector End = bUseScatter ? TraceEndPointWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f; // if not using scatter perform a basic line trace
+	FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f; // if not using scatter perform a basic line trace
 	World->LineTraceSingleByChannel(OutputHit,
 		TraceStart,
 		End,
@@ -77,6 +68,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	{
 		BeamEnd = OutputHit.ImpactPoint;
 	}
+	DrawDebugSphere(GetWorld(), BeamEnd, 12.f, 8, FColor::Emerald, true);
 	if (BeamParticles)
 	{
 		UParticleSystemComponent* BeamParticlesComp = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticles, TraceStart, FRotator::ZeroRotator, true);

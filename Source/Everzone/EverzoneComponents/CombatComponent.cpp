@@ -128,15 +128,46 @@ void UCombatComponent::Shoot()
 	if (CanShoot())
 	{
 		bCanShoot = false;
-		ServerShoot(HitTarget);
-		LocalShoot(HitTarget);
+		
 		if (EquippedWeapon)
 		{
 			CrosshairShootFactor = 0.9f;
+			switch (EquippedWeapon->ShotType)
+			{
+			case ETypeOfShot::ETOS_Projectile:
+				ShootProjectileWeapon();
+				break;
+			case ETypeOfShot::ETOS_HitScan:
+				ShootHitScanWeapon();
+				break;
+			case ETypeOfShot::ETOS_Shotgun:
+				ShootShotgun();
+				break;
+			}
 		}
 		StartShootTimer();
 	}
 	
+}
+
+void UCombatComponent::ShootProjectileWeapon()
+{
+	ServerShoot(HitTarget);
+	LocalShoot(HitTarget);
+}
+
+void UCombatComponent::ShootHitScanWeapon()
+{
+	if (EquippedWeapon)
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndPointWithScatter(HitTarget) : HitTarget;
+		ServerShoot(HitTarget);
+		LocalShoot(HitTarget);
+	}
+}
+
+void UCombatComponent::ShootShotgun()
+{
 }
 
 void UCombatComponent::LocalShoot(const FVector_NetQuantize& TraceHitTarget)

@@ -16,7 +16,7 @@ class EVERZONE_API AHitScanWeapon : public AWeapon
 public:
 	virtual void Shoot(const FVector& HitTarget) override;
 protected:
-	FVector TraceEndPointWithScatter(const FVector& TraceStart, const FVector& TraceEnd);
+	
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutputHit);
 
     UPROPERTY(EditAnywhere)
@@ -42,16 +42,7 @@ private:
 	class USoundCue* ShootSound;
 	
 
-	/*
-	* Calculating end point for line trace with scatter
-	*/
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float DistanceToSphere = 800.f;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float SphereRadius = 80.f;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	bool bUseScatter = false;
+	
 };
