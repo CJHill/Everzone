@@ -18,6 +18,7 @@
 #include "Everzone/Character/EverzoneAnimInstance.h"
 #include "Everzone/Weapon/Projectile.h"
 #include "Everzone/Weapon/MeleeKnife.h"
+#include "Everzone/Weapon/Shotgun.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -152,8 +153,12 @@ void UCombatComponent::Shoot()
 
 void UCombatComponent::ShootProjectileWeapon()
 {
-	ServerShoot(HitTarget);
-	LocalShoot(HitTarget);
+	if (EquippedWeapon)
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndPointWithScatter(HitTarget) : HitTarget;
+		ServerShoot(HitTarget);
+		LocalShoot(HitTarget);
+	}
 }
 
 void UCombatComponent::ShootHitScanWeapon()
@@ -168,6 +173,15 @@ void UCombatComponent::ShootHitScanWeapon()
 
 void UCombatComponent::ShootShotgun()
 {
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun)
+	{
+        TArray<FVector>HitTargets;
+		Shotgun->ShotgunTraceEndPointWithScatter(HitTarget, HitTargets);
+
+	}
+	
+
 }
 
 void UCombatComponent::LocalShoot(const FVector_NetQuantize& TraceHitTarget)

@@ -20,6 +20,7 @@ public:
 	  Damage is then applied after this code is conducted and it is multiplied by the value of the Key pair.
 	*/
 	virtual void Shoot(const FVector& HitTarget) override;
+	void ShotgunTraceEndPointWithScatter(const FVector& HitTarget, TArray<FVector>&HitTargets);
 private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	uint32 NumOfShotgunPellets = 10;

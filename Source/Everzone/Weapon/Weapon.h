@@ -119,7 +119,15 @@ protected:
 	virtual void HandleOnDropped();
 	virtual void HandleOnEquipSecondary();
 
+ /*
+  * Calculating end point for line trace with scatter
+ */
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 80.f;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -155,15 +163,7 @@ private:
 	void OnRep_Ammo();
 	void UseAmmo();
 
-/*
-* Calculating end point for line trace with scatter
-*/
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float DistanceToSphere = 800.f;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float SphereRadius = 80.f;
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
