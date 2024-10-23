@@ -153,21 +153,22 @@ void UCombatComponent::Shoot()
 
 void UCombatComponent::ShootProjectileWeapon()
 {
-	if (EquippedWeapon)
+	if (EquippedWeapon && Character)
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndPointWithScatter(HitTarget) : HitTarget;
+		
+		if (!Character->HasAuthority()) LocalShoot(HitTarget);
 		ServerShoot(HitTarget);
-		LocalShoot(HitTarget);
 	}
 }
 
 void UCombatComponent::ShootHitScanWeapon()
 {
-	if (EquippedWeapon)
+	if (EquippedWeapon && Character)
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndPointWithScatter(HitTarget) : HitTarget;
+		if (!Character->HasAuthority()) LocalShoot(HitTarget);
 		ServerShoot(HitTarget);
-		LocalShoot(HitTarget);
 	}
 }
 
@@ -176,9 +177,10 @@ void UCombatComponent::ShootShotgun()
 	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
 	if (Shotgun)
 	{
-        TArray<FVector>HitTargets;
+        TArray<FVector_NetQuantize>HitTargets;
 		Shotgun->ShotgunTraceEndPointWithScatter(HitTarget, HitTargets);
-
+		if (!Character->HasAuthority()) LocalShootShotgun(HitTargets);
+		ServerShootShotgun(HitTargets);
 	}
 	
 
@@ -187,18 +189,25 @@ void UCombatComponent::ShootShotgun()
 void UCombatComponent::LocalShoot(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr) return;
-	if (Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
-	{
-		Character->PlayShootMontage(bIsAiming);
-		EquippedWeapon->Shoot(TraceHitTarget);
-		CombatState = ECombatState::ECS_Unoccupied;
-		return;
-	}
+	
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayShootMontage(bIsAiming);
 		EquippedWeapon->Shoot(TraceHitTarget);
 	}
+}
+
+void UCombatComponent::LocalShootShotgun(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun == nullptr || Character == nullptr) return;
+	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayShootMontage(bIsAiming);
+		Shotgun->ShootShotgun(TraceHitTargets);
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+
 }
 
 void UCombatComponent::ThrowGrenade()
@@ -396,6 +405,16 @@ void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& 
 	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	LocalShoot(TraceHitTarget);
 }
+void UCombatComponent::ServerShootShotgun_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	MulticastShootShotgun(TraceHitTargets);
+}
+void UCombatComponent::MulticastShootShotgun_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+	LocalShootShotgun(TraceHitTargets);
+}
+
 /* Checks to see if the character and weapon to equip variable is equal to null if it is then it calls return.Otherwise it changes the weapon state to equipped
 * Gets the hand socket the from the characters skeleton in the editor
 * lastly gives ownership of the equipped weapon to the character in possession of the weapon and hides the pick up widget from display
@@ -614,6 +633,7 @@ void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
 		BackpackSocket->AttachActor(ActorToAttach, Character->GetMesh());
 	}
 }
+
 void UCombatComponent::Melee()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;

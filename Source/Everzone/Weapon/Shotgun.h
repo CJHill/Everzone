@@ -19,8 +19,8 @@ public:
 	  Uses a for loop the shotgun pellets so each pellet is conducting a line trace. A hit is recorded getting a pointer of the character that was hit and storing it in the TMap with a value of 1 per hit.
 	  Damage is then applied after this code is conducted and it is multiplied by the value of the Key pair.
 	*/
-	virtual void Shoot(const FVector& HitTarget) override;
-	void ShotgunTraceEndPointWithScatter(const FVector& HitTarget, TArray<FVector>&HitTargets);
+	virtual void ShootShotgun(const TArray<FVector_NetQuantize>& HitTargets);
+	void ShotgunTraceEndPointWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>&HitTargets);
 private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	uint32 NumOfShotgunPellets = 10;

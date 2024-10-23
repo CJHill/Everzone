@@ -77,6 +77,7 @@ protected:
 	void ShootHitScanWeapon();
 	void ShootShotgun();
 	void LocalShoot(const FVector_NetQuantize& TraceHitTarget);
+	void LocalShootShotgun(const TArray<FVector_NetQuantize>& TraceHitTargets);
 	void ThrowGrenade();
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
@@ -89,6 +90,12 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShoot(const FVector_NetQuantize& TraceHitTarget);
+
+	UFUNCTION(Server, Reliable)
+	void ServerShootShotgun(const TArray<FVector_NetQuantize>& TraceHitTargets);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastShootShotgun(const TArray<FVector_NetQuantize>& TraceHitTargets);
 
 	void Melee();
 	UFUNCTION(Server, Reliable)
