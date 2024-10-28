@@ -77,5 +77,9 @@ void UEverzoneAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bUseFabrik = EverzoneCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 	bUseAimOffset = EverzoneCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 	bTransformRightHand = EverzoneCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+	if (EverzoneCharacter->IsLocallyControlled() && EverzoneCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade)
+	{
+		bUseFabrik = !EverzoneCharacter->IsLocallyReloading();
+	}
 }
 

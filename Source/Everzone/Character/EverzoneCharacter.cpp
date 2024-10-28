@@ -813,6 +813,13 @@ ECombatState AEverzoneCharacter::GetCombatState() const
 	return CombatComp->CombatState;
 }
 
+bool AEverzoneCharacter::IsLocallyReloading()
+{
+	if(!CombatComp) return false;
+	return CombatComp->bIsLocallyReloading;
+	
+}
+
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)

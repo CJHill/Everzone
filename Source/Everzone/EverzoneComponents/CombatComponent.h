@@ -48,6 +48,8 @@ public:
 	//SetSpeeds: This function is for ensuring the player maintains the correct speed whilst aiming and while the speed buff is active.
 	void SetSpeeds(float BaseSpd, float BaseCrouchSpd);
 	void PickupGrenades(int32 GrenadesAmount);
+
+	bool bIsLocallyReloading = false;
 protected:
 	
 	virtual void BeginPlay() override;
@@ -150,9 +152,12 @@ private:
 	class AMeleeKnife* KnifeActor;
 
 
-	UPROPERTY(Replicated)
-	bool bIsAiming;
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
+	bool bIsAiming = false;
 
+	bool bAimButtonPressed = false;
+	UFUNCTION()
+	void OnRep_Aiming();
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
 

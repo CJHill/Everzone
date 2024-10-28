@@ -115,6 +115,7 @@ void UCombatComponent::SetAiming(bool bAiming)
 	{
 		Character->ShowSniperScope(bAiming);
 	}
+	if(Character->IsLocallyControlled()) bAimButtonPressed = bAiming;
 }
 void UCombatComponent::ServerSetAiming_Implementation(bool bAiming)
 {
@@ -358,6 +359,7 @@ bool UCombatComponent::CanShoot()
 	{
 		return false;
 	}
+	if (bIsLocallyReloading) return false;
 	if (!EquippedWeapon->AmmoIsEmpty() && bCanShoot && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
 	{
 		// if the player is using a shotgun, is reloading and has ammo in the shotgun we can interupt the reload process by shooting
@@ -521,7 +523,7 @@ void UCombatComponent::OnRep_CombatState()
 	switch (CombatState)
 	{
 	case ECombatState::ECS_Reloading:
-		HandleReload();
+		if(Character && !Character->IsLocallyControlled()) HandleReload();
 		break;
 	case ECombatState::ECS_Unoccupied:
 		if (bShootIsPressed)
@@ -561,14 +563,17 @@ bool UCombatComponent::bShouldSwapWeapons()
 }
 void UCombatComponent::Reload()
 {
-	if (AmmoReserves > 0 && CombatState ==ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->AmmoIsFull())
+	if (AmmoReserves > 0 && CombatState ==ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->AmmoIsFull() && !bIsLocallyReloading)
 	{
 		ServerReload();
+		HandleReload();
+		bIsLocallyReloading = true;
 	}
 }
 void UCombatComponent::FinishedReload()
 {
 	if (Character == nullptr) return;
+	bIsLocallyReloading = false;
 	if (Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -604,7 +609,7 @@ void UCombatComponent::ServerReload_Implementation()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
 	CombatState = ECombatState::ECS_Reloading;
-	HandleReload();
+	if(!Character->IsLocallyControlled()) HandleReload();
 }
 void UCombatComponent::ReloadEmptyWeapon()
 {
@@ -709,7 +714,11 @@ void UCombatComponent::MeleeFinished()
 }
 void UCombatComponent::HandleReload()
 {
-	Character->PlayReloadMontage();
+	if (Character)
+	{
+		Character->PlayReloadMontage();
+	}
+	
 }
 int32 UCombatComponent::AmountToReload()
 {
@@ -737,7 +746,7 @@ void UCombatComponent::UpdateAmmoAmount()
 	{
 		PlayerController->SetHUDAmmoReserves(AmmoReserves);
 	}
-	EquippedWeapon->AddAmmo(-ReloadAmount);
+	EquippedWeapon->AddAmmo(ReloadAmount);
 }
 void UCombatComponent::UpdateAmmoReserves()
 {
@@ -767,7 +776,7 @@ void UCombatComponent::UpdateShotgunAmmo()
 	{
 		PlayerController->SetHUDAmmoReserves(AmmoReserves);
 	}
-	EquippedWeapon->AddAmmo(-1);
+	EquippedWeapon->AddAmmo(1);
 	bCanShoot = true;
 	if (EquippedWeapon->AmmoIsFull() || AmmoReserves == 0) // if full jump to the end of the reload animation
 	{
@@ -899,6 +908,14 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 
 			PlayerHUD->SetHUDPackage(HUDPackage);
 		}
+	}
+}
+
+void UCombatComponent::OnRep_Aiming()
+{
+	if (Character && Character->IsLocallyControlled())
+	{
+		bIsAiming = bAimButtonPressed;
 	}
 }
 

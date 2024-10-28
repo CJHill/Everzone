@@ -155,14 +155,18 @@ private:
 	/*
 	* Ammunition Properties
 	*/
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 	UPROPERTY(EditAnywhere)
 	int32 AmmoMagazine;
-	UFUNCTION()
-	void OnRep_Ammo();
+
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
 	void UseAmmo();
 
+	int32 Sequence = 0; //Sequence is the number of unprocessed server requests for ammo. This is incremented in UseAmmo() and decremented in ClientUpdateAmmo()
 
 
 	UPROPERTY(EditAnywhere)

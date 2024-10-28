@@ -95,7 +95,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, WeaponState)
-	DOREPLIFETIME(AWeapon, Ammo)
+	
 }
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -116,35 +116,6 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 }
 
 
-void AWeapon::OnRep_Ammo()
-{
-	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
-	if (EverzoneOwningCharacter && EverzoneOwningCharacter->GetCombatComp() && EverzoneOwningCharacter->GetCombatComp()->IsShotgun() && AmmoIsFull())
-	{
-		EverzoneOwningCharacter->GetCombatComp()->JumpToShotgunEnd();
-	}
-	SetHUDAmmo();
-
-}
-void AWeapon::UseAmmo()
-{
-	Ammo = FMath::Clamp(Ammo -1, 0, AmmoMagazine);
-	SetHUDAmmo();
-}
-
-void AWeapon::SetHUDAmmo()
-{
-	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
-	if (EverzoneOwningCharacter)
-	{
-		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(EverzoneOwningCharacter->Controller) : EverzoneOwningController;
-		if (EverzoneOwningController)
-		{
-			EverzoneOwningController->SetHUDWeaponAmmo(Ammo);
-			EverzoneOwningController->SetHUDAmmoReserves(AmmoMagazine);
-		}
-	}
-}
 void AWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State;
@@ -267,12 +238,59 @@ void AWeapon::Dropped()
 	EverzoneOwningController = nullptr;
 }
 
-void AWeapon::AddAmmo(int32 AmmoToAdd)
+void AWeapon::SetHUDAmmo()
 {
-	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, AmmoMagazine);
-	SetHUDAmmo();
+	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
+	if (EverzoneOwningCharacter)
+	{
+		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(EverzoneOwningCharacter->Controller) : EverzoneOwningController;
+		if (EverzoneOwningController)
+		{
+			EverzoneOwningController->SetHUDWeaponAmmo(Ammo);
+			EverzoneOwningController->SetHUDAmmoReserves(AmmoMagazine);
+		}
+	}
 }
 
+void AWeapon::UseAmmo()
+{
+	Ammo = FMath::Clamp(Ammo - 1, 0, AmmoMagazine);
+	SetHUDAmmo();
+	if (HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		++Sequence;
+	}
+}
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, AmmoMagazine);
+	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
+}
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	if (HasAuthority()) return;
+	Ammo = ServerAmmo;
+	--Sequence;
+	Ammo -= Sequence;
+	SetHUDAmmo();
+}
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority()) return;
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, AmmoMagazine);
+	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
+	if (EverzoneOwningCharacter && EverzoneOwningCharacter->GetCombatComp() && EverzoneOwningCharacter->GetCombatComp()->IsShotgun() && AmmoIsFull())
+	{
+		EverzoneOwningCharacter->GetCombatComp()->JumpToShotgunEnd();
+	}
+	SetHUDAmmo();
+
+}
 bool AWeapon::AmmoIsEmpty()
 {
 	return Ammo <= 0;
@@ -304,10 +322,9 @@ void AWeapon::Shoot(const FVector& HitTarget)
 			
 		}
 	}
-	if (HasAuthority())
-	{
-		UseAmmo();
-	}
+	
+	UseAmmo();
+	
 	
 }
 
