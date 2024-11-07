@@ -44,6 +44,63 @@ public:
 	void UpdateHUDShield();
 	void UpdateHUDAmmo();
 	void SpawnDefaultWeapon();
+
+	/*Hit Boxes for Server Side Rewind. Naming convention is the same as the corresponding bodypart found in the skeletal mesh BP*/
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* Head;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Pelvis;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Spine_02;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Spine_03;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Upperarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Upperarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Lowerarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Lowerarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Backpack;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Upperbackpack;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Calf_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Calf_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_r;
+
+
 protected:
 	virtual void BeginPlay() override;
 	

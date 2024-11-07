@@ -23,6 +23,7 @@
 #include "Everzone/Weapon/WeaponTypes.h"
 #include "Everzone/HUD/EverzoneHUD.h"
 #include "Everzone/HUD/OverlayWidget.h"
+#include "Components/BoxComponent.h"
 
 
 // Sets default values
@@ -68,7 +69,78 @@ AEverzoneCharacter::AEverzoneCharacter()
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	/*Hit boxes for server side rewind*/
+	Head = CreateDefaultSubobject<UBoxComponent>(TEXT("Head Hitbox"));
+	Head->SetupAttachment(GetMesh(), FName("head"));
+	Head->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	Pelvis = CreateDefaultSubobject<UBoxComponent>(TEXT("Pelvis Hitbox"));
+	Pelvis->SetupAttachment(GetMesh(), FName("pelvis"));
+	Pelvis->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Spine_02 = CreateDefaultSubobject<UBoxComponent>(TEXT("Spine_02 Hitbox"));
+	Spine_02->SetupAttachment(GetMesh(), FName("spine_02"));
+	Spine_02->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Spine_03 = CreateDefaultSubobject<UBoxComponent>(TEXT("Spine_03 Hitbox"));
+	Spine_03->SetupAttachment(GetMesh(), FName("spine_03"));
+	Spine_03->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Upperarm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("Upperarm_l Hitbox"));
+	Upperarm_l->SetupAttachment(GetMesh(), FName("upperarm_l"));
+	Upperarm_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Upperarm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("Upperarm_r Hitbox"));
+	Upperarm_r->SetupAttachment(GetMesh(), FName("upperarm_r"));
+	Upperarm_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Lowerarm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("Lowerarm_l Hitbox"));
+	Lowerarm_l->SetupAttachment(GetMesh(), FName("lowerarm_l"));
+	Lowerarm_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Lowerarm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("Lowerarm_r Hitbox"));
+	Lowerarm_r->SetupAttachment(GetMesh(), FName("lowerarm_r"));
+	Lowerarm_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Hand_l = CreateDefaultSubobject<UBoxComponent>(TEXT("Hand_l Hitbox"));
+	Hand_l->SetupAttachment(GetMesh(), FName("hand_l"));
+	Hand_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Hand_r = CreateDefaultSubobject<UBoxComponent>(TEXT("Hand_r Hitbox"));
+	Hand_r->SetupAttachment(GetMesh(), FName("hand_r"));
+	Hand_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Backpack = CreateDefaultSubobject<UBoxComponent>(TEXT("Backpack Hitbox"));
+	Backpack->SetupAttachment(GetMesh(), FName("backpack"));
+	Backpack->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Upperbackpack = CreateDefaultSubobject<UBoxComponent>(TEXT("Upper Backpack Hitbox"));
+	Upperbackpack->SetupAttachment(GetMesh(), FName("blanket_r"));
+	Upperbackpack->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Thigh_l = CreateDefaultSubobject<UBoxComponent>(TEXT("Thigh_l Hitbox"));
+	Thigh_l->SetupAttachment(GetMesh(), FName("thigh_l"));
+	Thigh_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Thigh_r = CreateDefaultSubobject<UBoxComponent>(TEXT("Thigh_r Hitbox"));
+	Thigh_r->SetupAttachment(GetMesh(), FName("thigh_r"));
+	Thigh_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Calf_l = CreateDefaultSubobject<UBoxComponent>(TEXT("Calf_l Hitbox"));
+	Calf_l->SetupAttachment(GetMesh(), FName("calf_l"));
+	Calf_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Calf_r = CreateDefaultSubobject<UBoxComponent>(TEXT("Calf_r Hitbox"));
+	Calf_r->SetupAttachment(GetMesh(), FName("calf_r"));
+	Calf_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Foot_l = CreateDefaultSubobject<UBoxComponent>(TEXT("Foot_l Hitbox"));
+	Foot_l->SetupAttachment(GetMesh(), FName("foot_l"));
+	Foot_l->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Foot_r = CreateDefaultSubobject<UBoxComponent>(TEXT("Foot_r Hitbox"));
+	Foot_r->SetupAttachment(GetMesh(), FName("foot_r"));
+	Foot_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AEverzoneCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
