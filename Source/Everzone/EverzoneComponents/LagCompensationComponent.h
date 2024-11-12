@@ -6,6 +6,32 @@
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
 
+USTRUCT(BlueprintType)
+struct FHitBoxInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FVector Location;
+	UPROPERTY()
+	FRotator Rotation;
+	UPROPERTY()
+	FVector BoxExtent;
+};
+
+USTRUCT(BlueprintType)
+struct FFramePackage
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float Time;
+
+	UPROPERTY()
+	TMap<FName, FHitBoxInfo> HitboxMap;
+};
+
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class EVERZONE_API ULagCompensationComponent : public UActorComponent
@@ -15,14 +41,22 @@ class EVERZONE_API ULagCompensationComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	ULagCompensationComponent();
+	friend class AEverzoneCharacter;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+private:
+	UPROPERTY()
+	AEverzoneCharacter* Character;
+	UPROPERTY()
+	class AEverzonePlayerController* PlayerController;
+
 public:	
 	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 
 		
 };

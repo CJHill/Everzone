@@ -8,7 +8,9 @@
 #include "Everzone/Interfaces/CrosshairInterface.h"
 #include "Components/TimelineComponent.h"
 #include "Everzone/EverzoneTypes/CombatState.h"
+#include "Everzone/EverzoneComponents/LagCompensationComponent.h"
 #include "EverzoneCharacter.generated.h"
+
 
 UCLASS()
 class EVERZONE_API AEverzoneCharacter : public ACharacter, public ICrosshairInterface
@@ -169,10 +171,14 @@ private:
 	class AWeapon* OverlappingWeapon;
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+
+	//Everzone Component Classes
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComp;
 	UPROPERTY(VisibleAnywhere)
 	class UBuffComponent* BuffComp;
+	UPROPERTY(VisibleAnywhere)
+	class ULagCompensationComponent* LagCompensationComp;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();

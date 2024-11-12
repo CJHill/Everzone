@@ -53,6 +53,8 @@ AEverzoneCharacter::AEverzoneCharacter()
 	BuffComp = CreateDefaultSubobject<UBuffComponent>(TEXT("Buff Component"));
 	BuffComp->SetIsReplicated(true);
 
+	LagCompensationComp = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("Lag Compensation Component"));
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -228,6 +230,14 @@ void AEverzoneCharacter::PostInitializeComponents()
 		BuffComp->Character = this;
 		BuffComp->SetInitialSpd(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
 		BuffComp->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
+	}
+	if (LagCompensationComp)
+	{
+		LagCompensationComp->Character = this;
+		if (Controller)
+		{
+			LagCompensationComp->PlayerController = Cast<AEverzonePlayerController>(Controller);
+		}
 	}
 }
 void AEverzoneCharacter::PlayShootMontage(bool bAiming) 
