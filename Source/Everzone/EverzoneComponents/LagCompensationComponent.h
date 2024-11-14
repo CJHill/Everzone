@@ -44,10 +44,14 @@ public:
 	friend class AEverzoneCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ShowFramePackage(const FFramePackage& PackageToShow, const FColor& Colour);
+
+	void HitScanServerSideRewind(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& PackageToSave);
+
+	FFramePackage FrameToInterp(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
 private:
 	UPROPERTY()
 	AEverzoneCharacter* Character;
