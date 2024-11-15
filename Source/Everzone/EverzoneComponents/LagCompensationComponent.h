@@ -31,7 +31,16 @@ struct FFramePackage
 	TMap<FName, FHitBoxInfo> HitboxMap;
 };
 
+USTRUCT(BlueprintType)
+struct FServerSideRewindResult
+{
+	GENERATED_BODY()
 
+	UPROPERTY()
+	bool bHitConfirmed;
+	UPROPERTY()
+	bool bHitHeadshot;
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class EVERZONE_API ULagCompensationComponent : public UActorComponent
@@ -45,13 +54,20 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ShowFramePackage(const FFramePackage& PackageToShow, const FColor& Colour);
 
-	void HitScanServerSideRewind(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+	FServerSideRewindResult HitScanServerSideRewind(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& PackageToSave);
 
 	FFramePackage FrameToInterp(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+
+	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
+	void CacheHitBoxPositions(AEverzoneCharacter* HitCharacter, FFramePackage& OutFramePackage);
+	void MoveHitBoxes(AEverzoneCharacter* HitCharacter, const FFramePackage& FramePackage);
+	void ResetHitBoxes(AEverzoneCharacter* HitCharacter, const FFramePackage& FramePackage);
+
+	void EnableCharactersMeshCollision(AEverzoneCharacter* HitCharacter, ECollisionEnabled::Type CollsionEnabled);
 private:
 	UPROPERTY()
 	AEverzoneCharacter* Character;
