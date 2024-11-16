@@ -97,7 +97,8 @@ public:
 	bool bUseScatter = false;
 	FVector TraceEndPointWithScatter(const FVector& HitTarget);
 protected:
-	
+	UPROPERTY(EditAnywhere)
+	float Damage = 10.f;
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
@@ -128,6 +129,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float SphereRadius = 80.f;
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind = false;
+
+	UPROPERTY()
+	class AEverzoneCharacter* EverzoneOwningCharacter;
+	UPROPERTY()
+	class AEverzonePlayerController* EverzoneOwningController;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -171,8 +180,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
-	class AEverzoneCharacter* EverzoneOwningCharacter;
-	class AEverzonePlayerController* EverzoneOwningController;
+	
 public:	
 	void SetWeaponState(EWeaponState State);
 
@@ -184,4 +192,5 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetAmmoMag() const { return AmmoMagazine; }
 	FORCEINLINE UTexture2D* GetWeaponIcon() const { return WeaponIconTexture; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 };

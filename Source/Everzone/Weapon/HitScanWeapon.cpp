@@ -4,10 +4,11 @@
 #include "HitScanWeapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Everzone/Character/EverzoneCharacter.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
-
+#include "Everzone/EverzoneComponents/LagCompensationComponent.h"
 #include "DrawDebugHelpers.h"
 #include "WeaponTypes.h"
 void AHitScanWeapon::Shoot(const FVector& HitTarget)
@@ -26,10 +27,26 @@ void AHitScanWeapon::Shoot(const FVector& HitTarget)
 	FHitResult ShootResult;
 	WeaponTraceHit(Start, HitTarget, ShootResult);
 
-	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(ShootResult.GetActor());
-	if (EverzoneCharacter && HasAuthority() && InstigatorController)
+	AEverzoneCharacter* HitCharacter = Cast<AEverzoneCharacter>(ShootResult.GetActor()); 
+	if (HitCharacter  && InstigatorController)
 	{
-		UGameplayStatics::ApplyDamage(EverzoneCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+		if (HasAuthority() && !bUseServerSideRewind)
+		{
+			UGameplayStatics::ApplyDamage(HitCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+		}
+		if(!HasAuthority() && bUseServerSideRewind)
+		{
+			EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(OwnerPawn) : EverzoneOwningCharacter;
+			EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(InstigatorController) : EverzoneOwningController;
+			if (!EverzoneOwningCharacter || !EverzoneOwningController || !EverzoneOwningCharacter->GetLagCompensationComp()) return;
+			EverzoneOwningCharacter->GetLagCompensationComp()->ServerScoreRequest(
+				HitCharacter,
+				Start, 
+				HitTarget, 
+				EverzoneOwningController->GetCurrentServerTime() - EverzoneOwningController->SingleTripTime,
+				this);
+		}
+		
 	}
 	if (ImpactParticles)
 	{

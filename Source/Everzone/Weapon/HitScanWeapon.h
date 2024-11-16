@@ -25,8 +25,7 @@ protected:
     UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound;
 
-    UPROPERTY(EditAnywhere)
-	float Damage = 10.f;
+   
 
 private:
 	

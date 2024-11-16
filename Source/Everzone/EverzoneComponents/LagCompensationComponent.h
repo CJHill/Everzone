@@ -55,6 +55,9 @@ public:
 	void ShowFramePackage(const FFramePackage& PackageToShow, const FColor& Colour);
 
 	FServerSideRewindResult HitScanServerSideRewind(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+
+	UFUNCTION(Server, Reliable)
+	void ServerScoreRequest(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, class AWeapon* DamageCauser);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -68,6 +71,8 @@ protected:
 	void ResetHitBoxes(AEverzoneCharacter* HitCharacter, const FFramePackage& FramePackage);
 
 	void EnableCharactersMeshCollision(AEverzoneCharacter* HitCharacter, ECollisionEnabled::Type CollsionEnabled);
+
+	void SaveFrame();
 private:
 	UPROPERTY()
 	AEverzoneCharacter* Character;

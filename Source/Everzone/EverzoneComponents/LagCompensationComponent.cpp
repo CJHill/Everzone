@@ -3,8 +3,10 @@
 
 #include "LagCompensationComponent.h"
 #include "Everzone/Character/EverzoneCharacter.h"
+#include "Everzone/Weapon/Weapon.h"
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
 // Sets default values for this component's properties
 ULagCompensationComponent::ULagCompensationComponent()
 {
@@ -164,8 +166,37 @@ void ULagCompensationComponent::EnableCharactersMeshCollision(AEverzoneCharacter
 		HitCharacter->GetMesh()->SetCollisionEnabled(CollsionEnabled);
 	}
 }
+void ULagCompensationComponent::SaveFrame() 
+{
+	if (Character == nullptr || !Character->HasAuthority()) return;
+	if (FrameHistory.Num() <= 1)
+	{
+		// Save the current frame by adding it to the double linked list (Frame History)
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame);
+	}
+	else
+	{
+		// History Length contains the amount of time stored in the double linked list
+		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+
+		while (HistoryLength > MaxRecordTime)// The maximum length of time the double linked list can store is 300 milliseconds
+		{
+			// Remove the oldest frame and then check History Length's value again
+			FrameHistory.RemoveNode(FrameHistory.GetTail());
+			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		}
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame);
+
+		//ShowFramePackage(ThisFrame, FColor::Blue);
+	}
+}
 void ULagCompensationComponent::ShowFramePackage(const FFramePackage& PackageToShow, const FColor& Colour)
 {
+	//This function is purely to see the effects of server side rewind in the editor. It has no effect on how server side rewind works
 	for (auto& BoxInfo : PackageToShow.HitboxMap)
 	{
 		DrawDebugBox(GetWorld(), BoxInfo.Value.Location, BoxInfo.Value.BoxExtent, FQuat(BoxInfo.Value.Rotation), Colour, false, 0.3f);
@@ -228,31 +259,19 @@ FServerSideRewindResult ULagCompensationComponent::HitScanServerSideRewind(AEver
 	}
 	return ConfirmHit(FPackageToCheck, HitCharacter, TraceStart, HitLocation);
 }
+void ULagCompensationComponent::ServerScoreRequest_Implementation(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, AWeapon* DamageCauser)
+{
+	FServerSideRewindResult ConfirmHit = HitScanServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
+	if (Character && HitCharacter && ConfirmHit.bHitConfirmed && DamageCauser)
+	{
+		UGameplayStatics::ApplyDamage(HitCharacter, DamageCauser->GetDamage(), Character->Controller, DamageCauser, UDamageType::StaticClass());
+	}
+}
 // Called every frame
 void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (FrameHistory.Num() <= 1)
-	{
-		FFramePackage ThisFrame;
-		SaveFramePackage(ThisFrame);
-		FrameHistory.AddHead(ThisFrame);
-	}
-	else
-	{
-		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
-		while (HistoryLength > MaxRecordTime)
-		{
-			FrameHistory.RemoveNode(FrameHistory.GetTail());
-			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
-		}
-		FFramePackage ThisFrame;
-		SaveFramePackage(ThisFrame);
-		FrameHistory.AddHead(ThisFrame);
-
-		ShowFramePackage(ThisFrame, FColor::Blue);
-	}
+	SaveFrame();
 }
 
 

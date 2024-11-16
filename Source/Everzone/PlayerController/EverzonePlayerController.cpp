@@ -219,7 +219,8 @@ void AEverzonePlayerController::RequestServerTime_Implementation(float TimeServe
 void AEverzonePlayerController::ReportServerTime_Implementation(float TimeOfServerRequest, float TimeReceivedServerRequest)
 {
 	float RoundTripTime = GetWorld()->TimeSeconds - TimeOfServerRequest;
-	float CurrentServerTime = TimeReceivedServerRequest + (0.5 * RoundTripTime);
+	SingleTripTime = 0.5 * RoundTripTime; // We are only making note of the single trip time so that it can be used for server side rewind
+	float CurrentServerTime = TimeReceivedServerRequest + SingleTripTime;
 	ClientServerDeltaTime = CurrentServerTime - GetWorld()->TimeSeconds;
 }
 void AEverzonePlayerController::OnPossess(APawn* InPawn)
