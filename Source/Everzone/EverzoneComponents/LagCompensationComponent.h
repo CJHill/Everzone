@@ -29,6 +29,9 @@ struct FFramePackage
 
 	UPROPERTY()
 	TMap<FName, FHitBoxInfo> HitboxMap;
+
+	UPROPERTY()
+	AEverzoneCharacter* Character;
 };
 
 USTRUCT(BlueprintType)
@@ -41,6 +44,17 @@ struct FServerSideRewindResult
 	UPROPERTY()
 	bool bHitHeadshot;
 };
+USTRUCT(BlueprintType)
+struct FShotgunServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TMap<AEverzoneCharacter*, uint32> Headshots;
+	UPROPERTY()
+	TMap<AEverzoneCharacter*, uint32> Bodyshots;
+};
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class EVERZONE_API ULagCompensationComponent : public UActorComponent
@@ -55,9 +69,20 @@ public:
 	void ShowFramePackage(const FFramePackage& PackageToShow, const FColor& Colour);
 
 	FServerSideRewindResult HitScanServerSideRewind(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+	FShotgunServerSideRewindResult ShotgunServerSideRewind(
+		const TArray<AEverzoneCharacter*>& HitCharacters,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations,
+		float HitTime);
 
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, class AWeapon* DamageCauser);
+
+	UFUNCTION(Server, Reliable)
+	void ServerShotgunScoreRequest(const TArray<AEverzoneCharacter*>& HitCharacters,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations,
+		float HitTime);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -73,6 +98,10 @@ protected:
 	void EnableCharactersMeshCollision(AEverzoneCharacter* HitCharacter, ECollisionEnabled::Type CollsionEnabled);
 
 	void SaveFrame();
+    FFramePackage GetFrameToCheck(AEverzoneCharacter* HitCharacter, float HitTime);
+	//Lag compensation for Shotgun class
+	
+	FShotgunServerSideRewindResult ShotgunConfirmHit(const TArray<FFramePackage>& FramePackages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations);
 private:
 	UPROPERTY()
 	AEverzoneCharacter* Character;
