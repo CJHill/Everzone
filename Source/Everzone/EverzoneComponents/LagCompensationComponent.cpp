@@ -359,6 +359,7 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(AEverzoneCharacter* Hit
 	{
 		FPackageToCheck = FrameToInterp(Older->GetValue(), Younger->GetValue(), HitTime);
 	}
+	FPackageToCheck.Character = HitCharacter;
 	return FPackageToCheck;
 }
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewind(const TArray<AEverzoneCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)

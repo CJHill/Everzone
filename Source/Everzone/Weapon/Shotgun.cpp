@@ -4,8 +4,10 @@
 #include "Shotgun.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Everzone/Character/EverzoneCharacter.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Everzone/EverzoneComponents/LagCompensationComponent.h"
 #include "Sound/SoundCue.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -54,15 +56,38 @@ void AShotgun::ShootShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		}
 
 	}
+	// This array is needed for the function parameter of shotgun score request
+	TArray<AEverzoneCharacter*> HitCharacters;
 	for (auto HitPair : HitMap)
 	{
-		if (HitPair.Key && HasAuthority() && InstigatorController)
+		if (HitPair.Key && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(HitPair.Key, //player that was hit
-				Damage * HitPair.Value,// multiples damage by number of hits to player
-				InstigatorController,
-				this, UDamageType::StaticClass());
+			if (HasAuthority() && !bUseServerSideRewind)
+			{
+				UGameplayStatics::ApplyDamage(HitPair.Key, //player that was hit
+					Damage * HitPair.Value,// multiplies damage by number of hits the player received
+					InstigatorController,
+					this, UDamageType::StaticClass());
+			}
+
+			HitCharacters.Add(HitPair.Key);
+			
 		}
+	}
+	if (!HasAuthority() && bUseServerSideRewind)
+	{
+		
+		EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(OwnerPawn) : EverzoneOwningCharacter;
+		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(InstigatorController) : EverzoneOwningController;
+		if (EverzoneOwningCharacter && EverzoneOwningCharacter->IsLocallyControlled() && EverzoneOwningController && EverzoneOwningCharacter->GetLagCompensationComp())
+		{
+			EverzoneOwningCharacter->GetLagCompensationComp()->ServerShotgunScoreRequest(
+				HitCharacters,
+				Start,
+				HitTargets,
+				EverzoneOwningController->GetCurrentServerTime() - EverzoneOwningController->SingleTripTime);
+		}
+		
 	}
 }
 

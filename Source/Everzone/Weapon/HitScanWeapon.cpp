@@ -38,7 +38,7 @@ void AHitScanWeapon::Shoot(const FVector& HitTarget)
 		{
 			EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(OwnerPawn) : EverzoneOwningCharacter;
 			EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(InstigatorController) : EverzoneOwningController;
-			if (!EverzoneOwningCharacter || !EverzoneOwningController || !EverzoneOwningCharacter->GetLagCompensationComp()) return;
+			if (!EverzoneOwningCharacter || !EverzoneOwningCharacter->IsLocallyControlled() || !EverzoneOwningController || !EverzoneOwningCharacter->GetLagCompensationComp())  return;
 			EverzoneOwningCharacter->GetLagCompensationComp()->ServerScoreRequest(
 				HitCharacter,
 				Start, 
