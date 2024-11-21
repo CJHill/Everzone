@@ -23,6 +23,13 @@ public:
 	virtual void Destroyed() override;
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastOnHit(AEverzoneCharacter* HitPlayer);
+
+	/*Used For Server Side Rewind*/
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize TraceStart;
+	FVector_NetQuantize100 InitialVelocity;
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000;
 protected:
 	
 	virtual void BeginPlay() override;

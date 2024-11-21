@@ -16,6 +16,11 @@ class EVERZONE_API ARocketProjectile : public AProjectile
 public:
 	ARocketProjectile();
 	virtual void Destroyed() override;
+
+	//Exact same purpose as found in Projectile bullet class see that for more info
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& Event) override;
+#endif
 protected:
 	
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
