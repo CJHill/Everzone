@@ -7,6 +7,7 @@
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Everzone/Everzone.h"
 // Sets default values for this component's properties
 ULagCompensationComponent::ULagCompensationComponent()
 {
@@ -82,32 +83,91 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 	//Enable Collision for the head hitbox.
 	UBoxComponent* HeadBox = HitCharacter->PlayerHitBoxes[FName("head")];
 	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
 
 	FHitResult ConfirmedHitResult;
 	const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
 	UWorld* World = GetWorld();
 	if (!World) return FServerSideRewindResult();
 	
-	World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_Visibility);
+	World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_HitBox);
 	if (ConfirmedHitResult.bBlockingHit) // If we hit the head reset hit boxes to the original state via the cached frame.
 	{
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 		return FServerSideRewindResult{ true,true };
 	}
-	else // Didn't the head check the rest of the body
+	else // Didn't hit the head check the rest of the body
 	{
 		for (auto& HitBoxPair : HitCharacter->PlayerHitBoxes)
 		{
 			if (HitBoxPair.Value != nullptr)
 			{
 				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				HitBoxPair.Value->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+				HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
 			}
 		}
-		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_Visibility);
+		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_HitBox);
 		if (ConfirmedHitResult.bBlockingHit)
+		{
+			ResetHitBoxes(HitCharacter, CurrentFrame);
+			EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+			return FServerSideRewindResult{ true,false };
+		}
+	}
+	ResetHitBoxes(HitCharacter, CurrentFrame);
+	EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+	return FServerSideRewindResult{ false,false };
+}
+
+FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FFramePackage& Package, AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
+{
+	if (HitCharacter == nullptr) return FServerSideRewindResult();
+	FFramePackage CurrentFrame;
+	//Storing the position of Hit character's hitboxes in its current position 
+	CacheHitBoxPositions(HitCharacter, CurrentFrame);
+	//Moving the hit characters position back to the frame where the hit took place
+	MoveHitBoxes(HitCharacter, Package);
+	EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::NoCollision);
+
+	//Enable Collision for the head hitbox.
+	UBoxComponent* HeadBox = HitCharacter->PlayerHitBoxes[FName("head")];
+	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
+
+	FPredictProjectilePathParams PathParams;
+	PathParams.bTraceWithCollision = true;
+	PathParams.MaxSimTime = MaxRecordTime;
+	PathParams.LaunchVelocity = InitialVelocity;
+	PathParams.StartLocation = TraceStart;
+	PathParams.SimFrequency = 10.f;
+	PathParams.ProjectileRadius = 5.f;
+	PathParams.TraceChannel = ECC_HitBox;
+	PathParams.ActorsToIgnore.Add(GetOwner());
+	PathParams.DrawDebugTime = 5.f;
+	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+
+	FPredictProjectilePathResult PathResult;
+	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+
+	if (PathResult.HitResult.bBlockingHit) // if code here is executed it means we hit the head
+	{
+		ResetHitBoxes(HitCharacter, CurrentFrame);
+		EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+		return FServerSideRewindResult{ true,true };
+	}
+	else // we didn't the head check the rest of the body
+	{
+		for (auto& HitBoxPair : HitCharacter->PlayerHitBoxes)
+		{
+			if (HitBoxPair.Value != nullptr)
+			{
+				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
+			}
+		}
+		UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+		if (PathResult.HitResult.bBlockingHit)
 		{
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
@@ -147,7 +207,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		//Enable Collision for the head hitbox.
 		UBoxComponent* HeadBox = Frame.Character->PlayerHitBoxes[FName("head")];
 		HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+		HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
 	}
 	UWorld* World = GetWorld();
 	// checking for headshots
@@ -157,7 +217,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
 		
 		if (!World) return FShotgunServerSideRewindResult();
-		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_Visibility);
+		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_HitBox);
 
 		// If the line trace hit a player it will be stored in this everzone character variable
 		AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(ConfirmedHitResult.GetActor());
@@ -180,7 +240,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			if (HitBoxPair.Value != nullptr)
 			{
 				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				HitBoxPair.Value->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+				HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
 			}
 		}
 		UBoxComponent* HeadBox = Frame.Character->PlayerHitBoxes[FName("head")];
@@ -193,7 +253,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
 
 		if (!World) return FShotgunServerSideRewindResult();
-		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_Visibility);
+		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_HitBox);
 
 		// If the line trace hit a player it will be stored in this everzone character variable
 		AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(ConfirmedHitResult.GetActor());
@@ -376,6 +436,12 @@ FServerSideRewindResult ULagCompensationComponent::HitScanServerSideRewind(AEver
 {
 	FFramePackage FPackageToCheck = GetFrameToCheck(HitCharacter, HitTime);
 	return ConfirmHit(FPackageToCheck, HitCharacter, TraceStart, HitLocation);
+}
+
+FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewind(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
+{
+	FFramePackage FPackageToCheck = GetFrameToCheck(HitCharacter, HitTime);
+	return ProjectileConfirmHit(FPackageToCheck, HitCharacter, TraceStart, InitialVelocity, HitTime);
 }
 
 void ULagCompensationComponent::ServerScoreRequest_Implementation(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, AWeapon* DamageCauser)

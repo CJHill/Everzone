@@ -30,6 +30,9 @@ public:
 	FVector_NetQuantize100 InitialVelocity;
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000;
+
+	// Not exposing damage to blueprint as the dmg on the projectile weapon class will dictate how much dmg a projectile does. Damage on the projectile weapon class is derived from weapon
+	float Damage = 15.f;
 protected:
 	
 	virtual void BeginPlay() override;
@@ -38,8 +41,7 @@ protected:
 		//HitFunction that will be bound to the OnComponentHit Multicast Delegate found in PrimitiveComponent.h the parameters are the same in order for the binding to work
 		UFUNCTION()
 		virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-		UPROPERTY(EditAnywhere)
-		float Damage = 15.f;
+		
 		void ExplosionDamage();
 		UPROPERTY(EditAnywhere)
 		class UBoxComponent* CollisionBox;

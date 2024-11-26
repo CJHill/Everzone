@@ -69,12 +69,16 @@ public:
 	void ShowFramePackage(const FFramePackage& PackageToShow, const FColor& Colour);
 
 	FServerSideRewindResult HitScanServerSideRewind(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+
+	FServerSideRewindResult ProjectileServerSideRewind(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime);
+
 	FShotgunServerSideRewindResult ShotgunServerSideRewind(
 		const TArray<AEverzoneCharacter*>& HitCharacters,
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime);
 
+	//ServerScore Request is for Hitscan Weapons
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, class AWeapon* DamageCauser);
 
@@ -90,7 +94,7 @@ protected:
 
 	FFramePackage FrameToInterp(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
 
-	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
+	
 	void CacheHitBoxPositions(AEverzoneCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveHitBoxes(AEverzoneCharacter* HitCharacter, const FFramePackage& FramePackage);
 	void ResetHitBoxes(AEverzoneCharacter* HitCharacter, const FFramePackage& FramePackage);
@@ -99,8 +103,10 @@ protected:
 
 	void SaveFrame();
     FFramePackage GetFrameToCheck(AEverzoneCharacter* HitCharacter, float HitTime);
-	//Lag compensation for Shotgun class
-	
+
+	//Confirm Hit functions. Confirm hit is for hitscan weapons
+	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
+	FServerSideRewindResult ProjectileConfirmHit(const FFramePackage& Package, AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime);
 	FShotgunServerSideRewindResult ShotgunConfirmHit(const TArray<FFramePackage>& FramePackages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations);
 private:
 	UPROPERTY()
