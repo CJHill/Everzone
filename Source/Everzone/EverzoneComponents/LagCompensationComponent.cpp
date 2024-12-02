@@ -91,14 +91,24 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 	if (!World) return FServerSideRewindResult();
 	
 	World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_HitBox);
+	
 	if (ConfirmedHitResult.bBlockingHit) // If we hit the head reset hit boxes to the original state via the cached frame.
 	{
+		if (ConfirmedHitResult.Component.IsValid())
+		{
+			UBoxComponent* Box = Cast<UBoxComponent>(ConfirmedHitResult.Component);
+			if (Box)
+			{
+				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
+			}
+		}
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 		return FServerSideRewindResult{ true,true };
 	}
 	else // Didn't hit the head check the rest of the body
 	{
+		
 		for (auto& HitBoxPair : HitCharacter->PlayerHitBoxes)
 		{
 			if (HitBoxPair.Value != nullptr)
@@ -110,6 +120,14 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_HitBox);
 		if (ConfirmedHitResult.bBlockingHit)
 		{
+			if (ConfirmedHitResult.Component.IsValid())
+			{
+				UBoxComponent* Box = Cast<UBoxComponent>(ConfirmedHitResult.Component);
+				if (Box)
+				{
+					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+				}
+			}
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 			return FServerSideRewindResult{ true,false };
@@ -149,9 +167,17 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 
 	FPredictProjectilePathResult PathResult;
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
-
+	
 	if (PathResult.HitResult.bBlockingHit) // if code here is executed it means we hit the head
 	{
+		if (PathResult.HitResult.Component.IsValid())
+		{
+			UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
+			if (Box)
+			{
+				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+			}
+		}
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 		return FServerSideRewindResult{ true,true };
@@ -169,6 +195,14 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 		UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 		if (PathResult.HitResult.bBlockingHit)
 		{
+			if (PathResult.HitResult.Component.IsValid())
+			{
+				UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
+				if (Box)
+				{
+					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+				}
+			}
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 			return FServerSideRewindResult{ true,false };
@@ -222,6 +256,14 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		// If the line trace hit a player it will be stored in this everzone character variable
 		AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(ConfirmedHitResult.GetActor());
 		if (!EverzoneCharacter) return FShotgunServerSideRewindResult();
+		if (ConfirmedHitResult.Component.IsValid())
+		{
+			UBoxComponent* Box = Cast<UBoxComponent>(ConfirmedHitResult.Component);
+			if (Box)
+			{
+				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
+			}
+		}
 		//If the TMap ShotgunResult.Headshots already has the player from the previous comment add 1 to its value, else then add it to the TMap with the value of 1 as its the first recorded hit.
 		if (ShotgunResult.Headshots.Contains(EverzoneCharacter))
 		{
@@ -258,6 +300,14 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		// If the line trace hit a player it will be stored in this everzone character variable
 		AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(ConfirmedHitResult.GetActor());
 		if (!EverzoneCharacter) return FShotgunServerSideRewindResult();
+		if (ConfirmedHitResult.Component.IsValid())
+		{
+			UBoxComponent* Box = Cast<UBoxComponent>(ConfirmedHitResult.Component);
+			if (Box)
+			{
+				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
+			}
+		}
 		//If the TMap ShotgunResult.Headshots already has the player from the previous comment add 1 to its value, else then add it to the TMap with the value of 1 as it's the first recorded hit.
 		if (ShotgunResult.Bodyshots.Contains(EverzoneCharacter))
 		{
@@ -337,6 +387,7 @@ void ULagCompensationComponent::SaveFrame()
 		FFramePackage ThisFrame;
 		SaveFramePackage(ThisFrame);
 		FrameHistory.AddHead(ThisFrame);
+		//ShowFramePackage(ThisFrame, FColor::Green);
 	}
 	else
 	{
@@ -353,7 +404,8 @@ void ULagCompensationComponent::SaveFrame()
 		SaveFramePackage(ThisFrame);
 		FrameHistory.AddHead(ThisFrame);
 
-		//ShowFramePackage(ThisFrame, FColor::Blue);
+
+		//ShowFramePackage(ThisFrame, FColor::Green);
 	}
 }
 
@@ -432,6 +484,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewin
 	return ShotgunConfirmHit(FPackagesToCheck, TraceStart, HitLocations);
 }
 
+
 FServerSideRewindResult ULagCompensationComponent::HitScanServerSideRewind(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
 {
 	FFramePackage FPackageToCheck = GetFrameToCheck(HitCharacter, HitTime);
@@ -452,24 +505,90 @@ void ULagCompensationComponent::ServerScoreRequest_Implementation(AEverzoneChara
 		UGameplayStatics::ApplyDamage(HitCharacter, DamageCauser->GetDamage(), Character->Controller, DamageCauser, UDamageType::StaticClass());
 	}
 }
+void ULagCompensationComponent::ServerProjectileScoreRequest_Implementation(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
+{
+	FServerSideRewindResult ConfirmHit = ProjectileServerSideRewind(HitCharacter, TraceStart, InitialVelocity, HitTime);
+	UE_LOG(LogTemp, Warning, TEXT("ServerProjectileScoreRequest: Hit Character: %s, TraceStart: %s, InitialVelocity: %s, Time: %.2f"),
+		*HitCharacter->GetName(), *TraceStart.ToString(), *InitialVelocity.ToString(), HitTime);
+	if (Character && HitCharacter && ConfirmHit.bHitConfirmed && Character->GetEquippedWeapon())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerProjectileScoreRequest: Valid hit, applying damage to: %s"), *HitCharacter->GetName());
+		UGameplayStatics::ApplyDamage(HitCharacter, Character->GetEquippedWeapon()->GetDamage(), Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerProjectileScoreRequest: Invalid hit, no damage applied"));
+	}
+}
 void ULagCompensationComponent::ServerShotgunScoreRequest_Implementation(const TArray<AEverzoneCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
 	FShotgunServerSideRewindResult ConfirmHit = ShotgunServerSideRewind(HitCharacters, TraceStart, HitLocations, HitTime);
+	//UE_LOG(LogTemp, Warning, TEXT("ServerShotgunScoreRequest: HitCharacters Count: %d, TraceStart: %s, HitLocations: %s, Time: %.2f"),
+		//HitCharacters.Num(), *TraceStart.ToString(), *HitLocations[0].ToString(), HitTime);
+
 	for (auto& EverzoneCharacter : HitCharacters)
 	{
 		if (Character == nullptr || EverzoneCharacter == nullptr || EverzoneCharacter->GetEquippedWeapon() == nullptr ) continue;
 		float TotalDamage = 0;
+		//UE_LOG(LogTemp, Warning, TEXT("ServerShotgunScoreRequest: Valid hit for: %s, applying damage"), *EverzoneCharacter->GetName());
 		if (ConfirmHit.Headshots.Contains(EverzoneCharacter))
 		{
-			float HeadshotDamage = ConfirmHit.Headshots[EverzoneCharacter] * EverzoneCharacter->GetEquippedWeapon()->GetDamage();
+			float HeadshotDamage = ConfirmHit.Headshots[EverzoneCharacter] * Character->GetEquippedWeapon()->GetDamage();
 			TotalDamage += HeadshotDamage;
+			//UE_LOG(LogTemp, Warning, TEXT("ServerShotgunScoreRequest: Valid hit for headshot: %s, applying damage"), *EverzoneCharacter->GetName());
+
+		}
+		else
+		{
+			if (ConfirmHit.Headshots.Num() == 0)
+			{
+				UE_LOG(LogTemp, Warning, TEXT(" Headshots HitMap is empty!")); 
+				
+			}
+			for (auto& Pair : ConfirmHit.Headshots)
+			{
+				if (Pair.Key)
+				{
+					//UE_LOG(LogTemp, Warning, TEXT("Headshots HitMap: Character: %s, HitCount: %u"),
+						//*Pair.Key->GetName(), Pair.Value);
+				}
+				if (Pair.Key == nullptr)
+				{
+					//UE_LOG(LogTemp, Warning, TEXT("Headshots HitMap contains an invalid (nullptr) key!"));
+				}
+			}
 		}
 		if (ConfirmHit.Bodyshots.Contains(EverzoneCharacter))
 		{
-			float BodyshotDamage = ConfirmHit.Bodyshots[EverzoneCharacter] * EverzoneCharacter->GetEquippedWeapon()->GetDamage();
+			float BodyshotDamage = ConfirmHit.Bodyshots[EverzoneCharacter] * Character->GetEquippedWeapon()->GetDamage();
 			TotalDamage += BodyshotDamage;
+			//UE_LOG(LogTemp, Warning, TEXT("ServerShotgunScoreRequest: Valid hit for bodyshot: %s, applying damage"), *EverzoneCharacter->GetName());
 		}
-		UGameplayStatics::ApplyDamage(EverzoneCharacter, TotalDamage, Character->Controller, EverzoneCharacter->GetEquippedWeapon(), UDamageType::StaticClass());
+		else
+		{
+			if (ConfirmHit.Bodyshots.Num() == 0)
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Bodyshots HitMap is empty!"));
+				
+			}
+			for (auto& Pair : ConfirmHit.Bodyshots)
+			{
+				if (Pair.Key)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Bodyshots HitMap: Character: %s, HitCount: %u"),
+						*Pair.Key->GetName(), Pair.Value);
+				}
+				if (Pair.Key == nullptr)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Bodyshots HitMap contains an invalid (nullptr) key!"));
+				}
+			}
+		}
+		UGameplayStatics::ApplyDamage(EverzoneCharacter, TotalDamage, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+	
+		
+		
+		
 	}
 
 }
@@ -477,7 +596,9 @@ void ULagCompensationComponent::ServerShotgunScoreRequest_Implementation(const T
 void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
 	SaveFrame();
+	
 }
 
 

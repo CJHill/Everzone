@@ -36,6 +36,10 @@ public:
 	void LaunchGrenade();
 	UFUNCTION(BlueprintCallable)
 	void MeleeFinished();
+	UFUNCTION(BlueprintCallable)
+	void SwapWeaponFinished();
+	UFUNCTION(BlueprintCallable)
+	void SwapAttachWeapons();
 
 	UFUNCTION(Server, Reliable)
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
@@ -50,6 +54,13 @@ public:
 	void PickupGrenades(int32 GrenadesAmount);
 
 	bool bIsLocallyReloading = false;
+
+	UPROPERTY(Transient)
+	AWeapon* PendingSwapEquippedWeapon;
+	UPROPERTY(Transient)
+	AWeapon* PendingSwapSecondaryWeapon;
+
+	void CachePendingSwapWeapons();
 protected:
 	
 	virtual void BeginPlay() override;

@@ -120,6 +120,8 @@ protected:
 	virtual void HandleOnDropped();
 	virtual void HandleOnEquipSecondary();
 
+	UFUNCTION()
+	void OnPingTooHigh(bool HighPing);
  /*
   * Calculating end point for line trace with scatter
  */
@@ -130,7 +132,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float SphereRadius = 80.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false;
 
 	UPROPERTY()

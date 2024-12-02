@@ -161,7 +161,12 @@ void AEverzonePlayerController::CheckPing(float DeltaTime)
 			{
 				CurrentPing = PlayerState->GetPing() * 4;
 				ShowHighPingWarning();
+				ServerReportPingStatus(true);
 				PingAnimationDisplayTime = 0.f;
+			}
+			else
+			{
+				ServerReportPingStatus(false);
 			}
 		}
 		HighPingTimeShown = 0.f;
@@ -180,6 +185,12 @@ void AEverzonePlayerController::CheckPing(float DeltaTime)
 		}
 	}
 }
+//Is the ping too high?
+void AEverzonePlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	HighPingDelegate.Broadcast(bHighPing);
+}
+
 
 void AEverzonePlayerController::CheckMatchState_Implementation()
 {
@@ -528,7 +539,6 @@ void AEverzonePlayerController::OnRep_MatchState()
 		HandleCooldown();
 	}
 }
-
 
 void AEverzonePlayerController::HandleMatchHasStarted()
 {

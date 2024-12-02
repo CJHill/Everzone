@@ -31,6 +31,8 @@ UCombatComponent::UCombatComponent()
 
 
 
+
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -359,12 +361,13 @@ bool UCombatComponent::CanShoot()
 	{
 		return false;
 	}
-	if (bIsLocallyReloading) return false;
+	
 	if (!EquippedWeapon->AmmoIsEmpty() && bCanShoot && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
 	{
 		// if the player is using a shotgun, is reloading and has ammo in the shotgun we can interupt the reload process by shooting
 		return true;
 	}
+	if (bIsLocallyReloading) return false;
 	return !EquippedWeapon->AmmoIsEmpty() && bCanShoot && CombatState == ECombatState::ECS_Unoccupied;
 }
 
@@ -440,20 +443,12 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 }
 void UCombatComponent::SwapWeapons()
 {
-	if (CombatState != ECombatState::ECS_Unoccupied) return;
-	AWeapon* WeaponToSwap = EquippedWeapon;
-	EquippedWeapon = SecondaryWeapon;
-	SecondaryWeapon = WeaponToSwap;
+	if (CombatState != ECombatState::ECS_Unoccupied || Character == nullptr) return;
+	Character->PlaySwapWeaponMontage();
+	Character->bFinishedSwapping = false;
+	CombatState = ECombatState::ECS_SwappingWeapons;
 
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	AttachActorToRightHand(EquippedWeapon);
-	EquippedWeapon->SetHUDAmmo();
-	UpdateAmmoReserves();
-	PlayEquipWeaponSound(EquippedWeapon);
-	if (EquippedWeapon->AmmoIsEmpty()) ReloadEmptyWeapon();
-
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquipSecondary);
-	AttachActorToBackpack(SecondaryWeapon);
+	if (SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(false);
 }
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* PrimaryWeapon)
 {
@@ -548,6 +543,11 @@ void UCombatComponent::OnRep_CombatState()
 			
 		}
 		break;
+	case ECombatState::ECS_SwappingWeapons:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->PlaySwapWeaponMontage();
+		}
 	}
 }
 void UCombatComponent::SetWeaponIcon()
@@ -711,6 +711,39 @@ void UCombatComponent::MeleeFinished()
 	World->DestroyActor(Cast<AActor>(KnifeActor));
 	CombatState = ECombatState::ECS_Unoccupied;
 	AttachActorToRightHand(EquippedWeapon);
+}
+void UCombatComponent::SwapWeaponFinished()
+{
+	if (Character && Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		Character->bFinishedSwapping = true;
+	}
+	if (SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(true);
+}
+void UCombatComponent::CachePendingSwapWeapons()
+{
+	PendingSwapEquippedWeapon = SecondaryWeapon;
+	PendingSwapSecondaryWeapon = EquippedWeapon;
+}
+void UCombatComponent::SwapAttachWeapons()
+{
+	//AWeapon* WeaponToSwap = EquippedWeapon;
+	//EquippedWeapon = SecondaryWeapon;
+	//SecondaryWeapon = WeaponToSwap;
+	EquippedWeapon = PendingSwapEquippedWeapon;
+	SecondaryWeapon = PendingSwapSecondaryWeapon;
+
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRightHand(EquippedWeapon);
+	EquippedWeapon->SetHUDAmmo();
+	UpdateAmmoReserves();
+	PlayEquipWeaponSound(EquippedWeapon);
+	if (EquippedWeapon->AmmoIsEmpty()) ReloadEmptyWeapon();
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquipSecondary);
+	AttachActorToBackpack(SecondaryWeapon);
+	
 }
 void UCombatComponent::HandleReload()
 {

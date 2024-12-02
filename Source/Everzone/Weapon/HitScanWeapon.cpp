@@ -30,7 +30,8 @@ void AHitScanWeapon::Shoot(const FVector& HitTarget)
 	AEverzoneCharacter* HitCharacter = Cast<AEverzoneCharacter>(ShootResult.GetActor()); 
 	if (HitCharacter  && InstigatorController)
 	{
-		if (HasAuthority() && !bUseServerSideRewind)
+		bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+		if (HasAuthority() && bCauseAuthDamage)
 		{
 			UGameplayStatics::ApplyDamage(HitCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
 		}

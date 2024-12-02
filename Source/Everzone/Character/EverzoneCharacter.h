@@ -24,12 +24,15 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+
 	//Animation Montage Functions
 	void PlayShootMontage(bool bAiming);
 	void PlayElimMontage();
 	void PlayReloadMontage();
 	void PlayThrowGrenadeMontage();
 	void PlayMeleeMontage();
+	void PlaySwapWeaponMontage();
+
 	virtual void OnRep_ReplicatedMovement() override;
 	//We have two eliminated functions multicasteliminated handles functionality being replicated to all clients. Eliminated just handles server functionality
 	void Eliminated();
@@ -39,15 +42,16 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent) // Showing the sniper scope will be handled by our blueprint class
 	void ShowSniperScope(bool bShowScope);
+
 	UPROPERTY(Replicated)
-	bool bDisableGameplay = false;
+	bool bDisableGameplay = false; // This is to disable shooting once the game ends
 
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
 	void UpdateHUDAmmo();
 	void SpawnDefaultWeapon();
 
-
+	bool bFinishedSwapping = false;
 	//TMap for hitboxes
 	UPROPERTY()
 	TMap<FName, class UBoxComponent*> PlayerHitBoxes;
@@ -112,6 +116,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* MeleeMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SwapWeaponMontage;
 
 	//Using a rep notify function because they don't get called on the server meaning that setting the pickup widget's visibility inside OnRep_OverlappingWeapon
 	//will allow the display text to only appear on the client that owns the pawn overlapping with the actor

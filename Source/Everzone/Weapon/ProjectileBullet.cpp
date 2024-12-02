@@ -3,7 +3,9 @@
 
 #include "ProjectileBullet.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/Character.h"
+#include "Everzone/Character/EverzoneCharacter.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
+#include "Everzone/EverzoneComponents/LagCompensationComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 AProjectileBullet::AProjectileBullet()
@@ -30,16 +32,29 @@ void AProjectileBullet::PostEditChangeProperty(FPropertyChangedEvent& Event)
 #endif
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	ACharacter* Character = Cast<ACharacter>(GetOwner());
-	if (Character)
+	AEverzoneCharacter* Character = Cast<AEverzoneCharacter>(GetOwner());
+	if (!Character) return;
+	
+	AEverzonePlayerController* Controller = Cast<AEverzonePlayerController>(Character->Controller);
+	if (!Controller) return;
+	UE_LOG(LogTemp, Warning, TEXT("OnHit: Hit Actor: %s, Use SSR: %d"), *OtherActor->GetName(), bUseServerSideRewind);
+	if (Character->HasAuthority() && !bUseServerSideRewind)
 	{
-		AController* Controller = Character->Controller;
-		if (Controller)
-		{
-			UGameplayStatics::ApplyDamage(OtherActor, Damage, Controller, this, UDamageType::StaticClass());
-			
-		}
+		UE_LOG(LogTemp, Warning, TEXT("OnHit (Authority): Applying damage to: %s"), *OtherActor->GetName());
+		UGameplayStatics::ApplyDamage(OtherActor, Damage, Controller, this, UDamageType::StaticClass());
+		
+		Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+		return;
 	}
+	AEverzoneCharacter* HitCharacter = Cast<AEverzoneCharacter>(OtherActor);
+	if (bUseServerSideRewind && Character->GetLagCompensationComp() && Character->IsLocallyControlled() && HitCharacter)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnHit (SSR): Requesting server-side rewind for character: %s"), *HitCharacter->GetName());
+		Character->GetLagCompensationComp()->ServerProjectileScoreRequest(HitCharacter, TraceStart, InitialVelocity, Controller->GetCurrentServerTime() - Controller-> SingleTripTime);
+	}
+			
+		
+	
 	
 	Super::OnHit(HitComp, OtherActor, OtherComp,NormalImpulse, Hit);
 }
@@ -47,19 +62,5 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
-	/*FPredictProjectilePathParams ProjectilePathParams;
-	ProjectilePathParams.ActorsToIgnore.Add(this);
-	ProjectilePathParams.bTraceWithChannel = true;
-	ProjectilePathParams.bTraceWithCollision = true;
-	ProjectilePathParams.DrawDebugTime = 5.f;
-	ProjectilePathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
-	ProjectilePathParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
-	ProjectilePathParams.MaxSimTime = 4.f;
-	ProjectilePathParams.ProjectileRadius = 5.f;
-	ProjectilePathParams.SimFrequency = 10.f;
-	ProjectilePathParams.StartLocation = GetActorLocation();
-	ProjectilePathParams.TraceChannel = ECollisionChannel::ECC_Visibility;
-
-	FPredictProjectilePathResult ProjectilePathResult;
-	UGameplayStatics::PredictProjectilePath(this, ProjectilePathParams, ProjectilePathResult);*/
+	
 }

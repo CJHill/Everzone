@@ -327,6 +327,21 @@ void AEverzoneCharacter::PlayMeleeMontage()
 	}
 }
 
+void AEverzoneCharacter::PlaySwapWeaponMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (CombatComp != nullptr)
+	{
+		CombatComp->CachePendingSwapWeapons();
+	}
+
+	if (AnimInstance && SwapWeaponMontage)
+	{
+		AnimInstance->Montage_Play(SwapWeaponMontage);
+
+	}
+}
+
 void AEverzoneCharacter::OnRep_ReplicatedMovement()
 {
 	Super::OnRep_ReplicatedMovement();
@@ -515,6 +530,16 @@ void AEverzoneCharacter::EquipButtonPressed()
 	if (CombatComp)
 	{
 		ServerEquipButtonPressed();
+		bool bSwapWeapon = CombatComp->bShouldSwapWeapons() && 
+			!HasAuthority() &&
+			CombatComp->CombatState == ECombatState::ECS_Unoccupied && 
+			OverlappingWeapon == nullptr;
+		if (bSwapWeapon)
+		{
+			PlaySwapWeaponMontage();
+			CombatComp->CombatState = ECombatState::ECS_SwappingWeapons;
+			bFinishedSwapping = false;
+		}
 	}
 }
 
@@ -841,6 +866,7 @@ void AEverzoneCharacter::SpawnDefaultWeapon()
 	if (EverzoneGameMode && World && !bIsEliminated && DefaultWeaponClass)
 	{
 		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->SetOwner(this);
 		StartingWeapon->bDestroyWeapon = true;
 		if (CombatComp)
 		{

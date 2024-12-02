@@ -41,7 +41,7 @@ AWeapon::AWeapon()
 	
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
-	
+	PickupWidget->SetCollisionResponseToAllChannels(ECR_Ignore);
 }
 
 void AWeapon::EnableCustomDepth(bool bEnable)
@@ -95,7 +95,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, WeaponState)
-	
+	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly)
 }
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -155,6 +155,15 @@ void AWeapon::HandleOnEquipped()
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
 	EnableCustomDepth(false);
+	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
+	if (EverzoneOwningCharacter && bUseServerSideRewind)
+	{
+		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(EverzoneOwningCharacter->Controller) : EverzoneOwningController;
+		if (EverzoneOwningController && HasAuthority()  && !EverzoneOwningController->HighPingDelegate.IsBound())
+		{
+			EverzoneOwningController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 void AWeapon::HandleOnDropped()
 {
@@ -173,6 +182,15 @@ void AWeapon::HandleOnDropped()
 	WeaponMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
 
+	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
+	if (EverzoneOwningCharacter && bUseServerSideRewind)
+	{
+		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(EverzoneOwningCharacter->Controller) : EverzoneOwningController;
+		if (EverzoneOwningController && HasAuthority() && EverzoneOwningController->HighPingDelegate.IsBound())
+		{
+			EverzoneOwningController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 void AWeapon::HandleOnEquipSecondary()
 {
@@ -188,9 +206,23 @@ void AWeapon::HandleOnEquipSecondary()
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
-	EnableCustomDepth(true);
+	
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
 	WeaponMesh->MarkRenderStateDirty();
+
+	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
+	if (EverzoneOwningCharacter && bUseServerSideRewind)
+	{
+		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(EverzoneOwningCharacter->Controller) : EverzoneOwningController;
+		if (EverzoneOwningController && HasAuthority() && EverzoneOwningController->HighPingDelegate.IsBound())
+		{
+			EverzoneOwningController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
+}
+void AWeapon::OnPingTooHigh(bool HighPing)
+{
+	bUseServerSideRewind = !HighPing;
 }
 void AWeapon::OnRep_WeaponState()
 {
@@ -247,7 +279,7 @@ void AWeapon::SetHUDAmmo()
 		if (EverzoneOwningController)
 		{
 			EverzoneOwningController->SetHUDWeaponAmmo(Ammo);
-			EverzoneOwningController->SetHUDAmmoReserves(AmmoMagazine);
+			
 		}
 	}
 }

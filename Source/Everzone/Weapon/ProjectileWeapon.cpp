@@ -19,6 +19,7 @@ void AProjectileWeapon::Shoot(const FVector& HitTarget)
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.Instigator = InstigatorPawn;
+	
 
 	AProjectile* SpawnedProjectile = nullptr;
 	if (bUseServerSideRewind)
@@ -31,10 +32,10 @@ void AProjectileWeapon::Shoot(const FVector& HitTarget)
 				SpawnedProjectile->bUseServerSideRewind = false;
 				SpawnedProjectile->Damage = Damage;
 			}
-			else // Server, not locally controlled. we spawn a non replicated projectile with no server side rewind as that client will fire their own server side rewind projectile
+			else // Server, not locally controlled. we spawn a non replicated projectile as that client will fire their own server side rewind projectile we can set ssr to true since we know the bullet will use server side rewind
 			{
 				SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-				SpawnedProjectile->bUseServerSideRewind = false;
+				SpawnedProjectile->bUseServerSideRewind = true;
 			}
 		}
 		else // On client machine using server side rewind
@@ -44,7 +45,7 @@ void AProjectileWeapon::Shoot(const FVector& HitTarget)
 				SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 				SpawnedProjectile->bUseServerSideRewind = true;
 				SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
-				SpawnedProjectile->InitialVelocity = GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
+				SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
 				SpawnedProjectile->Damage = Damage;
 			}
 			else //On client machine but a non locally controlled player pawn a non replicated projectile with no server side rewind

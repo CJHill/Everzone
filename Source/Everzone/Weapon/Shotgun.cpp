@@ -62,7 +62,8 @@ void AShotgun::ShootShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 	{
 		if (HitPair.Key && InstigatorController)
 		{
-			if (HasAuthority() && !bUseServerSideRewind)
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if (HasAuthority() && bCauseAuthDamage)
 			{
 				UGameplayStatics::ApplyDamage(HitPair.Key, //player that was hit
 					Damage * HitPair.Value,// multiplies damage by number of hits the player received
@@ -71,22 +72,28 @@ void AShotgun::ShootShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			}
 
 			HitCharacters.Add(HitPair.Key);
-			
+
 		}
+		
 	}
-	if (!HasAuthority() && bUseServerSideRewind)
+	if (!HasAuthority() && bUseServerSideRewind && OwnerPawn->IsLocallyControlled())
 	{
 		
 		EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(OwnerPawn) : EverzoneOwningCharacter;
 		EverzoneOwningController = EverzoneOwningController == nullptr ? Cast<AEverzonePlayerController>(InstigatorController) : EverzoneOwningController;
-		if (EverzoneOwningCharacter && EverzoneOwningCharacter->IsLocallyControlled() && EverzoneOwningController && EverzoneOwningCharacter->GetLagCompensationComp())
-		{
+
+		
+		if (!EverzoneOwningCharacter || EverzoneOwningController || !EverzoneOwningCharacter->GetLagCompensationComp())  return;
+		
 			EverzoneOwningCharacter->GetLagCompensationComp()->ServerShotgunScoreRequest(
 				HitCharacters,
 				Start,
 				HitTargets,
 				EverzoneOwningController->GetCurrentServerTime() - EverzoneOwningController->SingleTripTime);
-		}
+		
+		
+		
+			//UE_LOG(LogTemp, Warning, TEXT("ServerShotgunScoreRequest: Invalid condition"));
 		
 	}
 }

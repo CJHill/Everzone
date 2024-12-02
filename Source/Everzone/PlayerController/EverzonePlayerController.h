@@ -7,6 +7,7 @@
 #include "Engine/Texture2D.h"
 #include "EverzonePlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 
 /**
  * Responsiblities for this class are to; implement functionality for changing elements on the Player's HUD, syncing the time between server and client
@@ -41,6 +42,8 @@ public:
 	void OnMatchStateSet(FName State);
 
 	float SingleTripTime = 0.f;
+
+	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
@@ -132,4 +135,6 @@ private:
 
 	float PingAnimationDisplayTime = 0.f;
 	float CurrentPing = 0.f;
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
 };
