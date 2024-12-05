@@ -76,7 +76,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	
 	UWorld* World = GetWorld();
 	if (!World) return;
-	FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f; // if not using scatter perform a basic line trace
+	FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f; 
 	World->LineTraceSingleByChannel(OutputHit,
 		TraceStart,
 		End,

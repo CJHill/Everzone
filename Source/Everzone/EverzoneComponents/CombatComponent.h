@@ -98,14 +98,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Grenades")
 	TSubclassOf<class AProjectile> GrenadeClass;
 
-	UFUNCTION(Server, Reliable)
-	void ServerShoot(const FVector_NetQuantize& TraceHitTarget);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerShoot(const FVector_NetQuantize& TraceHitTarget, float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShoot(const FVector_NetQuantize& TraceHitTarget);
 
-	UFUNCTION(Server, Reliable)
-	void ServerShootShotgun(const TArray<FVector_NetQuantize>& TraceHitTargets);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerShootShotgun(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShootShotgun(const TArray<FVector_NetQuantize>& TraceHitTargets);

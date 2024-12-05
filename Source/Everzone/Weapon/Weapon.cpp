@@ -292,7 +292,7 @@ void AWeapon::UseAmmo()
 	{
 		ClientUpdateAmmo(Ammo);
 	}
-	else
+	else if(EverzoneOwningCharacter && EverzoneOwningCharacter->IsLocallyControlled())
 	{
 		++Sequence;
 	}

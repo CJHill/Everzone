@@ -305,7 +305,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			UBoxComponent* Box = Cast<UBoxComponent>(ConfirmedHitResult.Component);
 			if (Box)
 			{
-				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
+				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
 			}
 		}
 		//If the TMap ShotgunResult.Headshots already has the player from the previous comment add 1 to its value, else then add it to the TMap with the value of 1 as it's the first recorded hit.
@@ -477,9 +477,9 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(AEverzoneCharacter* Hit
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewind(const TArray<AEverzoneCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
 	TArray<FFramePackage> FPackagesToCheck;
-	for (AEverzoneCharacter* HitCharacter : HitCharacters)
+	for (AEverzoneCharacter* CharacterHit : HitCharacters)
 	{
-		FPackagesToCheck.Add(GetFrameToCheck(HitCharacter, HitTime));
+		FPackagesToCheck.Add(GetFrameToCheck(CharacterHit, HitTime));
 	}
 	return ShotgunConfirmHit(FPackagesToCheck, TraceStart, HitLocations);
 }

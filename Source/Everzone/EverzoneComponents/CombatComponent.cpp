@@ -161,7 +161,7 @@ void UCombatComponent::ShootProjectileWeapon()
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndPointWithScatter(HitTarget) : HitTarget;
 		
 		if (!Character->HasAuthority()) LocalShoot(HitTarget);
-		ServerShoot(HitTarget);
+		ServerShoot(HitTarget, EquippedWeapon->ShootDelay);
 	}
 }
 
@@ -171,7 +171,7 @@ void UCombatComponent::ShootHitScanWeapon()
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndPointWithScatter(HitTarget) : HitTarget;
 		if (!Character->HasAuthority()) LocalShoot(HitTarget);
-		ServerShoot(HitTarget);
+		ServerShoot(HitTarget, EquippedWeapon->ShootDelay);
 	}
 }
 
@@ -183,7 +183,7 @@ void UCombatComponent::ShootShotgun()
         TArray<FVector_NetQuantize>HitTargets;
 		Shotgun->ShotgunTraceEndPointWithScatter(HitTarget, HitTargets);
 		if (!Character->HasAuthority()) LocalShootShotgun(HitTargets);
-		ServerShootShotgun(HitTargets);
+		ServerShootShotgun(HitTargets, EquippedWeapon->ShootDelay);
 	}
 	
 
@@ -209,6 +209,7 @@ void UCombatComponent::LocalShootShotgun(const TArray<FVector_NetQuantize>& Trac
 		Character->PlayShootMontage(bIsAiming);
 		Shotgun->ShootShotgun(TraceHitTargets);
 		CombatState = ECombatState::ECS_Unoccupied;
+		bIsLocallyReloading = false;
 	}
 
 }
@@ -400,9 +401,18 @@ void UCombatComponent::InitAmmoReserves() // Setting the Ammo Reserves for each 
 	AmmoReservesMap.Emplace(EWeaponType::EWT_GrenadeLauncher, InitialGrenadeLauncherAmmoReserves);
 }
 
-void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
+void UCombatComponent::ServerShoot_Implementation(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
 {
 	MulticastShoot(TraceHitTarget);
+}
+bool UCombatComponent::ServerShoot_Validate(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
+{
+	if (EquippedWeapon)
+	{
+		bool bNearlyEqual = FMath::IsNearlyEqual(EquippedWeapon->ShootDelay, FireDelay, 0.001f);
+		return bNearlyEqual;
+	}
+	return true;
 }
 
 void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -410,9 +420,18 @@ void UCombatComponent::MulticastShoot_Implementation(const FVector_NetQuantize& 
 	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	LocalShoot(TraceHitTarget);
 }
-void UCombatComponent::ServerShootShotgun_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+void UCombatComponent::ServerShootShotgun_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay)
 {
 	MulticastShootShotgun(TraceHitTargets);
+}
+bool UCombatComponent::ServerShootShotgun_Validate(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay)
+{
+	if (EquippedWeapon)
+	{
+		bool bNearlyEqual = FMath::IsNearlyEqual(EquippedWeapon->ShootDelay, FireDelay, 0.001f);
+		return bNearlyEqual;
+	}
+	return true;
 }
 void UCombatComponent::MulticastShootShotgun_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
 {
