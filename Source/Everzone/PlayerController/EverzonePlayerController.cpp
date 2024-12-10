@@ -16,6 +16,7 @@
 #include "Everzone/GameState/EverzoneGameState.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
 #include "Components/Image.h"
+#include "Everzone/HUD/ReturnToMenuWidget.h"
 
 void AEverzonePlayerController::BeginPlay()
 {
@@ -24,6 +25,12 @@ void AEverzonePlayerController::BeginPlay()
 	EverzoneHUD = Cast<AEverzoneHUD>(GetHUD());
 	
 	CheckMatchState();
+}
+void AEverzonePlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	if (InputComponent == nullptr) return;
+	InputComponent->BindAction("Quit", EInputEvent::IE_Pressed, this, &AEverzonePlayerController::ShowReturnToMenu);
 }
 void AEverzonePlayerController::Tick(float DeltaTime)
 {
@@ -184,6 +191,27 @@ void AEverzonePlayerController::CheckPing(float DeltaTime)
 			HideHighPingWarning();
 		}
 	}
+}
+void AEverzonePlayerController::ShowReturnToMenu()
+{
+	if (ReturnToMenuWidget == nullptr) return;
+	if (ReturnToMenu == nullptr)
+	{
+		ReturnToMenu = CreateWidget<UReturnToMenuWidget>(this, ReturnToMenuWidget);
+	}
+	if (ReturnToMenu)
+	{
+		bReturnToMenu = !bReturnToMenu;
+		if (bReturnToMenu)
+		{
+			ReturnToMenu->MenuSetup();
+		}
+		else
+		{
+			ReturnToMenu->MenuTearDown();
+		}
+	}
+	
 }
 //Is the ping too high?
 void AEverzonePlayerController::ServerReportPingStatus_Implementation(bool bHighPing)

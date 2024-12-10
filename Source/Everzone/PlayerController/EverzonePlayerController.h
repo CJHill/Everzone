@@ -17,6 +17,8 @@ class EVERZONE_API AEverzonePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	
+
 	//OnPossess is needed for reseting the health bar to full on respawn
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTime);
@@ -46,6 +48,8 @@ public:
 	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+
 	void SetHUDTime();
 	void PollInit();
 	void HandleMatchHasStarted();
@@ -79,6 +83,8 @@ protected:
 	void ShowHighPingWarning();
 	void HideHighPingWarning();
 	void CheckPing(float DeltaTime);
+
+	void ShowReturnToMenu();
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
@@ -86,6 +92,18 @@ private:
 	class AEverzoneGameMode* EverzoneGameMode;
 	UPROPERTY()
 	class AEverzoneCharacter* EverzoneCharacter;
+
+	//Return to Menu Variables
+	UPROPERTY(EditAnywhere, Category = "HUD")
+	TSubclassOf<class UUserWidget> ReturnToMenuWidget;
+
+	UPROPERTY()
+	class UReturnToMenuWidget* ReturnToMenu;
+
+	bool bReturnToMenu = false;
+
+
+	//Game Time Variables
 	float LevelStartTime = 0.f;
 	
 	float MatchTime = 0.f;
