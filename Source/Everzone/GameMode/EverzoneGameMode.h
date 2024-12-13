@@ -24,7 +24,7 @@ public:
    
     virtual void PlayerEliminated(class AEverzoneCharacter* PlayerKilled, class AEverzonePlayerController* VictimsController, class AEverzonePlayerController* KillersController);
     virtual void RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController);
-
+    void PlayerLeftGame(class AEverzonePlayerState* PlayerLeaving);
 
     UPROPERTY(EditDefaultsOnly)
     float WarmUpTime = 10.f;

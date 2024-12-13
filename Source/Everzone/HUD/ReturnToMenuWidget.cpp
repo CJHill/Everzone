@@ -6,6 +6,7 @@
 #include "Components/Button.h"
 #include "MultiplayerSessionsSubsystem.h"
 #include "GameFramework/GameModeBase.h"
+#include "Everzone/Character/EverzoneCharacter.h"
 
 void UReturnToMenuWidget::MenuSetup()
 {
@@ -33,7 +34,7 @@ void UReturnToMenuWidget::MenuSetup()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!GameInstance) return;
 	MultiplayerSessions = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
-	if (MultiplayerSessions && !MultiplayerSessions->MultiplayerOnDestroySessionComplete.IsBound())
+	if (MultiplayerSessions)
 	{
 		MultiplayerSessions->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UReturnToMenuWidget::OnDestroyedSession);
 	}
@@ -58,7 +59,7 @@ void UReturnToMenuWidget::MenuTearDown()
 	{
 		ReturnBtn->OnClicked.RemoveDynamic(this, &UReturnToMenuWidget::ReturnButtonClicked);
 	}
-	if (MultiplayerSessions && MultiplayerSessions->MultiplayerOnDestroySessionComplete.IsBound())
+	if (MultiplayerSessions)
 	{
 		MultiplayerSessions->MultiplayerOnDestroySessionComplete.RemoveDynamic(this, &UReturnToMenuWidget::OnDestroyedSession);
 	}
@@ -85,6 +86,7 @@ void UReturnToMenuWidget::OnDestroyedSession(bool bWasDestroyed)
 		AGameModeBase* GameMode = World->GetAuthGameMode<AGameModeBase>();
 		if (GameMode)
 		{
+			UE_LOG(LogTemp, Warning, TEXT(" GameMode returning to main menu"));
 			GameMode->ReturnToMainMenuHost();
 		}
 		else
@@ -98,11 +100,31 @@ void UReturnToMenuWidget::OnDestroyedSession(bool bWasDestroyed)
 	}
 }
 
-void UReturnToMenuWidget::ReturnButtonClicked()
+void UReturnToMenuWidget::OnPlayerLeftGame()
 {
-	ReturnBtn->SetIsEnabled(false);
 	if (MultiplayerSessions)
 	{
 		MultiplayerSessions->DestroySession();
+	}
+}
+
+void UReturnToMenuWidget::ReturnButtonClicked()
+{
+	ReturnBtn->SetIsEnabled(false);
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* FirstController = World->GetFirstPlayerController();
+	if (!FirstController) return;
+
+	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(FirstController->GetPawn());
+	if (EverzoneCharacter)
+	{
+		EverzoneCharacter->ServerLeftGame();
+		EverzoneCharacter->OnLeftGame.AddDynamic(this, &UReturnToMenuWidget::OnPlayerLeftGame);
+	}
+	else
+	{
+		ReturnBtn->SetIsEnabled(true);
 	}
 }

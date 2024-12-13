@@ -11,6 +11,7 @@
 #include "Everzone/EverzoneComponents/LagCompensationComponent.h"
 #include "EverzoneCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
 UCLASS()
 class EVERZONE_API AEverzoneCharacter : public ACharacter, public ICrosshairInterface
@@ -35,10 +36,19 @@ public:
 
 	virtual void OnRep_ReplicatedMovement() override;
 	//We have two eliminated functions multicasteliminated handles functionality being replicated to all clients. Eliminated just handles server functionality
-	void Eliminated();
+	void Eliminated(bool bPlayerLeftGame);
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastEliminated();
+	void MulticastEliminated(bool bPlayerLeftGame);
+
+	UFUNCTION(Server, Reliable)
+	void ServerLeftGame();
+	FOnLeftGame OnLeftGame;
+
 	virtual void Destroyed() override;
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastGainedTheLead();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLostTheLead();
 
 	UFUNCTION(BlueprintImplementableEvent) // Showing the sniper scope will be handled by our blueprint class
 	void ShowSniperScope(bool bShowScope);
@@ -202,6 +212,17 @@ private:
 	float EliminatedDelay = 3.f;
 
 	void EliminatedTimerFinished();
+
+	bool bLeftGame = false;
+	
+
+	
+	//Crown effect properties
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	class UNiagaraSystem* CrownSystem;
+	UPROPERTY()
+	class UNiagaraComponent* CrownSystemComp;
+
 	/*
 	* Dissolve effect properties for elimination
 	*/

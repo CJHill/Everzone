@@ -76,8 +76,34 @@ void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEver
 	AEverzonePlayerState* VictimsPlayerState = VictimsController ? Cast<AEverzonePlayerState>(VictimsController->PlayerState) : nullptr;
 	if (KillersPlayerState && KillersPlayerState != VictimsPlayerState && EverzoneGameState)
 	{
+		TArray<AEverzonePlayerState*> LeadingPlayers;
+		for (auto LeadPlayer : EverzoneGameState->TopScoringPlayers)
+		{
+			LeadingPlayers.Add(LeadPlayer);
+		}
 		KillersPlayerState->AddToPlayerScore(1.0f);
 		EverzoneGameState->UpdateTopScorer(KillersPlayerState);
+		if (EverzoneGameState->TopScoringPlayers.Contains(KillersPlayerState))
+		{
+			AEverzoneCharacter* Leader = Cast<AEverzoneCharacter>(KillersPlayerState->GetPawn());
+			if (Leader)
+			{
+				Leader->MulticastGainedTheLead();
+			}
+		}
+
+		for (int32 i = 0; i < LeadingPlayers.Num(); i++)
+		{
+			if (EverzoneGameState->TopScoringPlayers.Contains(LeadingPlayers[i]))
+			{
+				AEverzoneCharacter* OldLeader = Cast<AEverzoneCharacter>(LeadingPlayers[i]->GetPawn());
+				if (OldLeader)
+				{
+					OldLeader->MulticastLostTheLead();
+				}
+			}
+		}
+
 	}
 	if (VictimsPlayerState && KillersPlayerState)
 	{
@@ -87,7 +113,7 @@ void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEver
 	}
 	if (PlayerKilled)
 	{
-		PlayerKilled->Eliminated();
+		PlayerKilled->Eliminated(false);
 		
 		
 	}
@@ -108,6 +134,21 @@ void AEverzoneGameMode::RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzo
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1); // We minus one to ensure that the maximum value doesn't fall outside of the array index
 		VictimsController->HideDeathMessage();
 		RestartPlayerAtPlayerStart(VictimsController, PlayerStarts[Selection]);
+	}
+}
+
+void AEverzoneGameMode::PlayerLeftGame(class AEverzonePlayerState* PlayerLeaving)
+{
+	if (PlayerLeaving == nullptr) return;
+	AEverzoneGameState* EverzoneGameState = GetGameState<AEverzoneGameState>();
+	if (EverzoneGameState && EverzoneGameState->TopScoringPlayers.Contains(PlayerLeaving))
+	{
+		EverzoneGameState->TopScoringPlayers.Remove(PlayerLeaving);
+	}
+	AEverzoneCharacter* CharacterLeaving = Cast<AEverzoneCharacter>(PlayerLeaving->GetPawn());
+	if (CharacterLeaving)
+	{
+		CharacterLeaving->Eliminated(true);
 	}
 }
 

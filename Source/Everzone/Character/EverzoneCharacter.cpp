@@ -24,7 +24,9 @@
 #include "Everzone/HUD/EverzoneHUD.h"
 #include "Everzone/HUD/OverlayWidget.h"
 #include "Components/BoxComponent.h"
-
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Everzone/GameState/EverzoneGameState.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -181,6 +183,35 @@ void AEverzoneCharacter::Destroyed()
 	}
 }
 
+void AEverzoneCharacter::MulticastGainedTheLead_Implementation()
+{
+	if (CrownSystem == nullptr) return;
+	if (!IsValid(CrownSystemComp) && !CrownSystemComp->IsActive())
+	{
+		CrownSystemComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			CrownSystem,
+			GetCapsuleComponent(),
+			FName(),
+			GetActorLocation() + FVector(0.f, 0.f, 110.f),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false);
+	}
+	if (CrownSystemComp)
+	{
+		CrownSystemComp->Activate();
+	}
+}
+
+void AEverzoneCharacter::MulticastLostTheLead_Implementation()
+{
+	if (CrownSystemComp)
+	{
+		CrownSystemComp->DestroyComponent();
+	}
+
+}
+
 
 void AEverzoneCharacter::BeginPlay()
 {
@@ -202,6 +233,7 @@ void AEverzoneCharacter::BeginPlay()
 	{
 		AttachedGrenade->SetVisibility(false);
 	}
+	
 }
 
 void AEverzoneCharacter::Tick(float DeltaTime)
@@ -351,7 +383,7 @@ void AEverzoneCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastSimReplication = 0.f;
 }
 
-void AEverzoneCharacter::Eliminated()
+void AEverzoneCharacter::Eliminated(bool bPlayerLeftGame)
 {
 	HandleWeaponsOnDeath();
 
@@ -359,12 +391,13 @@ void AEverzoneCharacter::Eliminated()
 	{
 		PlayerController->HideWeaponIcon();
 	}
-	MulticastEliminated();
-	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &AEverzoneCharacter::EliminatedTimerFinished, EliminatedDelay);
+	MulticastEliminated(bPlayerLeftGame);
+	
 }
 
-void AEverzoneCharacter::MulticastEliminated_Implementation()
+void AEverzoneCharacter::MulticastEliminated_Implementation(bool bPlayerLeftGame)
 {
+	bLeftGame = bPlayerLeftGame;
 	if (PlayerController)
 	{
 		PlayerController->SetHUDWeaponAmmo(0);
@@ -395,6 +428,9 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 			ShowSniperScope(false);
 		}
 	}
+	//Start timer for EliminatedTimerFinished
+	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &AEverzoneCharacter::EliminatedTimerFinished, EliminatedDelay);
+
 	//disable movement and collision
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
@@ -415,20 +451,36 @@ void AEverzoneCharacter::MulticastEliminated_Implementation()
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, DeathBotCue, GetActorLocation());
 	}
-
+	if (CrownSystemComp)
+	{
+		CrownSystemComp->DestroyComponent();
+	}
 }
 
 void AEverzoneCharacter::EliminatedTimerFinished()
 {
 	AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>(); // Use this line to get the game mode when you need it
-	if (EverzoneGameMode)
+	if (EverzoneGameMode && !bLeftGame)
 	{
 		EverzoneGameMode->RequestRespawn(this, PlayerController);
+	}
+	if (bLeftGame && IsLocallyControlled())
+	{
+		OnLeftGame.Broadcast();
 	}
 	PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(this->Controller) : PlayerController;
 	if (PlayerController)
 	{
 		PlayerController->HideDeathMessage();
+	}
+}
+void AEverzoneCharacter::ServerLeftGame_Implementation()
+{
+	AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>(); 
+	EverzonePlayerState = EverzonePlayerState == nullptr ? GetPlayerState<AEverzonePlayerState>() : EverzonePlayerState;
+	if (EverzoneGameMode)
+	{
+		EverzoneGameMode->PlayerLeftGame(EverzonePlayerState);
 	}
 }
 void AEverzoneCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
@@ -494,6 +546,13 @@ void AEverzoneCharacter::GetAndInitHUD()
 			EverzonePlayerState->AddToPlayerScore(0.f);
 			EverzonePlayerState->AddToPlayerDeaths(0);
 			EverzonePlayerState->SetKillersName("");
+
+			//We are checking to see if the player is a top scorer so that they spawn with the crown effect if they are.
+			AEverzoneGameState* EverzoneGameState = Cast<AEverzoneGameState>(UGameplayStatics::GetGameState(this));
+			if (EverzoneGameState && EverzoneGameState->TopScoringPlayers.Contains(EverzonePlayerState))
+			{
+				MulticastGainedTheLead();
+			}
 		}
 	}
 }

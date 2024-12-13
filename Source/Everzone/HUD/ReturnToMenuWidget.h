@@ -18,7 +18,12 @@ public:
 	void MenuTearDown();
 protected:
 	virtual bool Initialize() override;
+
+	UFUNCTION()
 	void OnDestroyedSession(bool bWasDestroyed);
+
+	UFUNCTION()
+	void OnPlayerLeftGame();
 private:
 	UPROPERTY(meta =(BindWidget))
 	class UButton* ReturnBtn;
