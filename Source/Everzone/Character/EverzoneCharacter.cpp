@@ -186,7 +186,7 @@ void AEverzoneCharacter::Destroyed()
 void AEverzoneCharacter::MulticastGainedTheLead_Implementation()
 {
 	if (CrownSystem == nullptr) return;
-	if (!IsValid(CrownSystemComp) && !CrownSystemComp->IsActive())
+	if (!IsValid(CrownSystemComp))
 	{
 		CrownSystemComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			CrownSystem,
@@ -197,8 +197,9 @@ void AEverzoneCharacter::MulticastGainedTheLead_Implementation()
 			EAttachLocation::KeepWorldPosition,
 			false);
 	}
-	if (CrownSystemComp)
+	if (CrownSystemComp && !CrownSystemComp->IsActive())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Activating crown"));
 		CrownSystemComp->Activate();
 	}
 }

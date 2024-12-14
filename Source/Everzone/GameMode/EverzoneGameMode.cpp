@@ -72,17 +72,19 @@ void AEverzoneGameMode::Tick(float DeltaTime)
 void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController, AEverzonePlayerController* KillersController)
 {
 	AEverzoneGameState* EverzoneGameState = GetGameState<AEverzoneGameState>();
-	AEverzonePlayerState* KillersPlayerState = KillersController ? Cast<AEverzonePlayerState>(KillersController->PlayerState) : nullptr;
-	AEverzonePlayerState* VictimsPlayerState = VictimsController ? Cast<AEverzonePlayerState>(VictimsController->PlayerState) : nullptr;
+	AEverzonePlayerState* KillersPlayerState = KillersController ? Cast<AEverzonePlayerState>(KillersController->PlayerState) : nullptr;//Person who got the kill
+	AEverzonePlayerState* VictimsPlayerState = VictimsController ? Cast<AEverzonePlayerState>(VictimsController->PlayerState) : nullptr;//Person who died
+
 	if (KillersPlayerState && KillersPlayerState != VictimsPlayerState && EverzoneGameState)
 	{
-		TArray<AEverzonePlayerState*> LeadingPlayers;
-		for (auto LeadPlayer : EverzoneGameState->TopScoringPlayers)
-		{
-			LeadingPlayers.Add(LeadPlayer);
-		}
+		//Caching the current top players
+		TArray<AEverzonePlayerState*> PreviousLeadingPlayers = EverzoneGameState->TopScoringPlayers; 
+
+		//The player who got the kill add 1 to their score and update the top scorer's array
 		KillersPlayerState->AddToPlayerScore(1.0f);
 		EverzoneGameState->UpdateTopScorer(KillersPlayerState);
+
+		//Check if the player who got the kill is now in the top scoring players array if so call the crown function
 		if (EverzoneGameState->TopScoringPlayers.Contains(KillersPlayerState))
 		{
 			AEverzoneCharacter* Leader = Cast<AEverzoneCharacter>(KillersPlayerState->GetPawn());
@@ -92,7 +94,32 @@ void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEver
 			}
 		}
 
-		for (int32 i = 0; i < LeadingPlayers.Num(); i++)
+		//notify previous top scoring players if they lost they lead
+		for (AEverzonePlayerState* PreviousLeadPlayer : PreviousLeadingPlayers)
+		{
+			if (!EverzoneGameState->TopScoringPlayers.Contains(PreviousLeadPlayer))
+			{
+				AEverzoneCharacter* OldLeader = Cast<AEverzoneCharacter>(PreviousLeadPlayer->GetPawn());
+				if (OldLeader)
+				{
+					OldLeader->MulticastLostTheLead();
+				}
+			}
+		}
+
+		//Notify players if they weren't previously leading the match
+		for (AEverzonePlayerState* NewLeadPlayer : EverzoneGameState->TopScoringPlayers)
+		{
+			if (!PreviousLeadingPlayers.Contains(NewLeadPlayer))
+			{
+				AEverzoneCharacter* NewLeader = Cast<AEverzoneCharacter>(NewLeadPlayer->GetPawn());
+				if (NewLeader)
+				{
+					NewLeader->MulticastGainedTheLead();
+				}
+			}
+		}
+		/*for (int32 i = 0; i < LeadingPlayers.Num(); i++)
 		{
 			if (EverzoneGameState->TopScoringPlayers.Contains(LeadingPlayers[i]))
 			{
@@ -102,7 +129,7 @@ void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEver
 					OldLeader->MulticastLostTheLead();
 				}
 			}
-		}
+		}*/
 
 	}
 	if (VictimsPlayerState && KillersPlayerState)
