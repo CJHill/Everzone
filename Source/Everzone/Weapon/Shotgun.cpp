@@ -29,6 +29,7 @@ void AShotgun::ShootShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 
 	//HitMap: maps to players' character models to the number of times a trace hits a character model
 	TMap<AEverzoneCharacter*, uint32>  HitMap;
+	TMap<AEverzoneCharacter*, uint32> HeadshotMap;
 	for (FVector_NetQuantize HitTarget : HitTargets)
 	{
 		FHitResult WeaponHit;
@@ -37,14 +38,19 @@ void AShotgun::ShootShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(WeaponHit.GetActor());
 		if (EverzoneCharacter)
 		{
-			if (HitMap.Contains(EverzoneCharacter))
+			const bool bHeadshot = WeaponHit.BoneName.ToString() == FString("head");
+			if (bHeadshot)
 			{
-				HitMap[EverzoneCharacter]++;
+				if (HeadshotMap.Contains(EverzoneCharacter)) HeadshotMap[EverzoneCharacter]++;
+				else HeadshotMap.Emplace(EverzoneCharacter, 1);
 			}
 			else
 			{
-				HitMap.Emplace(EverzoneCharacter, 1);
+				if (HitMap.Contains(EverzoneCharacter)) HitMap[EverzoneCharacter]++;
+				else HitMap.Emplace(EverzoneCharacter, 1);
 			}
+			
+
 			if (ImpactParticles)
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, WeaponHit.ImpactPoint, WeaponHit.ImpactNormal.Rotation());
@@ -58,24 +64,50 @@ void AShotgun::ShootShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 	}
 	// This array is needed for the function parameter of shotgun score request
 	TArray<AEverzoneCharacter*> HitCharacters;
+
+	//Maps amount of hits to damage
+	TMap<AEverzoneCharacter*, float> DamageMap;
 	for (auto HitPair : HitMap)
 	{
-		if (HitPair.Key && InstigatorController)
+		if (HitPair.Key)
+		{
+			//calculation for bodyshot damage amount of hits multiplied by damage info stored in damage map
+			DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage);
+
+			HitCharacters.AddUnique(HitPair.Key);
+			
+		}
+	}
+	
+	for (auto HeadshotHitPair : HeadshotMap)
+	{
+		if (HeadshotHitPair.Key)
+		{
+			//calculation for headshot damage amount of hits multiplied by damage. info stored in damage map
+			if (DamageMap.Contains(HeadshotHitPair.Key)) HeadshotMap[HeadshotHitPair.Key]+= HeadshotHitPair.Value * HeadshotDamage;
+			else DamageMap.Emplace(HeadshotHitPair.Key, HeadshotHitPair.Value * HeadshotDamage);
+
+			HitCharacters.AddUnique(HeadshotHitPair.Key);
+
+		}
+	}
+
+	for (auto DamagePair : DamageMap)
+	{
+		if (DamagePair.Key && InstigatorController)
 		{
 			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 			if (HasAuthority() && bCauseAuthDamage)
 			{
-				UGameplayStatics::ApplyDamage(HitPair.Key, //player that was hit
-					Damage * HitPair.Value,// multiplies damage by number of hits the player received
+				UGameplayStatics::ApplyDamage(DamagePair.Key, //player that was hit
+					DamagePair.Value,
 					InstigatorController,
 					this, UDamageType::StaticClass());
 			}
-
-			HitCharacters.Add(HitPair.Key);
-			
 		}
-		
 	}
+	
+
 	if (!HasAuthority() && bUseServerSideRewind && OwnerPawn->IsLocallyControlled())
 	{
 		

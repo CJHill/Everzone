@@ -5,6 +5,10 @@
 #include "GameFramework/PlayerController.h"
 #include "OverlayWidget.h"
 #include "AnnouncementWidget.h"
+#include "ElimAnnouncementWidget.h"
+#include "Components/HorizontalBox.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/CanvasPanelSlot.h"
 
 void AEverzoneHUD::BeginPlay()
 {
@@ -29,6 +33,48 @@ void AEverzoneHUD::AddAnnouncementOverlay()
 		if (AnnouncementOverlay) return;
 		AnnouncementOverlay = CreateWidget<UAnnouncementWidget>(PlayerController, AnnouncementWidgetClass);
 		AnnouncementOverlay->AddToViewport();
+	}
+}
+void AEverzoneHUD::AddElimAnnouncementOverlay(FString Killer, FString Victim)
+{
+	OwningPlayer = OwningPlayer == nullptr ? GetOwningPlayerController() : OwningPlayer;
+	if (OwningPlayer && ElimAnnouncementClass)
+	{
+		UElimAnnouncementWidget* ElimAnnouncementWidget = CreateWidget<UElimAnnouncementWidget>(OwningPlayer, ElimAnnouncementClass);
+		if (!ElimAnnouncementWidget) return;
+
+		ElimAnnouncementWidget->SetElimAnnouncementText(Killer, Victim);
+		ElimAnnouncementWidget->AddToViewport();
+
+		for (auto Message : ElimMessages)
+		{
+			if (!Message || !Message->AnnouncementBox) return;
+
+			UCanvasPanelSlot* CanvasSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(Message->AnnouncementBox);
+			if (!CanvasSlot) return;
+
+			FVector2D MessagePosition = CanvasSlot->GetPosition();
+			FVector2D NewMessagePosition(CanvasSlot->GetPosition().X, MessagePosition.Y - CanvasSlot->GetSize().Y);
+
+			CanvasSlot->SetPosition(NewMessagePosition);
+		}
+
+		ElimMessages.Add(ElimAnnouncementWidget);
+
+		FTimerHandle ElimAnnouncementTimer;
+		FTimerDelegate ElimAnnouncementDelegate;
+
+		ElimAnnouncementDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"), ElimAnnouncementWidget);
+		GetWorld()->GetTimerManager().SetTimer(ElimAnnouncementTimer, ElimAnnouncementDelegate, ElimAnnouncementTime, false);
+	}
+}
+void AEverzoneHUD::ElimAnnouncementTimerFinished(UElimAnnouncementWidget* AnnouncementToRemove)
+{
+	if (AnnouncementToRemove)
+	{
+		ElimMessages.Remove(AnnouncementToRemove);
+		AnnouncementToRemove->RemoveFromParent();
+		
 	}
 }
 void AEverzoneHUD::DrawHUD()
@@ -83,3 +129,5 @@ void AEverzoneHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, 
 	const FVector2D TextureDrawPoint(ViewportCenter.X - (TextureWidth / 2.f) + Spread.X, ViewportCenter.Y - (TextureHeight / 2.f) + Spread.Y);
 	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth, TextureHeight, 0.f, 0.f, 1.f, 1.f, CrosshairsColour);
 }
+
+

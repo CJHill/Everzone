@@ -119,17 +119,7 @@ void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEver
 				}
 			}
 		}
-		/*for (int32 i = 0; i < LeadingPlayers.Num(); i++)
-		{
-			if (EverzoneGameState->TopScoringPlayers.Contains(LeadingPlayers[i]))
-			{
-				AEverzoneCharacter* OldLeader = Cast<AEverzoneCharacter>(LeadingPlayers[i]->GetPawn());
-				if (OldLeader)
-				{
-					OldLeader->MulticastLostTheLead();
-				}
-			}
-		}*/
+		
 
 	}
 	if (VictimsPlayerState && KillersPlayerState)
@@ -141,8 +131,15 @@ void AEverzoneGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEver
 	if (PlayerKilled)
 	{
 		PlayerKilled->Eliminated(false);
-		
-		
+	}
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		AEverzonePlayerController* EverzonePlayer = Cast<AEverzonePlayerController>(*It);
+		if (EverzonePlayer && VictimsPlayerState && KillersPlayerState)
+		{
+			EverzonePlayer->BroadcastElim(KillersPlayerState, VictimsPlayerState);
+		}
 	}
 }
 

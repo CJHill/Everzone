@@ -213,6 +213,7 @@ void AEverzonePlayerController::ShowReturnToMenu()
 	}
 	
 }
+
 //Is the ping too high?
 void AEverzonePlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
 {
@@ -539,6 +540,53 @@ void AEverzonePlayerController::ReceivedPlayer()
 	if (IsLocalController())
 	{
 		RequestServerTime(GetWorld()->GetTimeSeconds());
+	}
+}
+
+void AEverzonePlayerController::BroadcastElim(APlayerState* Killer, APlayerState* Victim)
+{
+	ClientElimAnnouncement(Killer, Victim);
+}
+void AEverzonePlayerController::ClientElimAnnouncement_Implementation(APlayerState* Killer, APlayerState* Victim)
+{
+	//Self represents the locally controlled player
+	APlayerState* Self = GetPlayerState<APlayerState>();
+
+	if (Killer, Victim, Self)
+	{
+		EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+		if (!EverzoneHUD) return;
+
+		//You killed someone conditional
+		if (Killer == Self && Victim != Self)
+		{
+			EverzoneHUD->AddElimAnnouncementOverlay("You", Victim->GetPlayerName());
+			return;
+		}
+
+		//Someone killed you conditional
+		if (Victim == Self && Killer != Self)
+		{
+			EverzoneHUD->AddElimAnnouncementOverlay(Killer->GetPlayerName(), "You");
+			return;
+		}
+
+		//Someone else killed themselves conditional
+		if (Killer == Victim && Killer != Self)
+		{
+			EverzoneHUD->AddElimAnnouncementOverlay(Killer->GetPlayerName(), "themselves");
+			return;
+		}
+
+		//You killed yourself conditional
+		if (Killer == Victim && Killer == Self)
+		{
+			EverzoneHUD->AddElimAnnouncementOverlay("You", "yourself");
+			return;
+		}
+		
+		//If we reach this line it means someone killed someone else
+		EverzoneHUD->AddElimAnnouncementOverlay(Killer->GetPlayerName(), Victim->GetPlayerName());
 	}
 }
 

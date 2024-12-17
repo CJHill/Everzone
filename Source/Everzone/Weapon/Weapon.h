@@ -99,6 +99,9 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	float Damage = 10.f;
+	UPROPERTY(EditAnywhere)
+	float HeadshotDamage = 30.f;
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
@@ -195,4 +198,5 @@ public:
 	FORCEINLINE int32 GetAmmoMag() const { return AmmoMagazine; }
 	FORCEINLINE UTexture2D* GetWeaponIcon() const { return WeaponIconTexture; }
 	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetHeadshotDamage() const { return HeadshotDamage; }
 };

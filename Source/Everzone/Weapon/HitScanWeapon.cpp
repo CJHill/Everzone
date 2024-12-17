@@ -30,10 +30,13 @@ void AHitScanWeapon::Shoot(const FVector& HitTarget)
 	AEverzoneCharacter* HitCharacter = Cast<AEverzoneCharacter>(ShootResult.GetActor()); 
 	if (HitCharacter  && InstigatorController)
 	{
+	
 		bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 		if (HasAuthority() && bCauseAuthDamage)
 		{
-			UGameplayStatics::ApplyDamage(HitCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+			const float DamageToDeal = ShootResult.BoneName.ToString() == FString("head") ? HeadshotDamage : Damage;
+			
+			UGameplayStatics::ApplyDamage(HitCharacter, DamageToDeal, InstigatorController, this, UDamageType::StaticClass());
 		}
 		if(!HasAuthority() && bUseServerSideRewind)
 		{
@@ -86,7 +89,11 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	{
 		BeamEnd = OutputHit.ImpactPoint;
 	}
-	DrawDebugSphere(GetWorld(), BeamEnd, 12.f, 8, FColor::Emerald, true);
+	else
+	{
+		OutputHit.ImpactPoint = End;
+	}
+	
 	if (BeamParticles)
 	{
 		UParticleSystemComponent* BeamParticlesComp = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticles, TraceStart, FRotator::ZeroRotator, true);

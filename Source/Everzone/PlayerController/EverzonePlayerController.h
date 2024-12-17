@@ -21,25 +21,36 @@ public:
 
 	//OnPossess is needed for reseting the health bar to full on respawn
 	virtual void OnPossess(APawn* InPawn) override;
+
 	virtual void Tick(float DeltaTime);
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	void SetHUDHealth(float CurrentHealth, float MaxHealth);
 	void SetHUDShield(float ShieldAmount, float MaxShieldAmount);
+
 	void SetHUDScore(float Score);
 	void SetHUDDeaths(int32 Deaths);
+
 	void ShowDeathMessage(const FString KilledBy);
 	void HideDeathMessage();
+
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDAmmoReserves(int32 Ammo);
 	void SetHUDGrenades(int32 Grenades);
+
 	void ShowWeaponIcon(UTexture2D* WeaponIcon);
 	void HideWeaponIcon();
+
 	void SetHUDMatchTimer(float TimeRemaining);
 	void SetHUDAnnouncementTimer(float TimeRemaining);
+
 	// Synced server world clock function
 	virtual float GetCurrentServerTime();
 	//Syncs with the server clock as soon as possible
 	virtual void ReceivedPlayer() override;
+
+	void BroadcastElim(APlayerState* Killer, APlayerState* Victim);
 
 	void OnMatchStateSet(FName State);
 
@@ -85,6 +96,9 @@ protected:
 	void CheckPing(float DeltaTime);
 
 	void ShowReturnToMenu();
+
+	UFUNCTION(Client, Reliable)
+	void ClientElimAnnouncement(APlayerState* Killer, APlayerState* Victim);
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;
