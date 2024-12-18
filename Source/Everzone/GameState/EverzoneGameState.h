@@ -20,6 +20,20 @@ public:
 	UPROPERTY(Replicated)
 	TArray<AEverzonePlayerState*> TopScoringPlayers;
 
+	//Team related properties
+
+	TArray<AEverzonePlayerState*> OrangeTeam;
+	TArray<AEverzonePlayerState*> BlueTeam;
+
+	UPROPERTY(ReplicatedUsing = OnRep_OrangeTeamScore)
+	float OrangeTeamScore = 0;
+	UFUNCTION()
+	void OnRep_OrangeTeamScore();
+
+	UPROPERTY(ReplicatedUsing = OnRep_BlueTeamScore)
+	float BlueTeamScore = 0;
+	UFUNCTION()
+	void OnRep_BlueTeamScore();
 private:
 	float TopScore = 0.f;
 };

@@ -47,8 +47,7 @@ void AHitScanWeapon::Shoot(const FVector& HitTarget)
 				HitCharacter,
 				Start, 
 				HitTarget, 
-				EverzoneOwningController->GetCurrentServerTime() - EverzoneOwningController->SingleTripTime,
-				this);
+				EverzoneOwningController->GetCurrentServerTime() - EverzoneOwningController->SingleTripTime);
 		}
 		
 	}

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Everzone/EverzoneTypes/Team.h"
 #include "EverzonePlayerState.generated.h"
 
 /**
@@ -38,9 +39,16 @@ private:
 	UPROPERTY()
 	class AEverzonePlayerController* PlayerController;
 
+	UPROPERTY(Replicated)
+	ETeam Team = ETeam::ET_NoTeam;
+
 	UPROPERTY(ReplicatedUsing = OnRep_Deaths)
 	int32 Deaths;
 
 	UPROPERTY(ReplicatedUsing = OnRep_KilledBy)
 	FString KilledBy;
+
+public:
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+	FORCEINLINE void SetTeam(ETeam TeamToSet) { Team = TeamToSet; }
 };

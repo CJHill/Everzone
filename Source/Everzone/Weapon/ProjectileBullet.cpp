@@ -37,11 +37,11 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	
 	AEverzonePlayerController* Controller = Cast<AEverzonePlayerController>(Character->Controller);
 	if (!Controller) return;
-	UE_LOG(LogTemp, Warning, TEXT("OnHit: Hit Actor: %s, Use SSR: %d"), *OtherActor->GetName(), bUseServerSideRewind);
+	
 	if (Character->HasAuthority() && !bUseServerSideRewind)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OnHit (Authority): Applying damage to: %s"), *OtherActor->GetName());
-		UGameplayStatics::ApplyDamage(OtherActor, Damage, Controller, this, UDamageType::StaticClass());
+		const float DamageToDeal = Hit.BoneName.ToString() == FString("head") ? HeadshotDamage : Damage;
+		UGameplayStatics::ApplyDamage(OtherActor, DamageToDeal, Controller, this, UDamageType::StaticClass());
 		
 		Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 		return;
@@ -49,7 +49,7 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	AEverzoneCharacter* HitCharacter = Cast<AEverzoneCharacter>(OtherActor);
 	if (bUseServerSideRewind && Character->GetLagCompensationComp() && Character->IsLocallyControlled() && HitCharacter)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OnHit (SSR): Requesting server-side rewind for character: %s"), *HitCharacter->GetName());
+		
 		Character->GetLagCompensationComp()->ServerProjectileScoreRequest(HitCharacter, TraceStart, InitialVelocity, Controller->GetCurrentServerTime() - Controller-> SingleTripTime);
 	}
 			

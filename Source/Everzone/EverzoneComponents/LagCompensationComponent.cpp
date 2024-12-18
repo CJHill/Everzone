@@ -497,28 +497,25 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewind(AE
 	return ProjectileConfirmHit(FPackageToCheck, HitCharacter, TraceStart, InitialVelocity, HitTime);
 }
 
-void ULagCompensationComponent::ServerScoreRequest_Implementation(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, AWeapon* DamageCauser)
+void ULagCompensationComponent::ServerScoreRequest_Implementation(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
 {
 	FServerSideRewindResult ConfirmHit = HitScanServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
-	if (Character && HitCharacter && ConfirmHit.bHitConfirmed && DamageCauser)
+	if (Character && HitCharacter && ConfirmHit.bHitConfirmed && Character->GetEquippedWeapon())
 	{
-		UGameplayStatics::ApplyDamage(HitCharacter, DamageCauser->GetDamage(), Character->Controller, DamageCauser, UDamageType::StaticClass());
+		const float Damage = ConfirmHit.bHitHeadshot ? Character->GetEquippedWeapon()->GetHeadshotDamage() : Character->GetEquippedWeapon()->GetDamage();
+		UGameplayStatics::ApplyDamage(HitCharacter, Damage, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
 	}
 }
 void ULagCompensationComponent::ServerProjectileScoreRequest_Implementation(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
 {
 	FServerSideRewindResult ConfirmHit = ProjectileServerSideRewind(HitCharacter, TraceStart, InitialVelocity, HitTime);
-	UE_LOG(LogTemp, Warning, TEXT("ServerProjectileScoreRequest: Hit Character: %s, TraceStart: %s, InitialVelocity: %s, Time: %.2f"),
-		*HitCharacter->GetName(), *TraceStart.ToString(), *InitialVelocity.ToString(), HitTime);
+	
 	if (Character && HitCharacter && ConfirmHit.bHitConfirmed && Character->GetEquippedWeapon())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ServerProjectileScoreRequest: Valid hit, applying damage to: %s"), *HitCharacter->GetName());
-		UGameplayStatics::ApplyDamage(HitCharacter, Character->GetEquippedWeapon()->GetDamage(), Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+		const float Damage = ConfirmHit.bHitHeadshot ? Character->GetEquippedWeapon()->GetHeadshotDamage() : Character->GetEquippedWeapon()->GetDamage();
+		UGameplayStatics::ApplyDamage(HitCharacter, Damage, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ServerProjectileScoreRequest: Invalid hit, no damage applied"));
-	}
+	
 }
 void ULagCompensationComponent::ServerShotgunScoreRequest_Implementation(const TArray<AEverzoneCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
@@ -533,7 +530,7 @@ void ULagCompensationComponent::ServerShotgunScoreRequest_Implementation(const T
 		//UE_LOG(LogTemp, Warning, TEXT("ServerShotgunScoreRequest: Valid hit for: %s, applying damage"), *EverzoneCharacter->GetName());
 		if (ConfirmHit.Headshots.Contains(EverzoneCharacter))
 		{
-			float HeadshotDamage = ConfirmHit.Headshots[EverzoneCharacter] * Character->GetEquippedWeapon()->GetDamage();
+			float HeadshotDamage = ConfirmHit.Headshots[EverzoneCharacter] * Character->GetEquippedWeapon()->GetHeadshotDamage();
 			TotalDamage += HeadshotDamage;
 			//UE_LOG(LogTemp, Warning, TEXT("ServerShotgunScoreRequest: Valid hit for headshot: %s, applying damage"), *EverzoneCharacter->GetName());
 

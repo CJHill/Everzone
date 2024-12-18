@@ -17,6 +17,7 @@ void AEverzonePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AEverzonePlayerState, Deaths);
 	DOREPLIFETIME(AEverzonePlayerState, KilledBy);
+	DOREPLIFETIME(AEverzonePlayerState, Team);
 }
 
 void AEverzonePlayerState::OnRep_Score()

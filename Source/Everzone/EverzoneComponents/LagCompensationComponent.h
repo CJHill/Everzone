@@ -80,7 +80,7 @@ public:
 
 	//ServerScore Request is for Hitscan Weapons
 	UFUNCTION(Server, Reliable)
-	void ServerScoreRequest(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, class AWeapon* DamageCauser);
+	void ServerScoreRequest(AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
 	UFUNCTION(Server, Reliable)
 	void ServerProjectileScoreRequest(class AEverzoneCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime);
 	UFUNCTION(Server, Reliable)

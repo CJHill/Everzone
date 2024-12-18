@@ -31,8 +31,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000;
 
-	// Not exposing damage to blueprint as the dmg on the projectile weapon class will dictate how much dmg a projectile does. Damage on the projectile weapon class is derived from weapon
+	//This is to set damage for grenades and rockets
+	UPROPERTY(EditAnywhere)
 	float Damage = 15.f;
+	//This can be left as is grenades and rockets do not require headshot damage
+	UPROPERTY(EditAnywhere)
+	float HeadshotDamage = 45.f;
 protected:
 	
 	virtual void BeginPlay() override;

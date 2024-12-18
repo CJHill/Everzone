@@ -206,10 +206,11 @@ void UCombatComponent::LocalShootShotgun(const TArray<FVector_NetQuantize>& Trac
 	if (Shotgun == nullptr || Character == nullptr) return;
 	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
 	{
+		bIsLocallyReloading = false;
 		Character->PlayShootMontage(bIsAiming);
 		Shotgun->ShootShotgun(TraceHitTargets);
 		CombatState = ECombatState::ECS_Unoccupied;
-		bIsLocallyReloading = false;
+		
 	}
 
 }

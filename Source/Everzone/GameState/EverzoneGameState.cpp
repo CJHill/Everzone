@@ -8,6 +8,8 @@ void AEverzoneGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AEverzoneGameState, TopScoringPlayers);
+	DOREPLIFETIME(AEverzoneGameState, OrangeTeamScore);
+	DOREPLIFETIME(AEverzoneGameState, BlueTeamScore);
 }
 
 void AEverzoneGameState::UpdateTopScorer(AEverzonePlayerState* TopPlayer)
@@ -27,4 +29,14 @@ void AEverzoneGameState::UpdateTopScorer(AEverzonePlayerState* TopPlayer)
 	  TopScoringPlayers.AddUnique(TopPlayer);
 	  TopScore = TopPlayer->GetScore();
 	}
+}
+
+void AEverzoneGameState::OnRep_OrangeTeamScore()
+{
+
+}
+
+void AEverzoneGameState::OnRep_BlueTeamScore()
+{
+
 }
