@@ -45,6 +45,11 @@ public:
 	void SetHUDMatchTimer(float TimeRemaining);
 	void SetHUDAnnouncementTimer(float TimeRemaining);
 
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDOrangeTeamScores(int32 OrangeScores);
+	void SetHUDBlueTeamScores(int32 BlueScores);
+
 	// Synced server world clock function
 	virtual float GetCurrentServerTime();
 	//Syncs with the server clock as soon as possible
@@ -52,7 +57,7 @@ public:
 
 	void BroadcastElim(APlayerState* Killer, APlayerState* Victim);
 
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
 
 	float SingleTripTime = 0.f;
 
@@ -63,7 +68,7 @@ protected:
 
 	void SetHUDTime();
 	void PollInit();
-	void HandleMatchHasStarted();
+	void HandleMatchHasStarted(bool bTeamsMatch = false);
 	/*
 	* Handle Cooldown: enables the announcment overlay checks the Game State's player array for top scorers, display's the winners name and disables gameplay ie shoot aim interact
 	*/ 
@@ -96,6 +101,12 @@ protected:
 	void CheckPing(float DeltaTime);
 
 	void ShowReturnToMenu();
+
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
 
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Killer, APlayerState* Victim);

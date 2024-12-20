@@ -33,7 +33,7 @@ void AEverzoneGameMode::OnMatchStateSet()
 		AEverzonePlayerController* EverzonePlayerController = Cast<AEverzonePlayerController>(*ControllerIt);
 		if (EverzonePlayerController)
 		{
-			EverzonePlayerController->OnMatchStateSet(MatchState);
+			EverzonePlayerController->OnMatchStateSet(MatchState, bIsTeamMatch);
 		}
 	}
 }
@@ -174,6 +174,12 @@ void AEverzoneGameMode::PlayerLeftGame(class AEverzonePlayerState* PlayerLeaving
 	{
 		CharacterLeaving->Eliminated(true);
 	}
+}
+
+float AEverzoneGameMode::CalculateDamage(AController* Killer, AController* Victim, float BaseDamage)
+{
+
+	return BaseDamage;
 }
 
 

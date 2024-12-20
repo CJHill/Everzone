@@ -22,6 +22,9 @@ public:
 
 	//Team related properties
 
+	void OrangeTeamScores();
+	void BlueTeamScores();
+
 	TArray<AEverzonePlayerState*> OrangeTeam;
 	TArray<AEverzonePlayerState*> BlueTeam;
 

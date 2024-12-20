@@ -39,9 +39,10 @@ private:
 	UPROPERTY()
 	class AEverzonePlayerController* PlayerController;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_Team)
 	ETeam Team = ETeam::ET_NoTeam;
-
+	UFUNCTION()
+	void OnRep_Team();
 	UPROPERTY(ReplicatedUsing = OnRep_Deaths)
 	int32 Deaths;
 
@@ -50,5 +51,5 @@ private:
 
 public:
 	FORCEINLINE ETeam GetTeam() const { return Team; }
-	FORCEINLINE void SetTeam(ETeam TeamToSet) { Team = TeamToSet; }
+	FORCEINLINE void SetTeam(ETeam TeamToSet);
 };

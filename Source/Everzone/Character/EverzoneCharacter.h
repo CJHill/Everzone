@@ -9,6 +9,7 @@
 #include "Components/TimelineComponent.h"
 #include "Everzone/EverzoneTypes/CombatState.h"
 #include "Everzone/EverzoneComponents/LagCompensationComponent.h"
+#include "Everzone/EverzoneTypes/Team.h"
 #include "EverzoneCharacter.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
@@ -65,6 +66,9 @@ public:
 	//TMap for hitboxes
 	UPROPERTY()
 	TMap<FName, class UBoxComponent*> PlayerHitBoxes;
+
+	//function for setting the material colour on the character
+	void SetTeamColours(ETeam Team);
 protected:
 	virtual void BeginPlay() override;
 	
@@ -99,6 +103,8 @@ protected:
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void HandleWeaponsOnDeath();
 private:
+	UPROPERTY()
+	class AEverzoneGameMode* EverzoneGameMode;
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
 
@@ -236,15 +242,33 @@ private:
 	UMaterialInstanceDynamic* InstDynamicDissolveMat;
 
 	//DissolveMatInst is the default material that can be set in the editor
-	UPROPERTY(EditAnywhere, Category = "Elimination")
+	UPROPERTY(VisibleAnywhere, Category = "Elimination")
 	UMaterialInstance* DissolveMatInst;
 
 	UFUNCTION()
 	void UpdateDissolveMat(float DissolveMatValue);
 	void StartDissolve();
-
 	UPROPERTY(EditAnywhere)
 	UCurveFloat* DissolveCurve;
+
+	/*
+	* Team colours material properties
+	*/
+	UPROPERTY(EditAnywhere, Category = "Elimination")
+	UMaterialInstance* OrangeDissolveMatInst;
+
+	UPROPERTY(EditAnywhere, Category = "Elimination")
+	UMaterialInstance* BlueDissolveMatInst;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* OrangeMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* BlueMaterial;
+	
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* DefaultMaterial;
+	
 
 	/*
 	* DeathBot Properties which is tied to elimination

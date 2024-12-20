@@ -26,6 +26,8 @@ public:
     virtual void RequestRespawn(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController);
     void PlayerLeftGame(class AEverzonePlayerState* PlayerLeaving);
 
+   virtual float CalculateDamage(AController* Killer, AController* Victim, float BaseDamage);
+
     UPROPERTY(EditDefaultsOnly)
     float WarmUpTime = 10.f;
     UPROPERTY(EditDefaultsOnly)
@@ -33,6 +35,8 @@ public:
     float LevelStartTime = 0.f;
     UPROPERTY(EditDefaultsOnly)
     float CooldownTime = 10.f;
+
+    bool bIsTeamMatch = false;
 protected:
     virtual void BeginPlay() override;
     virtual void OnMatchStateSet() override;

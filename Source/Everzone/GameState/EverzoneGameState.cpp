@@ -31,6 +31,16 @@ void AEverzoneGameState::UpdateTopScorer(AEverzonePlayerState* TopPlayer)
 	}
 }
 
+void AEverzoneGameState::OrangeTeamScores()
+{
+	++OrangeTeamScore;
+}
+
+void AEverzoneGameState::BlueTeamScores()
+{
+	++BlueTeamScore;
+}
+
 void AEverzoneGameState::OnRep_OrangeTeamScore()
 {
 

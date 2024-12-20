@@ -175,7 +175,7 @@ void AEverzoneCharacter::Destroyed()
 	{
 		DeathBotComp->DestroyComponent();
 	}
-	AEverzoneGameMode* EverzoneGameMode = Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this));
+	EverzoneGameMode = EverzoneGameMode == nullptr ? GetWorld()->GetAuthGameMode<AEverzoneGameMode>() : EverzoneGameMode;
 	bool bIsMatchNotInProgress = EverzoneGameMode && EverzoneGameMode->GetMatchState() != MatchState::InProgress;
 	if (CombatComp && CombatComp->EquippedWeapon && bIsMatchNotInProgress)
 	{
@@ -211,6 +211,30 @@ void AEverzoneCharacter::MulticastLostTheLead_Implementation()
 		CrownSystemComp->DestroyComponent();
 	}
 
+}
+
+
+void AEverzoneCharacter::SetTeamColours(ETeam Team)
+{
+	if (!GetMesh() || !DefaultMaterial) return;
+
+	switch (Team)
+	{
+	case ETeam::ET_OrangeTeam:
+		GetMesh()->SetMaterial(0, OrangeMaterial);
+		DissolveMatInst = OrangeDissolveMatInst;
+		break;
+
+	case ETeam::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial);
+		DissolveMatInst = BlueDissolveMatInst;
+		break;
+
+	case ETeam::ET_NoTeam:
+		GetMesh()->SetMaterial(0, DefaultMaterial);
+		DissolveMatInst = BlueDissolveMatInst;
+		break;
+	}
 }
 
 
@@ -461,7 +485,7 @@ void AEverzoneCharacter::MulticastEliminated_Implementation(bool bPlayerLeftGame
 
 void AEverzoneCharacter::EliminatedTimerFinished()
 {
-	AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>(); // Use this line to get the game mode when you need it
+	EverzoneGameMode = EverzoneGameMode == nullptr ? GetWorld()->GetAuthGameMode<AEverzoneGameMode>() : EverzoneGameMode; // Use this line to get the game mode when you need it
 	if (EverzoneGameMode && !bLeftGame)
 	{
 		EverzoneGameMode->RequestRespawn(this, PlayerController);
@@ -478,7 +502,7 @@ void AEverzoneCharacter::EliminatedTimerFinished()
 }
 void AEverzoneCharacter::ServerLeftGame_Implementation()
 {
-	AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>(); 
+	EverzoneGameMode = EverzoneGameMode == nullptr ? GetWorld()->GetAuthGameMode<AEverzoneGameMode>() : EverzoneGameMode;
 	EverzonePlayerState = EverzonePlayerState == nullptr ? GetPlayerState<AEverzonePlayerState>() : EverzonePlayerState;
 	if (EverzoneGameMode)
 	{
@@ -548,6 +572,8 @@ void AEverzoneCharacter::GetAndInitHUD()
 			EverzonePlayerState->AddToPlayerScore(0.f);
 			EverzonePlayerState->AddToPlayerDeaths(0);
 			EverzonePlayerState->SetKillersName("");
+			//Setting Team colour
+			SetTeamColours(EverzonePlayerState->GetTeam());
 
 			//We are checking to see if the player is a top scorer so that they spawn with the crown effect if they are.
 			AEverzoneGameState* EverzoneGameState = Cast<AEverzoneGameState>(UGameplayStatics::GetGameState(this));
@@ -697,7 +723,11 @@ void AEverzoneCharacter::Jump()
 }
 void AEverzoneCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
-	if (bIsEliminated) return;
+	EverzoneGameMode = EverzoneGameMode == nullptr ? GetWorld()->GetAuthGameMode<AEverzoneGameMode>() : EverzoneGameMode;
+
+	if (bIsEliminated || !EverzoneGameMode) return;
+	Damage = EverzoneGameMode->CalculateDamage(InstigatorController, Controller, Damage);
+
 	float DamageToHealth = Damage;
 	if (Shield > 0)
 	{
@@ -723,13 +753,11 @@ void AEverzoneCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const
 	PlayHitReactMontage();
 	if (CurrentHealth == 0.f)
 	{
-		AEverzoneGameMode* EverzoneGameMode = GetWorld()->GetAuthGameMode<AEverzoneGameMode>();
-		if (EverzoneGameMode)
-		{
-			PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Controller) : PlayerController;
-			AEverzonePlayerController* KillersController = Cast<AEverzonePlayerController>(InstigatorController);
-			EverzoneGameMode->PlayerEliminated(this, PlayerController, KillersController);
-		}
+		
+		PlayerController = PlayerController == nullptr ? Cast<AEverzonePlayerController>(Controller) : PlayerController;
+		AEverzonePlayerController* KillersController = Cast<AEverzonePlayerController>(InstigatorController);
+		EverzoneGameMode->PlayerEliminated(this, PlayerController, KillersController);
+		
 	}
 	
 }
@@ -930,7 +958,7 @@ void AEverzoneCharacter::UpdateHUDAmmo()
 }
 void AEverzoneCharacter::SpawnDefaultWeapon()
 {
-	AEverzoneGameMode* EverzoneGameMode = Cast<AEverzoneGameMode>(UGameplayStatics::GetGameMode(this));
+	EverzoneGameMode = EverzoneGameMode == nullptr ? GetWorld()->GetAuthGameMode<AEverzoneGameMode>() : EverzoneGameMode;
 	UWorld* World = GetWorld();
 	if (EverzoneGameMode && World && !bIsEliminated && DefaultWeaponClass)
 	{

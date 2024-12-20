@@ -108,4 +108,19 @@ void AEverzonePlayerState::UpdateDeathMessage()
 	}
 }
 
+void AEverzonePlayerState::OnRep_Team()
+{
+	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(GetPawn());
+	if (!EverzoneCharacter) return;
+	EverzoneCharacter->SetTeamColours(Team);
+}
+
+void AEverzonePlayerState::SetTeam(ETeam TeamToSet)
+{
+	Team = TeamToSet;
+	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(GetPawn());
+	if (!EverzoneCharacter) return;
+	EverzoneCharacter->SetTeamColours(Team);
+}
+
 

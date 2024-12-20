@@ -6,6 +6,11 @@
 #include "Everzone/PlayerState/EverzonePlayerState.h"
 #include "Kismet/GameplayStatics.h"
 
+ATeamsGameMode::ATeamsGameMode()
+{
+	bIsTeamMatch = true;
+}
+
 void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
@@ -47,6 +52,24 @@ void ATeamsGameMode::Logout(AController* Exiting)
 		EverzoneGameState->BlueTeam.Remove(EverzonePlayerState);
 	}
 	
+}
+
+float ATeamsGameMode::CalculateDamage(AController* Killer, AController* Victim, float BaseDamage)
+{
+	if (!Killer || !Victim) return BaseDamage;
+
+	AEverzonePlayerState* KillerPlayerState = Killer->GetPlayerState<AEverzonePlayerState>();
+	AEverzonePlayerState* VictimPlayerState = Victim->GetPlayerState<AEverzonePlayerState>();
+
+	if (!KillerPlayerState || !VictimPlayerState) return BaseDamage;
+
+	if (VictimPlayerState == KillerPlayerState) return BaseDamage;
+
+	if (VictimPlayerState->GetTeam() == KillerPlayerState->GetTeam())
+	{
+		return 0.f;
+	}
+	return BaseDamage;
 }
 
 void ATeamsGameMode::HandleMatchHasStarted()

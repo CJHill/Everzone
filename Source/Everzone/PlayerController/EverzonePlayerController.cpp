@@ -47,6 +47,7 @@ void AEverzonePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AEverzonePlayerController, StateofMatch);
+	DOREPLIFETIME(AEverzonePlayerController, bShowTeamScores);
 	
 }
 void AEverzonePlayerController::SetHUDTime()
@@ -213,6 +214,7 @@ void AEverzonePlayerController::ShowReturnToMenu()
 	}
 	
 }
+
 
 //Is the ping too high?
 void AEverzonePlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
@@ -524,6 +526,73 @@ void AEverzonePlayerController::SetHUDAnnouncementTimer(float TimeRemaining)
 	}
 }
 
+void AEverzonePlayerController::HideTeamScores()
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->OrangeTeamScore &&
+		EverzoneHUD->CharacterOverlay->BlueTeamScore;
+	if (bIsHUDValid)
+	{
+		EverzoneHUD->CharacterOverlay->OrangeTeamScore->SetText(FText());
+		EverzoneHUD->CharacterOverlay->BlueTeamScore->SetText(FText());
+	}
+}
+
+void AEverzonePlayerController::InitTeamScores()
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->OrangeTeamScore &&
+		EverzoneHUD->CharacterOverlay->BlueTeamScore;
+	if (bIsHUDValid)
+	{
+		FString Zero("0");
+		EverzoneHUD->CharacterOverlay->OrangeTeamScore->SetText(FText::FromString(Zero));
+		EverzoneHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(Zero));
+	}
+}
+
+void AEverzonePlayerController::SetHUDOrangeTeamScores(int32 OrangeScores)
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->OrangeTeamScore;
+	if (bIsHUDValid)
+	{
+		FString ScoreText = FString::Printf(TEXT("%d"), OrangeScores);
+		EverzoneHUD->CharacterOverlay->OrangeTeamScore->SetText(FText::FromString(ScoreText));
+	}
+
+}
+
+void AEverzonePlayerController::SetHUDBlueTeamScores(int32 BlueScores)
+{
+	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
+	bool bIsHUDValid = EverzoneHUD &&
+		EverzoneHUD->CharacterOverlay &&
+		EverzoneHUD->CharacterOverlay->BlueTeamScore;
+	if (bIsHUDValid)
+	{
+		FString ScoreText = FString::Printf(TEXT("%d"), BlueScores);
+		EverzoneHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(ScoreText));
+	}
+}
+void AEverzonePlayerController::OnRep_ShowTeamScores()
+{
+	if (bShowTeamScores)
+	{
+		InitTeamScores();
+	}
+	else
+	{
+		HideTeamScores();
+	}
+}
+
 float AEverzonePlayerController::GetCurrentServerTime()
 {
 	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
@@ -590,13 +659,13 @@ void AEverzonePlayerController::ClientElimAnnouncement_Implementation(APlayerSta
 	}
 }
 
-void AEverzonePlayerController::OnMatchStateSet(FName State)
+void AEverzonePlayerController::OnMatchStateSet(FName State, bool bTeamsMatch)
 {
 	StateofMatch = State;
 	
 	if (StateofMatch == MatchState::InProgress)
 	{
-		HandleMatchHasStarted();
+		HandleMatchHasStarted(bTeamsMatch);
 	}
 	else if (StateofMatch == MatchState::CooldownState)
 	{
@@ -616,8 +685,9 @@ void AEverzonePlayerController::OnRep_MatchState()
 	}
 }
 
-void AEverzonePlayerController::HandleMatchHasStarted()
+void AEverzonePlayerController::HandleMatchHasStarted(bool bTeamsMatch)
 {
+	if(HasAuthority()) bShowTeamScores = bTeamsMatch;
 	EverzoneHUD = EverzoneHUD == nullptr ? EverzoneHUD = Cast<AEverzoneHUD>(GetHUD()) : EverzoneHUD;
 	if (EverzoneHUD)
 	{
@@ -625,6 +695,15 @@ void AEverzonePlayerController::HandleMatchHasStarted()
 		if (EverzoneHUD->AnnouncementOverlay)
 		{
 			EverzoneHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (!HasAuthority()) return;
+		if (bTeamsMatch)
+		{
+			InitTeamScores();
+		}
+		else
+		{
+			HideTeamScores();
 		}
 	}
 }
