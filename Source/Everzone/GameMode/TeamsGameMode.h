@@ -20,6 +20,8 @@ public:
 	virtual void Logout(AController* Exiting) override;
 
 	virtual float CalculateDamage(AController* Killer, AController* Victim, float BaseDamage) override;
+
+	virtual void PlayerEliminated(class AEverzoneCharacter* PlayerKilled, class AEverzonePlayerController* VictimsController, class AEverzonePlayerController* KillersController) override;
 protected:
 	virtual void HandleMatchHasStarted() override;
 };

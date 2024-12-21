@@ -4,6 +4,7 @@
 #include "EverzoneGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
 void AEverzoneGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -34,19 +35,37 @@ void AEverzoneGameState::UpdateTopScorer(AEverzonePlayerState* TopPlayer)
 void AEverzoneGameState::OrangeTeamScores()
 {
 	++OrangeTeamScore;
+	AEverzonePlayerController* OrangeController = Cast<AEverzonePlayerController>(GetWorld()->GetFirstPlayerController());
+	if (OrangeController)
+	{
+		OrangeController->SetHUDOrangeTeamScores(OrangeTeamScore);
+	}
 }
 
 void AEverzoneGameState::BlueTeamScores()
 {
 	++BlueTeamScore;
+	AEverzonePlayerController* BlueController = Cast<AEverzonePlayerController>(GetWorld()->GetFirstPlayerController());
+	if (BlueController)
+	{
+		BlueController->SetHUDBlueTeamScores(BlueTeamScore);
+	}
 }
 
 void AEverzoneGameState::OnRep_OrangeTeamScore()
 {
-
+	AEverzonePlayerController* OrangeController = Cast<AEverzonePlayerController>(GetWorld()->GetFirstPlayerController());
+	if (OrangeController)
+	{
+		OrangeController->SetHUDOrangeTeamScores(OrangeTeamScore);
+	}
 }
 
 void AEverzoneGameState::OnRep_BlueTeamScore()
 {
-
+	AEverzonePlayerController* BlueController = Cast<AEverzonePlayerController>(GetWorld()->GetFirstPlayerController());
+	if (BlueController)
+	{
+		BlueController->SetHUDBlueTeamScores(BlueTeamScore);
+	}
 }

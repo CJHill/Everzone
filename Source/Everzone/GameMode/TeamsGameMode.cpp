@@ -5,6 +5,7 @@
 #include "Everzone/GameState/EverzoneGameState.h"
 #include "Everzone/PlayerState/EverzonePlayerState.h"
 #include "Kismet/GameplayStatics.h"
+#include "Everzone/PlayerController/EverzonePlayerController.h"
 
 ATeamsGameMode::ATeamsGameMode()
 {
@@ -70,6 +71,25 @@ float ATeamsGameMode::CalculateDamage(AController* Killer, AController* Victim, 
 		return 0.f;
 	}
 	return BaseDamage;
+}
+
+void ATeamsGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController, AEverzonePlayerController* KillersController)
+{
+	Super::PlayerEliminated(PlayerKilled, VictimsController, KillersController);
+
+	AEverzoneGameState* EverzoneGameState = Cast<AEverzoneGameState>(UGameplayStatics::GetGameState(this));
+	AEverzonePlayerState* KillerPlayerState = KillersController ? Cast<AEverzonePlayerState>(KillersController->PlayerState) : nullptr;
+	if (EverzoneGameState && KillerPlayerState && VictimsController != KillersController)
+	{
+		if (KillerPlayerState->GetTeam() == ETeam::ET_BlueTeam)
+		{
+			EverzoneGameState->BlueTeamScores();
+		}
+		if (KillerPlayerState->GetTeam() == ETeam::ET_OrangeTeam)
+		{
+			EverzoneGameState->OrangeTeamScores();
+		}
+	}
 }
 
 void ATeamsGameMode::HandleMatchHasStarted()
