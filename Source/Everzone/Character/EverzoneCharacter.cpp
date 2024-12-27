@@ -616,6 +616,7 @@ void AEverzoneCharacter::EquipButtonPressed()
 	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
+		if (CombatComp->bIsHoldingFlag) return;
 		ServerEquipButtonPressed();
 		bool bSwapWeapon = CombatComp->bShouldSwapWeapons() && 
 			!HasAuthority() &&
@@ -646,6 +647,7 @@ void AEverzoneCharacter::ServerEquipButtonPressed_Implementation()
 }
 void AEverzoneCharacter::CrouchButtonPressed()
 {
+	if (CombatComp && CombatComp->bIsHoldingFlag) return;
 	if (bIsCrouched) 
 	{
 		UnCrouch();
@@ -660,6 +662,7 @@ void AEverzoneCharacter::ReloadButtonPressed()
 	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
+	    if (CombatComp->bIsHoldingFlag) return;
 		CombatComp->Reload();
 	}
 }
@@ -668,6 +671,7 @@ void AEverzoneCharacter::AimButtonPressed()
 	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
+		if (CombatComp->bIsHoldingFlag) return;
 		CombatComp->SetAiming(true);
 	}
 }
@@ -676,6 +680,7 @@ void AEverzoneCharacter::AimButtonReleased()
 	
 	if (CombatComp)
 	{
+		if (CombatComp->bIsHoldingFlag) return;
 		CombatComp->SetAiming(false);
 	}
 }
@@ -684,6 +689,8 @@ void AEverzoneCharacter::ShootButtonPressed()
 	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
+		if (CombatComp->bIsHoldingFlag) return;
+
 		CombatComp->ShootButtonPressed(true);
 	}
 }
@@ -692,13 +699,18 @@ void AEverzoneCharacter::ShootButtonReleased()
 	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
+		if (CombatComp->bIsHoldingFlag) return;
+
 		CombatComp->ShootButtonPressed(false);
 	}
 }
 void AEverzoneCharacter::GrenadeButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (CombatComp)
 	{
+		if (CombatComp->bIsHoldingFlag) return;
+
 		CombatComp->ThrowGrenade();
 	}
 
@@ -712,6 +724,8 @@ void AEverzoneCharacter::GrenadeButtonPressed()
 //}
 void AEverzoneCharacter::Jump()
 {
+	if (CombatComp && CombatComp->bIsHoldingFlag) return;
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -817,6 +831,13 @@ float AEverzoneCharacter::CalculateSpeed()
 
 void AEverzoneCharacter::RotateInPlace(float DeltaTime)
 {
+	if (CombatComp && CombatComp->bIsHoldingFlag)
+	{
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	}
+
 	// The order when creating enums matter by peeking the definition of net role you can see Sim proxy is considered lower or less than autonomus or authoritative as enums are assigned ints
 	// so by checking if the local role is greater than simulated proxy AimOffset will only be called on the locally controlled client and the server
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
@@ -1035,6 +1056,20 @@ bool AEverzoneCharacter::IsLocallyReloading()
 	if(!CombatComp) return false;
 	return CombatComp->bIsLocallyReloading;
 	
+}
+
+bool AEverzoneCharacter::IsHoldingTheFlag() const
+{
+	if (!CombatComp) return false;
+
+	return CombatComp->bIsHoldingFlag;
+}
+
+ETeam AEverzoneCharacter::GetTeam()
+{
+	EverzonePlayerState = EverzonePlayerState == nullptr ? GetPlayerState<AEverzonePlayerState>() : EverzonePlayerState;
+	if(EverzonePlayerState == nullptr) return ETeam();
+	return EverzonePlayerState->GetTeam();
 }
 
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

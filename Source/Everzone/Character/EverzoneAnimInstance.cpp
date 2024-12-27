@@ -36,6 +36,7 @@ void UEverzoneAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	TurningInPlace = EverzoneCharacter->GetTurningInPlace();
 	bRotateRootBone = EverzoneCharacter->RotateRootBone();
 	bIsEliminated = EverzoneCharacter->IsEliminated();
+	bHoldingTheFlag = EverzoneCharacter->IsHoldingTheFlag();
 
 	//These variables and normalised delta rotator are needed for character strafing
 	FRotator AimRotation = EverzoneCharacter->GetBaseAimRotation();

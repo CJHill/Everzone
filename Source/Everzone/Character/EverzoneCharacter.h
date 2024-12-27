@@ -376,4 +376,6 @@ public:
 	FORCEINLINE UBuffComponent* GetBuffComp() const { return BuffComp; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComp() const { return LagCompensationComp; }
+	FORCEINLINE bool IsHoldingTheFlag() const;
+	ETeam GetTeam();
 };

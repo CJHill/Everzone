@@ -17,6 +17,7 @@
 #include "Everzone/PlayerState/EverzonePlayerState.h"
 #include "Components/Image.h"
 #include "Everzone/HUD/ReturnToMenuWidget.h"
+#include "Everzone/EverzoneTypes/Announcement.h"
 
 void AEverzonePlayerController::BeginPlay()
 {
@@ -721,32 +722,17 @@ void AEverzonePlayerController::HandleCooldown()
 	EverzoneHUD->AnnouncementOverlay->InputInfo;
 
 	if (!bIsHUDValid) return;
-	FString AnnouncementText("New Match Starts In: ");
+	FString AnnouncementText = Announcement::NewMatchStartsIn;
 	EverzoneHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	EverzoneHUD->AnnouncementOverlay->Announcement->SetText(FText::FromString(AnnouncementText));
 
 	if (EverzoneGameState && EverzonePlayerState)
 	{
 		TArray<AEverzonePlayerState*> TopPlayers = EverzoneGameState->TopScoringPlayers;
-		FString InputInfoText;
-		if (TopPlayers.Num() == 0)
-		{
-			InputInfoText = FString("There is no winner :(");
-		}
-		else if (TopPlayers.Num() == 1)
-		{
-			InputInfoText = FString::Printf(TEXT("The winner is:\n%s"), *TopPlayers[0]->GetPlayerName());
-		}
-		else if (TopPlayers.Num() > 1)
-		{
-			InputInfoText = FString::Printf(TEXT("The winners are:\n"));
-			for (auto JointFirstPlayers : TopPlayers)
-			{
-				InputInfoText.Append(FString::Printf(TEXT("%s\n"), *JointFirstPlayers->GetPlayerName()));
-			}
-		}
+		FString InfoText = bShowTeamScores ? GetTeamsAnnouncementText(EverzoneGameState) : GetAnnouncementInfoText(TopPlayers);
+		
 			
-		EverzoneHUD->AnnouncementOverlay->InputInfo->SetText(FText::FromString(InputInfoText));
+		EverzoneHUD->AnnouncementOverlay->InputInfo->SetText(FText::FromString(InfoText));
 	}
 	
 	EverzoneCharacter = Cast<AEverzoneCharacter>(GetPawn());
@@ -758,3 +744,63 @@ void AEverzonePlayerController::HandleCooldown()
 	}
 }
 
+FString AEverzonePlayerController::GetAnnouncementInfoText(const TArray<AEverzonePlayerState*>& BestPlayers)
+{
+	FString AnnouncementInfoText;
+	if (BestPlayers.Num() == 0)
+	{
+		AnnouncementInfoText = Announcement::ThereIsNoWinner;
+	}
+	else if (BestPlayers.Num() == 1)
+	{
+		AnnouncementInfoText = Announcement::OneWinner;
+		AnnouncementInfoText.Append(FString::Printf(TEXT("\n%s"), *BestPlayers[0]->GetPlayerName()));
+	}
+	else if (BestPlayers.Num() > 1)
+	{
+		AnnouncementInfoText = Announcement::MultipleWinners;
+		AnnouncementInfoText.Append(FString("\n"));
+		for (auto JointFirstPlayers : BestPlayers)
+		{
+			AnnouncementInfoText.Append(FString::Printf(TEXT("%s\n"), *JointFirstPlayers->GetPlayerName()));
+		}
+	}
+	return AnnouncementInfoText;
+}
+
+FString AEverzonePlayerController::GetTeamsAnnouncementText(AEverzoneGameState* GameState)
+{
+	if(GameState == nullptr) return FString();
+	FString AnnouncementInfoText;
+
+	const int32 OrangeTeamScore = GameState->OrangeTeamScore;
+	const int32 BlueTeamScore = GameState->BlueTeamScore;
+
+	if (OrangeTeamScore == 0 && BlueTeamScore == 0)
+	{
+		AnnouncementInfoText = Announcement::ThereIsNoWinner;
+	}
+	else if (OrangeTeamScore == BlueTeamScore)
+	{
+		AnnouncementInfoText = FString::Printf(TEXT("%s\n"), *Announcement::TeamTied);
+		AnnouncementInfoText.Append(Announcement::OrangeTeam);
+		AnnouncementInfoText.Append(FString("\n"));
+		AnnouncementInfoText.Append(Announcement::BlueTeam);
+		AnnouncementInfoText.Append(FString("\n"));
+	}
+	else if (OrangeTeamScore > BlueTeamScore)
+	{
+		AnnouncementInfoText = Announcement::OrangeTeamWins;
+		AnnouncementInfoText.Append(FString("\n"));
+		AnnouncementInfoText.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::OrangeTeam, OrangeTeamScore));
+		AnnouncementInfoText.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::BlueTeam, BlueTeamScore));
+	}
+	else if (BlueTeamScore > OrangeTeamScore)
+	{
+		AnnouncementInfoText = Announcement::BlueTeamWins;
+		AnnouncementInfoText.Append(FString("\n"));
+		AnnouncementInfoText.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::BlueTeam, BlueTeamScore));
+		AnnouncementInfoText.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::OrangeTeam, OrangeTeamScore));
+	}
+	return AnnouncementInfoText;
+}

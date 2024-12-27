@@ -102,6 +102,8 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(OtherActor);
 	if (EverzoneCharacter)
 	{
+		if (WeaponType == EWeaponType::EWT_Flag && EverzoneCharacter->GetTeam() != Team) return;
+		if (EverzoneCharacter->IsHoldingTheFlag()) return;
 		EverzoneCharacter->SetOverlappingWeapon(this);
 	}
 }
@@ -111,6 +113,8 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(OtherActor);
 	if (EverzoneCharacter)
 	{
+		if (WeaponType == EWeaponType::EWT_Flag && EverzoneCharacter->GetTeam() != Team) return;
+		if (EverzoneCharacter->IsHoldingTheFlag()) return;
 		EverzoneCharacter->SetOverlappingWeapon(nullptr);
 	}
 }
@@ -262,6 +266,7 @@ void AWeapon::OnRep_Owner()
 
 void AWeapon::Dropped()
 {
+	if (!WeaponMesh) return;
 	SetWeaponState(EWeaponState::EWS_Dropped);
 	FDetachmentTransformRules DroppedRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DroppedRules);

@@ -110,6 +110,9 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Killer, APlayerState* Victim);
+
+	FString GetAnnouncementInfoText(const TArray<class AEverzonePlayerState*>& BestPlayers);
+	FString GetTeamsAnnouncementText(class AEverzoneGameState* GameState);
 private:
 	UPROPERTY()
 	class AEverzoneHUD* EverzoneHUD;

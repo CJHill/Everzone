@@ -85,7 +85,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, AmmoReserves, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(UCombatComponent, Grenades, COND_OwnerOnly);
-	DOREPLIFETIME(UCombatComponent, CombatState)
+	DOREPLIFETIME(UCombatComponent, CombatState);
+	DOREPLIFETIME(UCombatComponent, bIsHoldingFlag);
 }
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -448,13 +449,28 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+
+	if (WeaponToEquip->GetWeaponType() == EWeaponType::EWT_Flag)
 	{
-       EquipSecondaryWeapon(WeaponToEquip);
+		bIsHoldingFlag = true;
+		Character->GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
+		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachFlagToLeftHand(WeaponToEquip);
+		WeaponToEquip->SetOwner(Character);
+		TheFlag = WeaponToEquip;
 	}
 	else
 	{
-       EquipPrimaryWeapon(WeaponToEquip);
+		if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+		{
+			EquipSecondaryWeapon(WeaponToEquip);
+		}
+		else
+		{
+			EquipPrimaryWeapon(WeaponToEquip);
+		}
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
 	}
 	
 
@@ -577,6 +593,7 @@ void UCombatComponent::SetWeaponIcon()
 	if (PlayerController == nullptr) return;
 	WeaponIconImage = EquippedWeapon->GetWeaponIcon();
 }
+
 bool UCombatComponent::bShouldSwapWeapons()
 {
 	return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr);
@@ -656,6 +673,24 @@ void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
 	if (BackpackSocket)
 	{
 		BackpackSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::AttachFlagToLeftHand(AWeapon* Flag)
+{
+	if (!Character || !Character->GetMesh() || !Flag) return;
+
+	const USkeletalMeshSocket* FlagSocket = Character->GetMesh()->GetSocketByName(FName("FlagSocket"));
+	if (FlagSocket)
+	{
+		FlagSocket->AttachActor(Flag, Character->GetMesh());
+	}
+}
+void UCombatComponent::OnRep_HoldingTheFlag()
+{
+	if (bIsHoldingFlag && Character && Character->IsLocallyControlled())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
 	}
 }
 

@@ -72,6 +72,7 @@ protected:
 	void ReloadEmptyWeapon();
 	void AttachActorToLeftHand(AActor* ActorToAttach);
 	void AttachActorToBackpack(AActor* ActorToAttach);
+	void AttachFlagToLeftHand(AWeapon* Flag);
 
 	void SetAiming(bool bAiming);
 	UFUNCTION(Server, Reliable)
@@ -264,6 +265,14 @@ private:
 	UPROPERTY()
 	class UTexture2D* WeaponIconImage;
 	void SetWeaponIcon();
+	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheFlag)
+	bool bIsHoldingFlag = false;
+
+	UFUNCTION()
+	void OnRep_HoldingTheFlag();
+
+	UPROPERTY()
+	AWeapon* TheFlag;
 public:	
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	bool bShouldSwapWeapons();
