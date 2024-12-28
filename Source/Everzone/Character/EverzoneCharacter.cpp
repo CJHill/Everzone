@@ -27,6 +27,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Everzone/GameState/EverzoneGameState.h"
+#include "Everzone/PlayerStart/TeamPlayerStart.h"
 
 // Sets default values
 AEverzoneCharacter::AEverzoneCharacter()
@@ -534,6 +535,41 @@ void AEverzoneCharacter::HandleWeaponsOnDeath()
 		DropOrDestroyWeapon(CombatComp->SecondaryWeapon);
 	}
 }
+
+void AEverzoneCharacter::SetSpawnPoint()
+{
+	if (HasAuthority() && EverzonePlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		TArray<ATeamPlayerStart*> TeamStarts;
+		for (auto Start : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(Start);
+			if (TeamPlayerStart && TeamPlayerStart->Team == EverzonePlayerState->GetTeam())
+			{
+				TeamStarts.Add(TeamPlayerStart);
+			}
+		}
+		if (TeamStarts.Num() > 0)
+		{
+			ATeamPlayerStart* ChosenPlayerStart = TeamStarts[FMath::RandRange(0, TeamStarts.Num() - 1)];
+			SetActorLocationAndRotation(ChosenPlayerStart->GetActorLocation(), ChosenPlayerStart->GetActorRotation());
+		}
+	}
+}
+
+void AEverzoneCharacter::OnPlayerStateInitialised()
+{
+	//This is to refresh the count for the score and death properties nothing is being added here
+	EverzonePlayerState->AddToPlayerScore(0.f);
+	EverzonePlayerState->AddToPlayerDeaths(0);
+	EverzonePlayerState->SetKillersName("");
+	//Setting Team colour
+	SetTeamColours(EverzonePlayerState->GetTeam());
+	SetSpawnPoint();
+}
+
 void AEverzoneCharacter::UpdateDissolveMat(float DissolveMatValue)
 {
 	if (InstDynamicDissolveMat)
@@ -568,12 +604,7 @@ void AEverzoneCharacter::GetAndInitHUD()
 		EverzonePlayerState = GetPlayerState<AEverzonePlayerState>();
 		if (EverzonePlayerState)
 		{
-			//This is to refresh the count for the score and death properties nothing is being added here
-			EverzonePlayerState->AddToPlayerScore(0.f);
-			EverzonePlayerState->AddToPlayerDeaths(0);
-			EverzonePlayerState->SetKillersName("");
-			//Setting Team colour
-			SetTeamColours(EverzonePlayerState->GetTeam());
+			OnPlayerStateInitialised();
 
 			//We are checking to see if the player is a top scorer so that they spawn with the crown effect if they are.
 			AEverzoneGameState* EverzoneGameState = Cast<AEverzoneGameState>(UGameplayStatics::GetGameState(this));

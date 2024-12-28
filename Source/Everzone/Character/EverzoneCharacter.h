@@ -102,6 +102,9 @@ protected:
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void HandleWeaponsOnDeath();
+
+	void SetSpawnPoint();
+	void OnPlayerStateInitialised();
 private:
 	UPROPERTY()
 	class AEverzoneGameMode* EverzoneGameMode;
