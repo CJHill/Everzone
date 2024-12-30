@@ -204,4 +204,5 @@ public:
 	FORCEINLINE UTexture2D* GetWeaponIcon() const { return WeaponIconTexture; }
 	FORCEINLINE float GetDamage() const { return Damage; }
 	FORCEINLINE float GetHeadshotDamage() const { return HeadshotDamage; }
+	ETeam GetTeam() const { return Team; }
 };

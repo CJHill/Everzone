@@ -5,6 +5,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Everzone/Character/EverzoneCharacter.h"
+#include "Everzone/EverzoneComponents/CombatComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 AFlag::AFlag()
 {
 	FlagMesh = CreateDefaultSubobject<UStaticMeshComponent>(FName("Flag Mesh"));
@@ -16,7 +19,12 @@ AFlag::AFlag()
 	FlagMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
+void AFlag::BeginPlay()
+{
+	Super::BeginPlay();
+	InitialTransform = GetActorTransform();
 
+}
 
 void AFlag::Dropped()
 {
@@ -30,6 +38,29 @@ void AFlag::Dropped()
 	EverzoneOwningController = nullptr;
 }
 
+void AFlag::ResetFlag()
+{
+	AEverzoneCharacter* FlagHolder = Cast<AEverzoneCharacter>(GetOwner());
+	UCombatComponent* CombatComponent = Cast<UCombatComponent>(FlagHolder->GetCombatComp());
+	if (FlagHolder)
+	{
+		FlagHolder->SetHoldingTheFlag(false);
+		FlagHolder->SetOverlappingWeapon(false);
+		FlagHolder->GetCharacterMovement()->MaxWalkSpeed = CombatComponent->GetBaseWalkSpeed();
+	}
+	if (!HasAuthority()) return;
+	FDetachmentTransformRules DroppedRules(EDetachmentRule::KeepWorld, true);
+	FlagMesh->DetachFromComponent(DroppedRules);
+	SetOwner(nullptr);
+	EverzoneOwningCharacter = nullptr;
+	EverzoneOwningController = nullptr;
+	SetWeaponState(EWeaponState::EWS_Initial);
+	GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetAreaSphere()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+	SetActorTransform(InitialTransform);
+}
+
 void AFlag::HandleOnEquipped()
 {
 	if (!FlagMesh || !GetAreaSphere()) return;
@@ -37,7 +68,8 @@ void AFlag::HandleOnEquipped()
 	GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	FlagMesh->SetSimulatePhysics(false);
 	FlagMesh->SetEnableGravity(false);
-	FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECR_Overlap);
 
 	EnableCustomDepth(false);
 }
@@ -61,5 +93,7 @@ void AFlag::HandleOnDropped()
 	EnableCustomDepth(true);
 
 }
+
+
 
 

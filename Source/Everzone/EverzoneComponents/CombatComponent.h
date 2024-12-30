@@ -276,6 +276,6 @@ private:
 public:	
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	bool bShouldSwapWeapons();
-
-		
+	FORCEINLINE float GetBaseWalkSpeed() const { return BaseWalkSpeed; }
+	FORCEINLINE float GetAimWalkSpeed() const { return AimWalkSpeed; }
 };

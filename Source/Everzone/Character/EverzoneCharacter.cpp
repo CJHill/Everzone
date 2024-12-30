@@ -868,6 +868,9 @@ void AEverzoneCharacter::RotateInPlace(float DeltaTime)
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
+	if (CombatComp && CombatComp->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
+	if (CombatComp && CombatComp->EquippedWeapon) bUseControllerRotationYaw = true;
+
 
 	// The order when creating enums matter by peeking the definition of net role you can see Sim proxy is considered lower or less than autonomus or authoritative as enums are assigned ints
 	// so by checking if the local role is greater than simulated proxy AimOffset will only be called on the locally controlled client and the server
@@ -1101,6 +1104,12 @@ ETeam AEverzoneCharacter::GetTeam()
 	EverzonePlayerState = EverzonePlayerState == nullptr ? GetPlayerState<AEverzonePlayerState>() : EverzonePlayerState;
 	if(EverzonePlayerState == nullptr) return ETeam();
 	return EverzonePlayerState->GetTeam();
+}
+
+void AEverzoneCharacter::SetHoldingTheFlag(bool bHolding)
+{
+	if (!CombatComp) return;
+	CombatComp->bIsHoldingFlag = bHolding;
 }
 
 void AEverzoneCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

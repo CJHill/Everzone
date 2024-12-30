@@ -18,12 +18,18 @@ public:
 
 	//We are overriding dropped to detach the flag mesh as its a static mesh whereas the other weapons are skeletal
 	virtual void Dropped() override;
+	void ResetFlag();
 protected:
 
 	virtual void HandleOnEquipped() override;
 	virtual void HandleOnDropped() override;
+	virtual void BeginPlay() override;
 private:
 
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* FlagMesh;
+
+	FTransform InitialTransform;
+public:
+	FORCEINLINE FTransform GetInitialTransform() const { return InitialTransform; }
 };

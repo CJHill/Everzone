@@ -102,7 +102,7 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(OtherActor);
 	if (EverzoneCharacter)
 	{
-		if (WeaponType == EWeaponType::EWT_Flag && EverzoneCharacter->GetTeam() != Team) return;
+		if (WeaponType == EWeaponType::EWT_Flag && EverzoneCharacter->GetTeam() == Team) return;
 		if (EverzoneCharacter->IsHoldingTheFlag()) return;
 		EverzoneCharacter->SetOverlappingWeapon(this);
 	}
@@ -113,7 +113,7 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	AEverzoneCharacter* EverzoneCharacter = Cast<AEverzoneCharacter>(OtherActor);
 	if (EverzoneCharacter)
 	{
-		if (WeaponType == EWeaponType::EWT_Flag && EverzoneCharacter->GetTeam() != Team) return;
+		if (WeaponType == EWeaponType::EWT_Flag && EverzoneCharacter->GetTeam() == Team) return;
 		if (EverzoneCharacter->IsHoldingTheFlag()) return;
 		EverzoneCharacter->SetOverlappingWeapon(nullptr);
 	}
