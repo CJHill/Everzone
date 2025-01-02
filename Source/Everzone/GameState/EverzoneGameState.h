@@ -24,6 +24,8 @@ public:
 
 	void OrangeTeamScores();
 	void BlueTeamScores();
+	void OrangeTeamScores(float Score);
+	void BlueTeamScores(float Score);
 
 	TArray<AEverzonePlayerState*> OrangeTeam;
 	TArray<AEverzonePlayerState*> BlueTeam;

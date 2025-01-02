@@ -9,7 +9,7 @@
 
 void ACaptureTheFlagMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzonePlayerController* VictimsController, AEverzonePlayerController* KillersController)
 {
-	AEverzoneGameMode::PlayerEliminated(PlayerKilled, VictimsController, KillersController);
+	Super::PlayerEliminated(PlayerKilled, VictimsController, KillersController);
 
 }
 
@@ -21,10 +21,10 @@ void ACaptureTheFlagMode::FlagCaptured(AFlag* Flag, AFlagZone* FlagZone)
 
 	if (FlagZone->Team == ETeam::ET_BlueTeam)
 	{
-		EverzoneGameState->BlueTeamScores();
+		EverzoneGameState->BlueTeamScores(FlagCaptureScore);
 	}
 	if (FlagZone->Team == ETeam::ET_OrangeTeam)
 	{
-		EverzoneGameState->OrangeTeamScores();
+		EverzoneGameState->OrangeTeamScores(FlagCaptureScore);
 	}
 }

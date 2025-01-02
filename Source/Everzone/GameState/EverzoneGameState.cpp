@@ -52,6 +52,26 @@ void AEverzoneGameState::BlueTeamScores()
 	}
 }
 
+void AEverzoneGameState::OrangeTeamScores(float Score)
+{
+	 OrangeTeamScore += Score;
+	 AEverzonePlayerController* OrangeController = Cast<AEverzonePlayerController>(GetWorld()->GetFirstPlayerController());
+	 if (OrangeController)
+	 {
+		 OrangeController->SetHUDOrangeTeamScores(OrangeTeamScore);
+	 }
+}
+
+void AEverzoneGameState::BlueTeamScores(float Score)
+{
+	BlueTeamScore += Score;
+	AEverzonePlayerController* BlueController = Cast<AEverzonePlayerController>(GetWorld()->GetFirstPlayerController());
+	if (BlueController)
+	{
+		BlueController->SetHUDBlueTeamScores(BlueTeamScore);
+	}
+}
+
 void AEverzoneGameState::OnRep_OrangeTeamScore()
 {
 	AEverzonePlayerController* OrangeController = Cast<AEverzonePlayerController>(GetWorld()->GetFirstPlayerController());
