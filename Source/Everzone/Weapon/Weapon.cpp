@@ -150,6 +150,7 @@ void AWeapon::HandleOnEquipped()
 	WeaponMesh->SetSimulatePhysics(false);
 	WeaponMesh->SetEnableGravity(false);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetVisibility(true);
 	SetHUDAmmo();
 	if (WeaponType == EWeaponType::EWT_SMG)
 	{
@@ -204,6 +205,7 @@ void AWeapon::HandleOnEquipSecondary()
 	WeaponMesh->SetSimulatePhysics(false);
 	WeaponMesh->SetEnableGravity(false);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetVisibility(true);
 	if (WeaponType == EWeaponType::EWT_SMG)
 	{
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);

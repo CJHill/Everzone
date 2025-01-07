@@ -67,6 +67,8 @@ AEverzoneCharacter::AEverzoneCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+	
+	
 
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Dissolve Timeline"));
 
@@ -956,11 +958,11 @@ void AEverzoneCharacter::HideCamera()
 		GetMesh()->SetVisibility(false);
 		if (CombatComp && CombatComp->EquippedWeapon && CombatComp->EquippedWeapon->GetWeaponMesh())
 		{
-			CombatComp->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+			//CombatComp->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
 		if (CombatComp && CombatComp->SecondaryWeapon && CombatComp->SecondaryWeapon->GetWeaponMesh())
 		{
-			CombatComp->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+			//CombatComp->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
 	}
 	else
@@ -968,11 +970,11 @@ void AEverzoneCharacter::HideCamera()
 		GetMesh()->SetVisibility(true);
 		if (CombatComp && CombatComp->EquippedWeapon && CombatComp->EquippedWeapon->GetWeaponMesh())
 		{
-			CombatComp->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+			//CombatComp->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 		if (CombatComp && CombatComp->SecondaryWeapon && CombatComp->SecondaryWeapon->GetWeaponMesh())
 		{
-			CombatComp->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+			//CombatComp->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
 	}
 }

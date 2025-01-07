@@ -26,11 +26,11 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 				FString MatchType = Subsystem->DesiredMatchType;
 				if (MatchType == "FreeForAll")
 				{
-					World->ServerTravel(FString("/Game/Maps/EverzoneMap?listen"));
+					World->ServerTravel(FString("/Game/Maps/FreeForAllMap?listen"));
 				}
 				else if (MatchType == "TeamDeathmatch")
 				{
-					World->ServerTravel(FString("/Game/Maps/TeamDeathmatch?listen"));
+					World->ServerTravel(FString("/Game/Maps/TeamDeathmatchMap?listen"));
 				}
 				else if (MatchType == "CaptureTheFlag")
 				{
