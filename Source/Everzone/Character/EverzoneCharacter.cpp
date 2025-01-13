@@ -956,26 +956,12 @@ void AEverzoneCharacter::HideCamera()
 	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraTransition)
 	{
 		GetMesh()->SetVisibility(false);
-		if (CombatComp && CombatComp->EquippedWeapon && CombatComp->EquippedWeapon->GetWeaponMesh())
-		{
-			//CombatComp->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
-		}
-		if (CombatComp && CombatComp->SecondaryWeapon && CombatComp->SecondaryWeapon->GetWeaponMesh())
-		{
-			//CombatComp->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
-		}
+
 	}
 	else
 	{
 		GetMesh()->SetVisibility(true);
-		if (CombatComp && CombatComp->EquippedWeapon && CombatComp->EquippedWeapon->GetWeaponMesh())
-		{
-			//CombatComp->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
-		}
-		if (CombatComp && CombatComp->SecondaryWeapon && CombatComp->SecondaryWeapon->GetWeaponMesh())
-		{
-			//CombatComp->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
-		}
+		
 	}
 }
 

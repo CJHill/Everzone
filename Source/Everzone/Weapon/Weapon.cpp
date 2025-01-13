@@ -293,39 +293,40 @@ void AWeapon::SetHUDAmmo()
 
 void AWeapon::UseAmmo()
 {
-	Ammo = FMath::Clamp(Ammo - 1, 0, AmmoMagazine);
+	Ammo = FMath::Clamp(Ammo - 1, 0, AmmoMagazine); // ammo is subtracted and displayed as so on the server
 	SetHUDAmmo();
 	if (HasAuthority())
 	{
-		ClientUpdateAmmo(Ammo);
+		ClientUpdateAmmo(Ammo);// The server passes in the current amount of ammo
 	}
-	else if(EverzoneOwningCharacter && EverzoneOwningCharacter->IsLocallyControlled())
+	else if(EverzoneOwningCharacter && EverzoneOwningCharacter->IsLocallyControlled()) // if we're on the client and are locally controlled 
 	{
-		++Sequence;
+		++Sequence; // sequence marks request to keep track of how many sent to the server
 	}
 }
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, AmmoMagazine);
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, AmmoMagazine); // ammo is added and displayed as so on the server
 	SetHUDAmmo();
-	ClientAddAmmo(AmmoToAdd);
+	ClientAddAmmo(AmmoToAdd); // The server passes in the current amount of ammo
 }
 void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
 {
-	if (HasAuthority()) return;
-	Ammo = ServerAmmo;
-	--Sequence;
+	if (HasAuthority()) return; // The server does not need to process this information here as it will be sent to the server when this function is called
+	Ammo = ServerAmmo; // the server ammo is now stored on the client
+	--Sequence; // removal of request 
 	Ammo -= Sequence;
 	SetHUDAmmo();
 }
 void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
 {
 	if (HasAuthority()) return;
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, AmmoMagazine);
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, AmmoMagazine); // ammo is added and displayed as so on the client
 	EverzoneOwningCharacter = EverzoneOwningCharacter == nullptr ? Cast<AEverzoneCharacter>(GetOwner()) : EverzoneOwningCharacter;
 	if (EverzoneOwningCharacter && EverzoneOwningCharacter->GetCombatComp() && EverzoneOwningCharacter->GetCombatComp()->IsShotgun() && AmmoIsFull())
 	{
-		EverzoneOwningCharacter->GetCombatComp()->JumpToShotgunEnd();
+		// called to displayed to the end part of the animation if the ammo added maxes out the magazine, as the shotgun reload animation enters each shell incrementally.
+		EverzoneOwningCharacter->GetCombatComp()->JumpToShotgunEnd();  
 	}
 	SetHUDAmmo();
 
