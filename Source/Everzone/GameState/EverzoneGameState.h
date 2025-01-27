@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// This class is responsible for handling the game's score not only for score in Team gamemodes but also for free for all as well.
+// It also holds the Teams arrays.
 
 #pragma once
 

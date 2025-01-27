@@ -94,14 +94,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 	
 	if (ConfirmedHitResult.bBlockingHit) // If we hit the head reset hit boxes to the original state via the cached frame.
 	{
-		if (ConfirmedHitResult.Component.IsValid())
-		{
-			UBoxComponent* Box = Cast<UBoxComponent>(ConfirmedHitResult.Component);
-			if (Box)
-			{
-				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
-			}
-		}
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 		return FServerSideRewindResult{ true,true };
@@ -120,14 +112,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 		World->LineTraceSingleByChannel(ConfirmedHitResult, TraceStart, TraceEnd, ECC_HitBox);
 		if (ConfirmedHitResult.bBlockingHit)
 		{
-			if (ConfirmedHitResult.Component.IsValid())
-			{
-				UBoxComponent* Box = Cast<UBoxComponent>(ConfirmedHitResult.Component);
-				if (Box)
-				{
-					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
-				}
-			}
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 			return FServerSideRewindResult{ true,false };
@@ -170,14 +154,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 	
 	if (PathResult.HitResult.bBlockingHit) // if code here is executed it means we hit the head
 	{
-		if (PathResult.HitResult.Component.IsValid())
-		{
-			UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
-			if (Box)
-			{
-				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
-			}
-		}
+		
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharactersMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 		return FServerSideRewindResult{ true,true };

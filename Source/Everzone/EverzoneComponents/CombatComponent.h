@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// This class is responsible for handling combat functionality and combat replication such as shooting, reloading,  throwing grenades, swapping and picking up weapons. 
+//It is also responsible for the initialisation for the ammo reserves
 
 #pragma once
 

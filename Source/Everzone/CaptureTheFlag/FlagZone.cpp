@@ -25,11 +25,14 @@ void AFlagZone::BeginPlay()
 void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AFlag* OverlappingFlag = Cast<AFlag>(OtherActor);
+
+	//if the flag belongs to the enemy team continue to executed code in the statement
 	if (OverlappingFlag && OverlappingFlag->GetTeam() != Team)
 	{
 		ACaptureTheFlagMode* CTFGameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagMode>();
 		if (CTFGameMode)
 		{
+			// handles scoring points for the team
 			CTFGameMode->FlagCaptured(OverlappingFlag, this);
 		}
 		OverlappingFlag->ResetFlag();

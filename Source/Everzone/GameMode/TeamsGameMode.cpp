@@ -62,11 +62,11 @@ float ATeamsGameMode::CalculateDamage(AController* Killer, AController* Victim, 
 	AEverzonePlayerState* KillerPlayerState = Killer->GetPlayerState<AEverzonePlayerState>();
 	AEverzonePlayerState* VictimPlayerState = Victim->GetPlayerState<AEverzonePlayerState>();
 
-	if (!KillerPlayerState || !VictimPlayerState) return BaseDamage;
+	if (!KillerPlayerState || !VictimPlayerState) return BaseDamage; // null check
 
-	if (VictimPlayerState == KillerPlayerState) return BaseDamage;
+	if (VictimPlayerState == KillerPlayerState) return BaseDamage; // if someone shoots themselves with a rocket launcher for example do that damage to the player
 
-	if (VictimPlayerState->GetTeam() == KillerPlayerState->GetTeam())
+	if (VictimPlayerState->GetTeam() == KillerPlayerState->GetTeam()) //if someone shoots a teammate do 0 damage.
 	{
 		return 0.f;
 	}
@@ -81,11 +81,11 @@ void ATeamsGameMode::PlayerEliminated(AEverzoneCharacter* PlayerKilled, AEverzon
 	AEverzonePlayerState* KillerPlayerState = KillersController ? Cast<AEverzonePlayerState>(KillersController->PlayerState) : nullptr;
 	if (EverzoneGameState && KillerPlayerState && VictimsController != KillersController)
 	{
-		if (KillerPlayerState->GetTeam() == ETeam::ET_BlueTeam)
+		if (KillerPlayerState->GetTeam() == ETeam::ET_BlueTeam) // award point/s to the blue team
 		{
 			EverzoneGameState->BlueTeamScores();
 		}
-		if (KillerPlayerState->GetTeam() == ETeam::ET_OrangeTeam)
+		if (KillerPlayerState->GetTeam() == ETeam::ET_OrangeTeam) // award point/s to the orange team
 		{
 			EverzoneGameState->OrangeTeamScores();
 		}
@@ -105,6 +105,7 @@ void ATeamsGameMode::HandleMatchHasStarted()
 		AEverzonePlayerState* EverzonePlayerState = Cast<AEverzonePlayerState>(PlayerState.Get());
 		if (EverzonePlayerState && EverzonePlayerState->GetTeam() == ETeam::ET_NoTeam)
 		{
+			// if there are more blue players than orange players or the same amount on each side assign the next player to orange. Else add the player to the blue team
 			if (EverzoneGameState->BlueTeam.Num() >= EverzoneGameState->OrangeTeam.Num())
 			{
 				EverzoneGameState->OrangeTeam.AddUnique(EverzonePlayerState);

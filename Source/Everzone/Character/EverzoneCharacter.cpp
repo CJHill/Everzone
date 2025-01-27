@@ -202,7 +202,7 @@ void AEverzoneCharacter::MulticastGainedTheLead_Implementation()
 	}
 	if (CrownSystemComp && !CrownSystemComp->IsActive())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Activating crown"));
+		
 		CrownSystemComp->Activate();
 	}
 }

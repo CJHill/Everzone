@@ -43,11 +43,14 @@ void AEverzoneHUD::AddElimAnnouncementOverlay(FString Killer, FString Victim)
 		UElimAnnouncementWidget* ElimAnnouncementWidget = CreateWidget<UElimAnnouncementWidget>(OwningPlayer, ElimAnnouncementClass);
 		if (!ElimAnnouncementWidget) return;
 
+		//Elim announcement widget will look like "Player 1 eliminated player 2!"
+
 		ElimAnnouncementWidget->SetElimAnnouncementText(Killer, Victim);
 		ElimAnnouncementWidget->AddToViewport();
 
 		for (auto Message : ElimMessages)
 		{
+			//Sets new position for message
 			if (!Message || !Message->AnnouncementBox) return;
 
 			UCanvasPanelSlot* CanvasSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(Message->AnnouncementBox);

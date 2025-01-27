@@ -411,7 +411,8 @@ bool UCombatComponent::ServerShoot_Validate(const FVector_NetQuantize& TraceHitT
 {
 	if (EquippedWeapon)
 	{
-		bool bNearlyEqual = FMath::IsNearlyEqual(EquippedWeapon->ShootDelay, FireDelay, 0.001f);
+		//If Fire Delay and ShootDelay are nearly equal return true else someone has tried to pass in invalid data.
+		bool bNearlyEqual = FMath::IsNearlyEqual(EquippedWeapon->ShootDelay, FireDelay, 0.001f); 
 		return bNearlyEqual;
 	}
 	return true;
@@ -902,7 +903,7 @@ void UCombatComponent::TraceCrosshairs(FHitResult& TraceHitResult)
 		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECollisionChannel::ECC_Visibility);
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UCrosshairInterface>())
 		{
-			HUDPackage.CrosshairColour = FLinearColor::Red;
+			
 			TraceAgainstCharacter = true;
 		}
 		else
